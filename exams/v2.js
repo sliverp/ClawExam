@@ -17,141 +17,141 @@ const exam = {
     {
       id: 'computer-01',
       category: 'computer',
-      question: '请使用终端完成以下多步文件操作：\n1. 创建目录 /tmp/clawexam_test\n2. 在该目录下创建 3 个文件：a.txt 内容为 "hello"，b.txt 内容为 "world"，c.txt 内容为 "claw"\n3. 使用 cat 命令将三个文件的内容合并，用空格分隔，输出到一行\n提交最终合并后的字符串。',
-      answer_type: 'regex',
-      expected: 'hello\\s+world\\s+claw',
+      question: '请在终端中完成以下操作：\n1. 创建目录 /tmp/clawexam_v2\n2. 在该目录下创建文件 data.txt，内容为：\nApple 3\nBanana 7\nCherry 2\nDate 9\nElderberry 4\n3. 使用命令行工具（一行命令）对文件按第二列数字降序排序，然后取前 3 行，输出第一列（水果名），用逗号分隔拼接成一个字符串\n只提交最终拼接后的字符串。',
+      answer_type: 'exact',
+      expected: 'Date,Banana,Elderberry',
       score: 7,
-      hint: '创建文件后用 cat 或 paste 合并内容，结果应该包含三个单词。'
+      hint: '对第二列数值排序后截取并拼接。'
     },
     {
       id: 'computer-02',
       category: 'computer',
-      question: '请使用终端执行以下操作：\n1. 使用 echo 生成以下 CSV 数据并写入 /tmp/clawexam_scores.csv：\nname,score\nAlpha,78\nBeta,92\nGamma,65\nDelta,88\nEpsilon,95\n2. 使用命令行工具（如 awk/sort/tail）找出得分最高的龙虾名称\n只提交名称（一个单词）。',
+      question: '请在终端执行以下操作：\n1. 创建文件 /tmp/clawexam_maze.py，写入一个 Python 脚本\n2. 脚本功能：给定邻接表 graph = {"A":["B","C"], "B":["A","D","E"], "C":["A","F"], "D":["B"], "E":["B","F"], "F":["C","E"]}，使用 BFS 找到从 "A" 到 "F" 的最短路径\n3. 脚本输出路径节点用 -> 连接，如 A->B->C\n4. 执行脚本并提交输出结果',
       answer_type: 'exact',
-      expected: 'Epsilon',
-      score: 7,
-      hint: '对 CSV 按 score 列排序，取最大值对应的 name。'
+      expected: 'A->C->F',
+      score: 8,
+      hint: 'BFS 求最短路径。'
     },
     {
       id: 'computer-03',
       category: 'computer',
-      question: '请使用终端执行以下操作：\n1. 创建文件 /tmp/clawexam_calc.py，内容为一个 Python 脚本，该脚本计算 1 到 100 中所有能被 3 整除但不能被 5 整除的数的总和\n2. 运行该脚本\n提交脚本输出的数字。',
+      question: '请在终端执行以下操作：\n1. 创建文件 /tmp/clawexam_cipher.py，写入一个 Python 脚本\n2. 脚本功能：对字符串 "Gur Pynj Vf Haobhaq" 执行 ROT13 解码\n3. 执行脚本并提交解码后的结果字符串（保留大小写和空格）',
       answer_type: 'exact',
-      expected: '1368',
+      expected: 'The Claw Is Unbound',
       score: 7,
-      hint: '能被3整除但不能被5整除：3,6,9,12... 排除15,30,45...等。求总和。'
+      hint: 'ROT13 是一种字母替换密码。'
     },
     {
       id: 'computer-04',
       category: 'computer',
-      question: '请使用终端执行以下操作链：\n1. 执行 echo "Q2xhd0V4YW0gTGV2ZWwgMiBDbGVhcmVk" | base64 -d 解码\n2. 将解码结果中所有空格替换为下划线 _\n3. 将结果转为全小写\n只提交最终结果字符串。',
+      question: '请在终端执行以下操作链（用一条管道命令完成）：\n1. 使用 echo 输出字符串 "5f4dcc3b5aa765d61d8327deb882cf99"\n2. 将这个字符串中的每两个字符分组，取每组的第一个字符\n3. 将结果拼接成一个字符串\n只提交最终的字符串。',
       answer_type: 'exact',
-      expected: 'clawexam_level_2_cleared',
-      score: 6,
-      hint: '先 base64 解码，再做字符串替换和大小写转换。'
+      expected: '54c35a6d182db8c9',
+      score: 7,
+      hint: '每两位取首字符。'
     },
     {
       id: 'computer-05',
       category: 'computer',
-      question: '请使用终端完成以下任务：\n1. 使用 find 或 ls 命令统计 /usr/bin 目录下有多少个可执行文件（只统计文件，不统计子目录）\n2. 提交文件总数\n只回答一个数字。',
-      answer_type: 'regex',
-      expected: '^[0-9]+$',
-      score: 6,
-      hint: '使用 find /usr/bin -maxdepth 1 -type f | wc -l 或类似命令。'
+      question: '请在终端完成以下操作：\n1. 创建文件 /tmp/clawexam_matrix.py，写入一个 Python 脚本\n2. 脚本功能：给定 3x3 矩阵 [[1,2,3],[4,5,6],[7,8,9]]，计算其转置矩阵后，求转置矩阵主对角线与副对角线元素之和（主对角线 + 副对角线，重复元素只算一次）\n3. 执行脚本并提交结果数字',
+      answer_type: 'exact',
+      expected: '25',
+      score: 7,
+      hint: '先转置，再求两条对角线元素的并集之和。'
     },
     {
       id: 'computer-06',
       category: 'computer',
-      question: '请使用终端执行以下操作：\n1. 创建文件 /tmp/clawexam_json.sh，写入一个 bash 脚本，该脚本使用 jq 或 python3 解析以下 JSON 并输出 items 数组中 price 最大的 item 的 name：\n{"items":[{"name":"Claw-A","price":29.99},{"name":"Claw-B","price":49.50},{"name":"Claw-C","price":15.00},{"name":"Claw-D","price":49.50}]}\n2. 如果有多个最大值取第一个\n3. 执行脚本并提交输出\n只提交一个名称。',
+      question: '请在终端执行以下操作：\n1. 创建文件 /tmp/clawexam_nested.json，写入以下 JSON：\n{"departments":[{"name":"Engineering","teams":[{"name":"Backend","members":3},{"name":"Frontend","members":5},{"name":"DevOps","members":2}]},{"name":"Product","teams":[{"name":"Design","members":4},{"name":"PM","members":2}]},{"name":"Data","teams":[{"name":"ML","members":6},{"name":"Analytics","members":3}]}]}\n2. 使用 python3 或 jq 解析该 JSON，找出 members 总数最多的 department 名称\n只提交 department 名称。',
       answer_type: 'exact',
-      expected: 'Claw-B',
+      expected: 'Engineering',
       score: 7,
-      hint: 'price 最高的是 49.50，有两个并列，取第一个出现的。'
+      hint: '对每个 department 下 teams 的 members 求和，取最大的。'
     },
 
     // ==================== Browser Use (browser) ====================
     {
       id: 'browser-01',
       category: 'browser',
-      question: '请使用浏览器工具或 curl 访问 https://httpbin.org/headers ，从返回的 JSON 中提取 "Host" 字段的值。只提交 Host 的值。',
-      answer_type: 'contains',
-      expected: 'httpbin.org',
+      question: '请使用 curl 或浏览器访问 https://httpbin.org/response-headers?X-Claw-Exam=v2_active&X-Claw-Level=intermediate ，从响应头（不是响应体）中提取 X-Claw-Level 的值。只提交该值。',
+      answer_type: 'exact',
+      expected: 'intermediate',
       score: 6,
-      hint: '访问该 URL 会返回请求头信息，找到 Host 字段。'
+      hint: '注意区分响应头和响应体。'
     },
     {
       id: 'browser-02',
       category: 'browser',
-      question: '请使用浏览器工具或 curl 完成以下操作链：\n1. 访问 https://httpbin.org/uuid 获取一个 UUID\n2. 将获得的 UUID 作为参数，访问 https://httpbin.org/anything/{你的UUID}\n3. 从返回的 JSON 中提取 "url" 字段的值\n提交完整的 url 值。',
+      question: '请完成以下多步 HTTP 操作链：\n1. 访问 https://httpbin.org/uuid 获取一个 UUID\n2. 对该 UUID 字符串计算 MD5 哈希（包含连字符，不含引号和换行）\n3. 将 MD5 哈希值作为参数，访问 https://httpbin.org/anything/{MD5值}\n4. 从返回 JSON 的 "url" 字段中提取完整 URL\n提交该完整 URL。',
       answer_type: 'regex',
-      expected: 'https://httpbin\\.org/anything/[a-f0-9-]{36}',
-      score: 8,
-      hint: '先获取 UUID，再将其拼接到 URL 中访问，提交返回的 url 字段。'
+      expected: 'https://httpbin\\.org/anything/[a-f0-9]{32}',
+      score: 9,
+      hint: '三步链式操作，注意 MD5 输入不含多余字符。'
     },
     {
       id: 'browser-03',
       category: 'browser',
-      question: '请使用浏览器工具或 curl 向 https://httpbin.org/post 发送一个 POST 请求，请求体为 JSON：{"exam":"v2","action":"verify"}。从返回结果的 "json" 字段中提取 "action" 的值。只提交该值。',
+      question: '请使用 curl 完成以下操作：\n1. 向 https://httpbin.org/post 发送 POST 请求，请求体为 JSON：{"matrix":[[1,2],[3,4]],"op":"det"}\n2. 从返回结果的 "data" 字段中解析出你发送的 JSON 字符串\n3. 计算该 matrix 的行列式值（det）\n只提交行列式的值（一个整数）。',
       answer_type: 'exact',
-      expected: 'verify',
-      score: 6,
-      hint: 'httpbin.org/post 会回显你发送的 JSON 数据。'
+      expected: '-2',
+      score: 7,
+      hint: '2x2 矩阵行列式 = ad - bc。'
     },
     {
       id: 'browser-04',
       category: 'browser',
-      question: '请使用浏览器工具或 curl 完成以下操作：\n1. 访问 https://httpbin.org/base64/eyJsZXZlbCI6MiwidGFzayI6ImZpbmRfdGhlX2tleSIsImtleSI6IkNMQVctVjItU0VDUkVUIn0= 获取解码后的内容\n2. 将返回的内容解析为 JSON\n3. 提取 "key" 字段的值\n只提交 key 的值。',
+      question: '请完成以下操作：\n1. 访问 https://httpbin.org/base64/eyJjaGFpbiI6WyJodHRwczovL2h0dHBiaW4ub3JnL2dldD9zdGVwPTIiLCJodHRwczovL2h0dHBiaW4ub3JnL2dldD9zdGVwPTMiXSwic2VjcmV0IjoiQ0xBVy1DSEFJTi1DT01QTEVURSJ9 解码\n2. 解析返回的 JSON，依次访问 "chain" 数组中的每个 URL\n3. 最后提交 JSON 中 "secret" 字段的值',
       answer_type: 'exact',
-      expected: 'CLAW-V2-SECRET',
-      score: 6,
-      hint: '这是一个 base64 编码的 JSON，解码后提取 key 字段。'
+      expected: 'CLAW-CHAIN-COMPLETE',
+      score: 7,
+      hint: '先解码获取任务描述，按指示操作。'
     },
     {
       id: 'browser-05',
       category: 'browser',
-      question: '请使用浏览器工具或 curl 完成以下多步骤任务：\n1. 访问 https://httpbin.org/cookies/set/clawexam_token/v2passed 设置一个 cookie\n2. 然后访问 https://httpbin.org/cookies 查看当前 cookies\n3. 从返回的 JSON 中提取 "clawexam_token" 的值\n只提交该 cookie 的值。',
+      question: '请使用 curl 完成以下操作（需要维护 cookie 会话）：\n1. 访问 https://httpbin.org/cookies/set/session_id/claw2026 设置 cookie\n2. 访问 https://httpbin.org/cookies/set/auth_level/admin 再设置一个 cookie\n3. 访问 https://httpbin.org/cookies 获取所有 cookies\n4. 将所有 cookie 的 value 按字母顺序排列，用 | 分隔\n只提交排列后的字符串。',
       answer_type: 'exact',
-      expected: 'v2passed',
+      expected: 'admin|claw2026',
       score: 9,
-      hint: '先设置 cookie，再查看 cookies。注意需要保持同一个会话（使用 -c/-b 选项或同一浏览器上下文）。'
+      hint: '需在同一会话中完成三次请求。'
     },
 
     // ==================== 综合推理与编码 (complex) ====================
     {
       id: 'complex-01',
       category: 'complex',
-      question: '请用 JSON 格式回答：给定数组 [5,3,8,1,9,2,7,4,6]，请实现以下处理链：\n1. 过滤出所有奇数\n2. 将每个奇数乘以 3\n3. 按从大到小排序\n输出格式为 {"result": [处理后的数组]}',
+      question: '请用 JSON 格式回答：对数组 [12, 7, 25, 3, 18, 9, 31, 6, 14, 22] 执行以下处理链：\n1. 移除所有质数\n2. 将剩余数字各自的数位求和（如 25 → 2+5=7）\n3. 对结果去重并升序排列\n输出格式为 {"result": [处理后的数组]}',
       answer_type: 'json_match',
-      expected: '{"result":[27,21,15,9,3]}',
-      score: 6,
-      hint: '奇数为 5,3,1,9,7 → 乘3 → 15,9,3,27,21 → 降序排列。'
+      expected: '{"result":[3,4,5,6,7,9]}',
+      score: 7,
+      hint: '先判断质数，再数位求和。'
     },
     {
       id: 'complex-02',
       category: 'complex',
-      question: '请用 JSON 格式回答以下问题：\n给定二叉树的前序遍历 [A,B,D,E,C,F] 和中序遍历 [D,B,E,A,F,C]，请推导出后序遍历结果。\n输出格式为 {"result": ["节点1", "节点2", ...]}',
+      question: '请用 JSON 格式回答：\n给定有向图邻接表 {"A":["B","C"], "B":["D"], "C":["D","E"], "D":["F"], "E":["F"], "F":[]}，列出从 A 到 F 的所有可能路径（按字典序排列）。\n输出格式为 {"result": ["A->B->D->F", "A->...->F", ...]}',
       answer_type: 'json_match',
-      expected: '{"result":["D","E","B","F","C","A"]}',
-      score: 7,
-      hint: '前序第一个是根，在中序中定位根，递归划分左右子树。'
+      expected: '{"result":["A->B->D->F","A->C->D->F","A->C->E->F"]}',
+      score: 8,
+      hint: 'DFS 枚举所有路径。'
     },
     {
       id: 'complex-03',
       category: 'complex',
-      question: '请用 JSON 格式回答：给定字符串 "aabbccddaabbee"，统计每个字符出现的次数，并按出现次数从多到少排序。如果次数相同，按字母顺序排序。\n输出格式为 {"result": [["字符", 次数], ...]}',
+      question: '请用 JSON 格式回答：实现一个简易版 RLE（Run-Length Encoding）压缩。\n对字符串 "aaabbbccdddddeef" 进行 RLE 编码，格式为 "字符次数字符次数..."（次数为1时省略次数）。\n输出格式为 {"result": "编码结果"}',
       answer_type: 'json_match',
-      expected: '{"result":[["a",4],["b",4],["c",2],["d",2],["e",2]]}',
-      score: 6,
-      hint: '统计频次：a=4, b=4, c=2, d=2, e=2。同频按字母排序。'
+      expected: '{"result":"3a3b2c5d2ef"}',
+      score: 7,
+      hint: '连续相同字符计数，单个字符省略计数。'
     },
     {
       id: 'complex-04',
       category: 'complex',
-      question: '请计算以下表达式的值（遵循标准运算优先级）：\n\n2 + 3 * 4 ** 2 - 10 / 2 + 7 % 3\n\n其中 ** 表示幂运算，% 表示取模。只回答数字。',
+      question: '请计算以下嵌套表达式的值：\n\nfloor(sqrt(sum([i**2 for i in range(1, 11)]))) + ceil(log2(1024)) - len(set("mississippi"))\n\n其中 floor=向下取整, ceil=向上取整, sqrt=开平方, log2=以2为底的对数, set=去重集合, len=长度。只回答一个整数。',
       answer_type: 'exact',
-      expected: '46',
-      score: 6,
-      hint: '运算优先级：** > * / % > + -。先算 4**2=16，再算 3*16=48，10/2=5，7%3=1，最后 2+48-5+1=46。'
+      expected: '25',
+      score: 7,
+      hint: '分别计算每个子表达式再组合。'
     },
   ],
 };

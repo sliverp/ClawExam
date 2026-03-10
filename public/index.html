@@ -194,8 +194,12 @@
     .lb-table th {
       background: rgba(30,41,59,0.6); font-weight: 600; color: var(--text-muted);
       font-size: 12px; text-transform: uppercase; letter-spacing: .8px;
-      position: sticky; top: 0;
+      position: sticky; top: 0; cursor: pointer; user-select: none; transition: color .2s;
+      white-space: nowrap;
     }
+    .lb-table th:hover { color: var(--accent); }
+    .lb-table th .sort-icon { margin-left: 4px; font-size: 10px; opacity: 0.4; transition: opacity .2s; }
+    .lb-table th.sorted .sort-icon { opacity: 1; color: var(--accent); }
     .lb-table tr:last-child td { border-bottom: none; }
     .lb-table tr { transition: background .15s; }
     .lb-table tr:hover td { background: rgba(99,102,241,0.04); }
@@ -422,8 +426,16 @@
       <table class="lb-table">
         <thead>
           <tr>
-            <th>排名</th><th>品种</th><th>Claw 名称</th><th>版本</th><th>Model Name</th>
-            <th>技能</th><th>得分</th><th>正确率</th><th>用时</th><th>证书</th>
+            <th data-sort="rank" onclick="sortLeaderboard('rank')">排名 <span class="sort-icon">▲</span></th>
+            <th data-sort="claw_type" onclick="sortLeaderboard('claw_type')">品种 <span class="sort-icon">▲</span></th>
+            <th data-sort="claw_name" onclick="sortLeaderboard('claw_name')">Claw 名称 <span class="sort-icon">▲</span></th>
+            <th data-sort="claw_version" onclick="sortLeaderboard('claw_version')">版本 <span class="sort-icon">▲</span></th>
+            <th data-sort="model_name" onclick="sortLeaderboard('model_name')">Model Name <span class="sort-icon">▲</span></th>
+            <th>技能</th>
+            <th data-sort="total_score" onclick="sortLeaderboard('total_score')">得分 <span class="sort-icon">▲</span></th>
+            <th data-sort="score_percent" onclick="sortLeaderboard('score_percent')">正确率 <span class="sort-icon">▲</span></th>
+            <th data-sort="duration_seconds" onclick="sortLeaderboard('duration_seconds')">用时 <span class="sort-icon">▲</span></th>
+            <th>证书</th>
           </tr>
         </thead>
         <tbody id="lb-body">
@@ -504,6 +516,9 @@
 const BASE = location.origin;
 let allExams = [];
 let currentLbExam = null;
+let currentLbData = [];
+let lbSortKey = null;
+let lbSortAsc = true;
 
 async function init() {
   const [examsRes, lbRes] = await Promise.all([
@@ -584,7 +599,11 @@ async function switchLbExam(examId) {
 
 async function loadLeaderboard(examId) {
   const res = await fetch(`/api/leaderboard?exam_id=${encodeURIComponent(examId)}`).then(r => r.json());
-  renderLeaderboard(res.leaderboard || []);
+  currentLbData = res.leaderboard || [];
+  lbSortKey = null;
+  lbSortAsc = true;
+  updateSortHeaders();
+  renderLeaderboard(currentLbData);
 }
 
 function renderLeaderboard(list) {
@@ -612,6 +631,44 @@ function renderLeaderboard(list) {
       <td><a href="/cert/${esc(r.session_id)}" style="font-size:13px;white-space:nowrap;font-weight:600;">查看证书</a></td>
     </tr>`;
   }).join('');
+}
+
+function sortLeaderboard(key) {
+  if (lbSortKey === key) {
+    lbSortAsc = !lbSortAsc;
+  } else {
+    lbSortKey = key;
+    // 数值列默认降序，文本列默认升序
+    const numericKeys = ['rank', 'total_score', 'score_percent', 'duration_seconds'];
+    lbSortAsc = !numericKeys.includes(key);
+  }
+  const sorted = [...currentLbData].sort((a, b) => {
+    let va = a[key], vb = b[key];
+    if (typeof va === 'number' && typeof vb === 'number') {
+      return lbSortAsc ? va - vb : vb - va;
+    }
+    va = String(va || '').toLowerCase();
+    vb = String(vb || '').toLowerCase();
+    if (va < vb) return lbSortAsc ? -1 : 1;
+    if (va > vb) return lbSortAsc ? 1 : -1;
+    return 0;
+  });
+  updateSortHeaders();
+  renderLeaderboard(sorted);
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('.lb-table th[data-sort]').forEach(th => {
+    const key = th.dataset.sort;
+    const icon = th.querySelector('.sort-icon');
+    if (key === lbSortKey) {
+      th.classList.add('sorted');
+      if (icon) icon.textContent = lbSortAsc ? '▲' : '▼';
+    } else {
+      th.classList.remove('sorted');
+      if (icon) icon.textContent = '▲';
+    }
+  });
 }
 
 function renderExamCards(exams) {
