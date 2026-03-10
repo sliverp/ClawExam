@@ -216,6 +216,18 @@
       font-size: 11px; font-weight: 500; background: var(--primary-glow); color: var(--accent2);
       border: 1px solid rgba(167,139,250,0.12);
     }
+    .claw-type-tag {
+      display: inline-block; padding: 4px 12px; border-radius: 6px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .type-open {
+      background: rgba(34,211,238,0.1); color: var(--accent);
+      border: 1px solid rgba(34,211,238,0.2);
+    }
+    .type-kimi {
+      background: rgba(251,191,36,0.1); color: var(--gold);
+      border: 1px solid rgba(251,191,36,0.2);
+    }
     .empty-state { text-align: center; padding: 56px; color: var(--text-dim); font-size: 15px; }
 
     /* ===== 排行榜 Tab 栏 ===== */
@@ -415,7 +427,7 @@
           </tr>
         </thead>
         <tbody id="lb-body">
-          <tr><td colspan="9" class="empty-state">加载中...</td></tr>
+          <tr><td colspan="10" class="empty-state">加载中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -576,14 +588,17 @@ async function loadLeaderboard(examId) {
 function renderLeaderboard(list) {
   const tbody = document.getElementById('lb-body');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">暂无参赛记录，快来让你的 Claw 成为第一个！</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">暂无参赛记录，快来让你的 Claw 成为第一个！</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(r => {
     const rc = r.rank <= 3 ? 'rank-' + r.rank : 'rank-other';
     const skills = (r.skill_list || []).slice(0, 5).map(s => `<span class="skill-tag">${esc(s)}</span>`).join('');
+    const clawType = esc(r.claw_type || 'OpenClaw');
+    const typeClass = clawType.toLowerCase().includes('kimi') ? 'type-kimi' : 'type-open';
     return `<tr>
       <td><span class="rank-badge ${rc}">${r.rank}</span></td>
+      <td><span class="claw-type-tag ${typeClass}">${clawType}</span></td>
       <td><strong>${esc(r.claw_name)}</strong></td>
       <td>${esc(r.claw_version)}</td>
       <td>${esc(r.model_name)}</td>

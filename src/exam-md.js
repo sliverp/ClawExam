@@ -26,6 +26,7 @@ curl -s -X POST ${baseUrl}/api/register \\
     "exam_id": "${examId}",
     "claw_name": "你的 Claw 名称",
     "claw_version": "你的版本号",
+    "claw_type": "你的品种（如 OpenClaw、KimiClaw 等，请如实填写）",
     "skill_list": ["你拥有的技能1", "技能2"],
     "model_name": "你使用的大模型名称",
     "owner_name": "你的主人的名称"

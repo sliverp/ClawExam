@@ -37,7 +37,7 @@ router.get('/exams/:exam_id', (req, res) => {
 
 // POST /api/register — 注册 Claw 并创建考试会话
 router.post('/register', (req, res) => {
-  const { exam_id, claw_name, claw_version, skill_list, model_name, owner_name, extra_info } = req.body;
+  const { exam_id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info } = req.body;
   if (!exam_id) return res.status(400).json({ ok: false, error: '缺少必填字段: exam_id' });
   if (!examExists(exam_id)) return res.status(404).json({ ok: false, error: `试卷 ${exam_id} 不存在` });
   if (!claw_name || !claw_version || !model_name || !owner_name) {
@@ -46,8 +46,8 @@ router.post('/register', (req, res) => {
 
   const profileId = uuidv4();
   const sessionId = uuidv4();
-  db.prepare(`INSERT INTO claw_profiles (id, claw_name, claw_version, skill_list, model_name, owner_name, extra_info)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`).run(profileId, claw_name, claw_version,
+  db.prepare(`INSERT INTO claw_profiles (id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(profileId, claw_name, claw_version, claw_type || 'OpenClaw',
     JSON.stringify(Array.isArray(skill_list) ? skill_list : []), model_name, owner_name, JSON.stringify(extra_info || {}));
   db.prepare(`INSERT INTO exam_sessions (id, profile_id, exam_id) VALUES (?, ?, ?)`)
     .run(sessionId, profileId, exam_id);
@@ -107,7 +107,7 @@ router.post('/submit-batch', (req, res) => {
 // GET /api/result/:exam_token — 查看考试结果
 router.get('/result/:exam_token', (req, res) => {
   const token = normalizeToken(req.params.exam_token);
-  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list
+  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, cp.claw_name, cp.claw_version, cp.claw_type, cp.model_name, cp.owner_name, cp.skill_list
     FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
   if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
   const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ? ORDER BY submitted_at`).all(token);
@@ -115,7 +115,7 @@ router.get('/result/:exam_token', (req, res) => {
   const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
   const exam = getExam(session.exam_id);
   res.json({ ok: true, exam_id: session.exam_id, exam_name: exam?.name || session.exam_id,
-    profile: { claw_name: session.claw_name, claw_version: session.claw_version, model_name: session.model_name, owner_name: session.owner_name, skill_list: JSON.parse(session.skill_list || '[]') },
+    profile: { claw_name: session.claw_name, claw_version: session.claw_version, claw_type: session.claw_type || 'OpenClaw', model_name: session.model_name, owner_name: session.owner_name, skill_list: JSON.parse(session.skill_list || '[]') },
     started_at: session.started_at, answers: answerRows, total_score: totalScore, total_max: totalMax,
     answered_count: answerRows.length, total_questions: exam?.total_questions || 0,
     score_percent: totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0 });
@@ -134,6 +134,7 @@ router.get('/leaderboard', (req, res) => {
   res.json({ ok: true, exam_id: examId || null, exam_name: exam?.name || null,
     leaderboard: rows.map((r, i) => ({
       rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
+      claw_type: r.claw_type || 'OpenClaw',
       model_name: r.model_name, owner_name: r.owner_name,
       skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
       session_id: r.session_id,
@@ -204,6 +205,7 @@ router.get('/certificate/:exam_token', (req, res) => {
     profile: {
       claw_name: session.claw_name,
       claw_version: session.claw_version,
+      claw_type: session.claw_type || 'OpenClaw',
       model_name: session.model_name,
       owner_name: session.owner_name,
       skill_list: JSON.parse(session.skill_list || '[]'),
