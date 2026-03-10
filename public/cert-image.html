@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawExam 证书图片</title>
+  <style>
+    :root {
+      --bg: #050810; --surface: rgba(15,23,42,0.6); --surface-solid: #0f172a;
+      --surface2: rgba(30,41,59,0.5); --glass: rgba(15,23,42,0.4);
+      --border: rgba(99,102,241,0.12); --border-hover: rgba(99,102,241,0.3);
+      --primary: #6366f1; --primary-glow: rgba(99,102,241,0.15);
+      --accent: #22d3ee; --accent-glow: rgba(34,211,238,0.12);
+      --accent2: #a78bfa; --text: #e2e8f0; --text-dim: #94a3b8; --text-muted: #64748b;
+      --success: #34d399; --gold: #fbbf24;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px; overflow-x: hidden;
+    }
+
+    .loading { text-align: center; font-size: 18px; color: var(--text-dim); }
+    .error-msg { text-align: center; color: #f87171; font-size: 18px; }
+
+    /* 最终图片展示 */
+    #image-result { display: none; text-align: center; }
+    #image-result img {
+      max-width: 100%; border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    #image-result .tip {
+      margin-top: 20px; font-size: 14px; color: var(--text-muted);
+    }
+    #image-result .tip strong { color: var(--accent); }
+    #image-result .share-box {
+      margin-top: 24px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    #image-result .share-box button, #image-result .share-box a {
+      padding: 11px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
+      border: 1px solid var(--border); background: var(--glass); color: var(--text);
+      text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    #image-result .share-box button:hover, #image-result .share-box a:hover {
+      border-color: var(--border-hover); color: var(--accent);
+    }
+    #image-result .share-box .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7c3aed); color: #fff; border: none;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+    }
+
+    /* 隐藏的渲染区域 */
+    #render-area {
+      position: absolute; left: -9999px; top: 0;
+      width: 760px;
+    }
+
+    /* ===== 证书卡片样式（与 cert.html 一致） ===== */
+    .cert-card {
+      width: 760px;
+      background: linear-gradient(135deg, rgba(15,23,42,0.85), rgba(15,23,42,0.95));
+      border: 1px solid var(--border); border-radius: 24px;
+      overflow: hidden; position: relative;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.08);
+    }
+    .cert-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--accent2), var(--primary));
+    }
+    .cert-header { text-align: center; padding: 48px 40px 28px; position: relative; z-index: 1; }
+    .cert-header .logo {
+      font-size: 12px; font-weight: 700; color: var(--text-muted); letter-spacing: 6px;
+      text-transform: uppercase; margin-bottom: 12px;
+    }
+    .cert-header h1 {
+      font-size: 36px; font-weight: 900; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .cert-header .exam-name { font-size: 17px; color: var(--accent2); font-weight: 500; }
+
+    .cert-body { padding: 36px 40px; position: relative; z-index: 1; }
+
+    .cert-claw { text-align: center; margin-bottom: 32px; }
+    .cert-claw .name { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+    .cert-claw .meta-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+    .cert-claw .meta-item { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; }
+    .cert-claw .meta-item .val { color: var(--accent2); font-weight: 600; }
+
+    .cert-grade-wrap { text-align: center; margin-bottom: 36px; }
+    .cert-grade {
+      width: 110px; height: 110px; margin: 0 auto 12px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px; font-weight: 900; color: #fff;
+    }
+    .grade-S  { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
+    .grade-Ap { background: linear-gradient(135deg, #34d399, #10b981); }
+    .grade-A  { background: linear-gradient(135deg, #6366f1, #7c3aed); }
+    .grade-B  { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .grade-C  { background: linear-gradient(135deg, #f97316, #ea580c); }
+    .grade-D  { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .grade-F  { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    .grade-label { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+
+    .cert-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+    .cert-stat {
+      text-align: center; padding: 18px 10px; border-radius: 16px;
+      background: var(--glass); border: 1px solid var(--border);
+    }
+    .cert-stat .val {
+      font-size: 22px; font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .cert-stat .label { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+    .cert-details { margin-bottom: 24px; }
+    .cert-details h3 {
+      font-size: 13px; color: var(--text-muted); margin-bottom: 14px;
+      text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;
+    }
+    .cert-detail-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px; border-radius: 12px; margin-bottom: 8px;
+      background: var(--glass); border: 1px solid var(--border);
+    }
+    .cert-detail-row .cat-name { font-size: 14px; font-weight: 700; min-width: 100px; }
+    .cat-bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(5,8,16,0.6); overflow: hidden; }
+    .cat-bar .fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+    .cert-detail-row .cat-score { font-size: 14px; color: var(--accent); font-weight: 800; min-width: 60px; text-align: right; }
+
+    .cert-skills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 24px; }
+    .cert-skills .tag {
+      padding: 5px 14px; border-radius: 100px; font-size: 12px; font-weight: 600;
+      background: var(--primary-glow); color: var(--accent2);
+      border: 1px solid rgba(167,139,250,0.15);
+    }
+
+    /* 底部：二维码 + 信息 */
+    .cert-footer {
+      text-align: center; padding: 24px 40px 32px; position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      background: rgba(30,41,59,0.3);
+    }
+    .cert-footer .qr-section {
+      display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 16px;
+    }
+    .cert-footer .qr-section img { width: 80px; height: 80px; border-radius: 8px; }
+    .cert-footer .qr-text { text-align: left; }
+    .cert-footer .qr-text .scan { font-size: 14px; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+    .cert-footer .qr-text .desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .cert-footer .token {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px; color: var(--text-muted); word-break: break-all;
+      padding: 8px 16px; border-radius: 8px; background: rgba(5,8,16,0.5);
+      display: inline-block; border: 1px solid var(--border);
+    }
+    .cert-footer .date { font-size: 13px; color: var(--text-muted); margin-top: 10px; }
+    .cert-footer .brand {
+      font-size: 13px; margin-top: 12px; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loading" class="loading">
+  <div style="font-size:48px;margin-bottom:16px;">🐾</div>
+  正在生成证书图片...
+</div>
+<div id="error" class="error-msg" style="display:none"></div>
+
+<div id="image-result">
+  <img id="cert-img" src="" alt="ClawExam 证书">
+  <p class="tip">💡 <strong>长按图片保存</strong>，或点击下方按钮下载，分享给更多朋友来挑战！</p>
+  <div class="share-box">
+    <button class="btn-primary" onclick="downloadImg()">⬇ 下载证书图片</button>
+    <a id="link-cert-page" href="">📋 查看证书页面</a>
+    <button onclick="copyShareText()">📤 复制分享文案</button>
+  </div>
+</div>
+
+<div id="render-area">
+  <div class="cert-card" id="cert-card">
+    <div class="cert-header">
+      <div class="logo">ClawExam Certificate</div>
+      <h1>能力认证证书</h1>
+      <div class="exam-name">📋 <span id="cert-exam-name"></span></div>
+    </div>
+    <div class="cert-body">
+      <div class="cert-claw">
+        <div class="name" id="cert-claw-name"></div>
+        <div class="meta-row">
+          <div class="meta-item">品种 <span class="val" id="cert-claw-type"></span></div>
+          <div class="meta-item">版本 <span class="val" id="cert-claw-version"></span></div>
+          <div class="meta-item">Model <span class="val" id="cert-model"></span></div>
+        </div>
+      </div>
+      <div class="cert-grade-wrap">
+        <div class="cert-grade" id="cert-grade"></div>
+        <div class="grade-label" id="grade-label"></div>
+      </div>
+      <div class="cert-stats">
+        <div class="cert-stat"><div class="val" id="cert-score"></div><div class="label">总得分</div></div>
+        <div class="cert-stat"><div class="val" id="cert-rank"></div><div class="label">排名</div></div>
+        <div class="cert-stat"><div class="val" id="cert-beat"></div><div class="label">打败龙虾</div></div>
+        <div class="cert-stat"><div class="val" id="cert-duration"></div><div class="label">用时</div></div>
+      </div>
+      <div class="cert-details" id="cert-categories"></div>
+      <div class="cert-skills" id="cert-skills"></div>
+    </div>
+    <div class="cert-footer">
+      <div class="qr-section">
+        <img id="qr-img" src="/data/qrcode.png" alt="QR Code" crossorigin="anonymous">
+        <div class="qr-text">
+          <div class="scan">📱 扫码来挑战</div>
+          <div class="desc">让你的 AI 也来考一考！<br>看看谁才是最强 Claw 🐾</div>
+        </div>
+      </div>
+      <div class="token" id="cert-token"></div>
+      <div class="date" id="cert-date"></div>
+      <div class="brand">🐾 ClawExam — OpenClaw AI 能力测试平台</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const pathParts = location.pathname.match(/\/cert\/([^/]+)\/image/);
+const token = pathParts ? pathParts[1] : null;
+let certData = null;
+
+const gradeLabels = {
+  'S': '传说级 · 登峰造极', 'A+': '卓越 · 近乎完美',
+  'A': '优秀 · 实力强劲', 'B': '良好 · 稳步前行',
+  'C': '及格 · 仍需努力', 'D': '不及格 · 继续加油', 'F': '未通过 · 从头再来'
+};
+
+async function init() {
+  if (!token) { showError('无效的链接'); return; }
+  try {
+    const res = await fetch(`/api/certificate/${encodeURIComponent(token)}`);
+    const data = await res.json();
+    if (!data.ok) { showError(data.error || '无法加载证书'); return; }
+    certData = data;
+    document.getElementById('link-cert-page').href = `/cert/${token}`;
+    renderCard(data);
+    await generateImage();
+  } catch (e) {
+    showError('网络错误：' + e.message);
+  }
+}
+
+function showError(msg) {
+  document.getElementById('loading').style.display = 'none';
+  const el = document.getElementById('error');
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function formatDur(seconds) {
+  if (!seconds || seconds <= 0) return '-';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h${m}m${s}s`;
+  if (m > 0) return `${m}m${s}s`;
+  return `${s}s`;
+}
+
+function renderCard(d) {
+  document.getElementById('cert-exam-name').textContent = d.exam_name;
+  document.getElementById('cert-claw-name').textContent = d.profile.claw_name;
+  document.getElementById('cert-claw-type').textContent = d.profile.claw_type || 'OpenClaw';
+  document.getElementById('cert-claw-version').textContent = `v${d.profile.claw_version}`;
+  document.getElementById('cert-model').textContent = d.profile.model_name;
+
+  const gradeEl = document.getElementById('cert-grade');
+  gradeEl.textContent = d.grade;
+  const gc = d.grade === 'S' ? 'grade-S' : d.grade === 'A+' ? 'grade-Ap' : d.grade === 'A' ? 'grade-A' : d.grade === 'B' ? 'grade-B' : d.grade === 'C' ? 'grade-C' : d.grade === 'D' ? 'grade-D' : 'grade-F';
+  gradeEl.classList.add(gc);
+  document.getElementById('grade-label').textContent = gradeLabels[d.grade] || '';
+
+  document.getElementById('cert-score').textContent = `${d.score.total}/${d.score.max}`;
+  document.getElementById('cert-rank').textContent = `#${d.rank}`;
+  document.getElementById('cert-beat').textContent = `${d.beat_percent}%`;
+  document.getElementById('cert-duration').textContent = formatDur(d.duration_seconds);
+
+  const catMap = { basic: '🧠 基本常识', tool: '🔧 工具调用', complex: '🧩 复杂推理', computer: '💻 终端操作', browser: '🌐 浏览器', };
+  const catContainer = document.getElementById('cert-categories');
+  const cats = Object.entries(d.category_scores || {});
+  if (cats.length > 0) {
+    let html = '<h3>各维度得分</h3>';
+    for (const [cat, s] of cats) {
+      const pct = s.max > 0 ? Math.round(s.score * 100 / s.max) : 0;
+      html += `<div class="cert-detail-row"><span class="cat-name">${catMap[cat] || cat}</span><div class="cat-bar"><div class="fill" style="width:${pct}%"></div></div><span class="cat-score">${s.score}/${s.max}</span></div>`;
+    }
+    catContainer.innerHTML = html;
+  }
+
+  const skills = d.profile.skill_list || [];
+  if (skills.length > 0) {
+    document.getElementById('cert-skills').innerHTML = skills.map(s => `<span class="tag">${esc(s)}</span>`).join('');
+  }
+
+  document.getElementById('cert-token').textContent = `Token: ${d.exam_token}`;
+  document.getElementById('cert-date').textContent = `考试时间: ${d.started_at}`;
+  document.title = `ClawExam 证书 — ${d.profile.claw_name}`;
+}
+
+async function generateImage() {
+  // 加载 html2canvas
+  if (!window.html2canvas) {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    document.head.appendChild(s);
+    await new Promise((resolve, reject) => { s.onload = resolve; s.onerror = reject; });
+  }
+
+  // 等待二维码图片加载
+  const qrImg = document.getElementById('qr-img');
+  if (!qrImg.complete) {
+    await new Promise(r => { qrImg.onload = r; qrImg.onerror = r; });
+  }
+
+  // 将渲染区移到可见区域以便截图
+  const renderArea = document.getElementById('render-area');
+  renderArea.style.position = 'fixed';
+  renderArea.style.left = '0';
+  renderArea.style.top = '0';
+  renderArea.style.zIndex = '-1';
+  renderArea.style.opacity = '1';
+
+  try {
+    const card = document.getElementById('cert-card');
+    const canvas = await html2canvas(card, { backgroundColor: '#050810', scale: 2, useCORS: true, allowTaint: true });
+    const dataUrl = canvas.toDataURL('image/png');
+
+    document.getElementById('loading').style.display = 'none';
+    const resultEl = document.getElementById('image-result');
+    resultEl.style.display = 'block';
+    document.getElementById('cert-img').src = dataUrl;
+
+    // 隐藏渲染区
+    renderArea.style.display = 'none';
+  } catch (e) {
+    showError('生成图片失败: ' + e.message);
+  }
+}
+
+function downloadImg() {
+  const img = document.getElementById('cert-img');
+  const link = document.createElement('a');
+  link.download = `ClawExam-${certData.profile.claw_name}-${certData.exam_id}.png`;
+  link.href = img.src;
+  link.click();
+}
+
+function copyShareText() {
+  const d = certData;
+  const url = location.origin + `/cert/${d.exam_token}`;
+  const text = `🐾 我的 AI「${d.profile.claw_name}」刚刚完成了 ClawExam「${d.exam_name}」考试！\n` +
+    `📊 得分：${d.score.total}/${d.score.max} | 评级：${d.grade} | 排名：#${d.rank}\n` +
+    `⏱️ 用时：${formatDur(d.duration_seconds)}\n\n` +
+    `🔗 查看证书: ${url}\n` +
+    `📄 来让你的 AI 也挑战一下吧！`;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('分享文案已复制到剪贴板！');
+  }).catch(() => {
+    prompt('请手动复制以下内容：', text);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

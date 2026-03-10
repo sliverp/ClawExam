@@ -20,7 +20,7 @@ const exam = {
       question: '请回答：HTTP 状态码 404 代表什么含义？请用四个字回答。',
       answer_type: 'contains',
       expected: '未找到',
-      score: 5,
+      score: 4,
       hint: '答案是一个常见的 HTTP 错误描述，四个汉字。'
     },
     {
@@ -29,7 +29,7 @@ const exam = {
       question: '请回答：JSON 全称是什么？请用英文全称回答。',
       answer_type: 'contains',
       expected: 'JavaScript Object Notation',
-      score: 5,
+      score: 4,
       hint: '答案是 JSON 的英文全称。'
     },
     {
@@ -38,7 +38,7 @@ const exam = {
       question: '请回答：在 Linux 中，查看当前目录下所有文件（包括隐藏文件）的命令是什么？只写命令，不需要解释。',
       answer_type: 'regex',
       expected: 'ls\\s+-[al]{1,2}a?',
-      score: 5,
+      score: 4,
       hint: '答案是一个 ls 命令加参数。'
     },
     {
@@ -47,7 +47,7 @@ const exam = {
       question: '请回答：TCP 三次握手的第二步，服务端发送的报文包含哪两个标志位？用加号连接，如 A+B 的格式回答。',
       answer_type: 'regex',
       expected: 'SYN\\s*\\+\\s*ACK',
-      score: 5,
+      score: 4,
       hint: '答案格式: XXX+XXX'
     },
     {
@@ -56,7 +56,7 @@ const exam = {
       question: '请计算：十六进制 0xFF 转换为十进制是多少？只回答数字。',
       answer_type: 'exact',
       expected: '255',
-      score: 5,
+      score: 4,
       hint: '直接回答一个十进制数字。'
     },
 
@@ -67,7 +67,7 @@ const exam = {
       question: '请使用你的浏览器工具（agent browser）访问 https://httpbin.org/get 并截图。将截图转为 base64 编码后，提交前 32 个字符作为答案。如果你无法截图，请提交该 URL 返回的 JSON 中 "url" 字段的值。',
       answer_type: 'regex',
       expected: '(^[A-Za-z0-9+/]{32}$)|(https://httpbin\\.org/get)',
-      score: 15,
+      score: 8,
       hint: '使用浏览器截图工具，或直接访问该 URL 获取返回值。'
     },
     {
@@ -76,7 +76,7 @@ const exam = {
       question: '请使用工具执行以下 shell 命令并提交输出结果：echo "ClawExam-$(date +%Y)" 。只提交命令的输出，不需要解释。',
       answer_type: 'regex',
       expected: 'ClawExam-20[2-3][0-9]',
-      score: 10,
+      score: 7,
       hint: '执行 shell 命令，提交其标准输出。'
     },
     {
@@ -85,7 +85,7 @@ const exam = {
       question: '请使用工具读取 https://httpbin.org/base64/Q2xhd0V4YW0gUGFzc2Vk 的内容，并提交返回的明文文本。',
       answer_type: 'contains',
       expected: 'ClawExam Passed',
-      score: 10,
+      score: 7,
       hint: '这是一个 base64 解码接口，返回值是明文字符串。'
     },
     {
@@ -94,7 +94,7 @@ const exam = {
       question: '请使用工具对字符串 "openclaw" 计算 MD5 哈希值。只提交 32 位小写十六进制结果。',
       answer_type: 'regex',
       expected: '^[a-f0-9]{32}$',
-      score: 10,
+      score: 8,
       hint: '使用 md5 工具或命令计算，提交 32 位小写十六进制。'
     },
 

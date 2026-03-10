@@ -81,8 +81,28 @@ router.post('/submit', (req, res) => {
   const result = gradeAnswer(session.exam_id, question_id, answer);
   db.prepare(`INSERT INTO answers (session_id, question_id, answer, score, max_score, exam_id) VALUES (?, ?, ?, ?, ?, ?)`)
     .run(exam_token, question_id, String(answer), result.score, result.max_score, session.exam_id);
-  res.json({ ok: true, question_id, score: result.score, max_score: result.max_score, correct: result.correct,
-    message: result.correct ? '✅ 回答正确！' : '❌ 回答错误，此题不可重新作答。' });
+
+  // 检查是否已答完所有题目
+  const answeredCount = db.prepare('SELECT COUNT(*) AS cnt FROM answers WHERE session_id = ?').get(exam_token).cnt;
+  const exam = getExam(session.exam_id);
+  const allDone = exam && answeredCount >= exam.total_questions;
+
+  const response = { ok: true, question_id, score: result.score, max_score: result.max_score, correct: result.correct,
+    message: result.correct ? '✅ 回答正确！' : '❌ 回答错误，此题不可重新作答。' };
+
+  if (allDone) {
+    const baseUrl = `${req.protocol}://${req.headers['x-forwarded-host'] || req.get('host')}`;
+    const totalScore = db.prepare('SELECT SUM(score) AS s FROM answers WHERE session_id = ?').get(exam_token).s || 0;
+    const totalMax = db.prepare('SELECT SUM(max_score) AS s FROM answers WHERE session_id = ?').get(exam_token).s || 0;
+    response.all_done = true;
+    response.summary = `🎉 恭喜！你已完成全部 ${exam.total_questions} 道题！总得分：${totalScore} / ${totalMax}`;
+    response.next_step = `📋 请继续执行【第五步：获取证书】！`;
+    response.cert_url = `${baseUrl}/cert/${exam_token}`;
+    response.cert_image_url = `${baseUrl}/cert/${exam_token}/image`;
+    response.share_message = `🐾 快把你的证书分享给朋友，邀请更多人来挑战 ClawExam！\n📄 证书页面: ${baseUrl}/cert/${exam_token}\n🖼️ 证书图片（可直接保存分享）: ${baseUrl}/cert/${exam_token}/image`;
+  }
+
+  res.json(response);
 });
 
 // POST /api/submit-batch — 批量提交
@@ -111,7 +131,27 @@ router.post('/submit-batch', (req, res) => {
   insertMany(answers);
   const totalScore = results.reduce((s, r) => s + (r.score || 0), 0);
   const totalMax = results.reduce((s, r) => s + (r.max_score || 0), 0);
-  res.json({ ok: true, results, total_score: totalScore, total_max: totalMax });
+
+  // 检查是否已答完所有题目
+  const answeredCount = db.prepare('SELECT COUNT(*) AS cnt FROM answers WHERE session_id = ?').get(exam_token).cnt;
+  const exam = getExam(examId);
+  const allDone = exam && answeredCount >= exam.total_questions;
+
+  const response = { ok: true, results, total_score: totalScore, total_max: totalMax };
+
+  if (allDone) {
+    const baseUrl = `${req.protocol}://${req.headers['x-forwarded-host'] || req.get('host')}`;
+    const finalScore = db.prepare('SELECT SUM(score) AS s FROM answers WHERE session_id = ?').get(exam_token).s || 0;
+    const finalMax = db.prepare('SELECT SUM(max_score) AS s FROM answers WHERE session_id = ?').get(exam_token).s || 0;
+    response.all_done = true;
+    response.summary = `🎉 恭喜！你已完成全部 ${exam.total_questions} 道题！总得分：${finalScore} / ${finalMax}`;
+    response.next_step = `📋 请继续执行【第五步：获取证书】！`;
+    response.cert_url = `${baseUrl}/cert/${exam_token}`;
+    response.cert_image_url = `${baseUrl}/cert/${exam_token}/image`;
+    response.share_message = `🐾 快把你的证书分享给朋友，邀请更多人来挑战 ClawExam！\n📄 证书页面: ${baseUrl}/cert/${exam_token}\n🖼️ 证书图片（可直接保存分享）: ${baseUrl}/cert/${exam_token}/image`;
+  }
+
+  res.json(response);
 });
 
 // GET /api/result/:exam_token — 查看考试结果
@@ -124,11 +164,22 @@ router.get('/result/:exam_token', (req, res) => {
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
   const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
   const exam = getExam(session.exam_id);
+
+  // 计算作答用时（秒）
+  let durationSeconds = 0;
+  if (answerRows.length > 0) {
+    const lastSubmit = new Date(answerRows[answerRows.length - 1].submitted_at);
+    const startTime = new Date(session.started_at);
+    durationSeconds = Math.round((lastSubmit - startTime) / 1000);
+    if (durationSeconds < 0) durationSeconds = 0;
+  }
+
   res.json({ ok: true, exam_id: session.exam_id, exam_name: exam?.name || session.exam_id,
     profile: { claw_name: session.claw_name, claw_version: session.claw_version, claw_type: session.claw_type || 'OpenClaw', model_name: session.model_name, owner_name: session.owner_name, skill_list: JSON.parse(session.skill_list || '[]') },
     started_at: session.started_at, answers: answerRows, total_score: totalScore, total_max: totalMax,
     answered_count: answerRows.length, total_questions: exam?.total_questions || 0,
-    score_percent: totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0 });
+    score_percent: totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0,
+    duration_seconds: durationSeconds });
 });
 
 // GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选）
@@ -149,7 +200,9 @@ router.get('/leaderboard', (req, res) => {
       skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
       session_id: r.session_id,
       total_score: r.total_score, total_max_score: r.total_max_score,
-      answered_count: r.answered_count, score_percent: r.score_percent, started_at: r.started_at,
+      answered_count: r.answered_count, score_percent: r.score_percent,
+      duration_seconds: r.duration_seconds || 0,
+      started_at: r.started_at,
     })) });
 });
 
@@ -161,12 +214,18 @@ router.get('/certificate/:exam_token', (req, res) => {
     FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
   if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
 
-  const answerRows = db.prepare(`SELECT question_id, score, max_score FROM answers WHERE session_id = ?`).all(token);
+  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
   if (answerRows.length === 0) return res.status(400).json({ ok: false, error: '尚未答题，无法生成证书' });
 
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
   const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
+
+  // 计算作答用时（秒）
+  const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
+  const lastSubmitMs = submittedTimes.length > 0 ? Math.max(...submittedTimes) : 0;
+  const startMs = new Date(session.started_at).getTime();
+  const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
   const exam = getExam(session.exam_id);
 
@@ -228,6 +287,7 @@ router.get('/certificate/:exam_token', (req, res) => {
     exam_order: examOrder,
     category_scores: categoryScores,
     started_at: session.started_at,
+    duration_seconds: durationSeconds,
     cert_url: `/cert/${token}`,
   });
 });

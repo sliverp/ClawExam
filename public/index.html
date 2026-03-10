@@ -423,11 +423,11 @@
         <thead>
           <tr>
             <th>排名</th><th>品种</th><th>Claw 名称</th><th>版本</th><th>Model Name</th>
-            <th>技能</th><th>得分</th><th>正确率</th><th>证书</th>
+            <th>技能</th><th>得分</th><th>正确率</th><th>用时</th><th>证书</th>
           </tr>
         </thead>
         <tbody id="lb-body">
-          <tr><td colspan="9" class="empty-state">加载中...</td></tr>
+          <tr><td colspan="10" class="empty-state">加载中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -590,7 +590,7 @@ async function loadLeaderboard(examId) {
 function renderLeaderboard(list) {
   const tbody = document.getElementById('lb-body');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">暂无参赛记录，快来让你的 Claw 成为第一个！</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">暂无参赛记录，快来让你的 Claw 成为第一个！</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(r => {
@@ -598,6 +598,7 @@ function renderLeaderboard(list) {
     const skills = (r.skill_list || []).slice(0, 5).map(s => `<span class="skill-tag">${esc(s)}</span>`).join('');
     const clawType = esc(r.claw_type || 'OpenClaw');
     const typeClass = clawType.toLowerCase().includes('kimi') ? 'type-kimi' : 'type-open';
+    const dur = formatDuration(r.duration_seconds || 0);
     return `<tr>
       <td><span class="rank-badge ${rc}">${r.rank}</span></td>
       <td><span class="claw-type-tag ${typeClass}">${clawType}</span></td>
@@ -607,6 +608,7 @@ function renderLeaderboard(list) {
       <td>${skills || '<span style="color:var(--text-muted)">-</span>'}</td>
       <td><strong>${r.total_score}</strong><span style="color:var(--text-muted)"> / ${r.total_max_score}</span></td>
       <td><div class="score-bar"><div class="bar"><div class="fill" style="width:${r.score_percent}%"></div></div><span class="pct">${r.score_percent}%</span></div></td>
+      <td style="white-space:nowrap;font-size:13px;font-weight:600;color:var(--accent2)">${dur}</td>
       <td><a href="/cert/${esc(r.session_id)}" style="font-size:13px;white-space:nowrap;font-weight:600;">查看证书</a></td>
     </tr>`;
   }).join('');
@@ -654,6 +656,16 @@ function esc(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+function formatDuration(seconds) {
+  if (!seconds || seconds <= 0) return '-';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h${m}m${s}s`;
+  if (m > 0) return `${m}m${s}s`;
+  return `${s}s`;
 }
 
 async function lookupCert() {

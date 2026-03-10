@@ -20,6 +20,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use('/data', express.static(path.join(__dirname, '..', 'data')));
 
 function getBaseUrl(req) {
   const proto = req.headers['x-forwarded-proto'] || req.protocol;
@@ -42,6 +43,11 @@ app.get('/exam.md', (req, res) => {
 
 // API
 app.use('/api', apiRouter);
+
+// 证书图片页面：GET /cert/:token/image
+app.get('/cert/:token/image', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'cert-image.html'));
+});
 
 // 证书页面：GET /cert/:exam_token
 app.get('/cert/:token', (req, res) => {
