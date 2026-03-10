@@ -40,15 +40,15 @@ router.post('/register', (req, res) => {
   const { exam_id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info } = req.body;
   if (!exam_id) return res.status(400).json({ ok: false, error: '缺少必填字段: exam_id' });
   if (!examExists(exam_id)) return res.status(404).json({ ok: false, error: `试卷 ${exam_id} 不存在` });
-  if (!claw_name || !claw_version || !model_name || !owner_name) {
-    return res.status(400).json({ ok: false, error: '缺少必填字段: claw_name, claw_version, model_name, owner_name' });
+  if (!claw_name || !claw_version || !model_name) {
+    return res.status(400).json({ ok: false, error: '缺少必填字段: claw_name, claw_version, model_name' });
   }
 
   const profileId = uuidv4();
   const sessionId = uuidv4();
   db.prepare(`INSERT INTO claw_profiles (id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(profileId, claw_name, claw_version, claw_type || 'OpenClaw',
-    JSON.stringify(Array.isArray(skill_list) ? skill_list : []), model_name, owner_name, JSON.stringify(extra_info || {}));
+    JSON.stringify(Array.isArray(skill_list) ? skill_list : []), model_name, owner_name || '', JSON.stringify(extra_info || {}));
   db.prepare(`INSERT INTO exam_sessions (id, profile_id, exam_id) VALUES (?, ?, ?)`)
     .run(sessionId, profileId, exam_id);
 
@@ -67,12 +67,22 @@ router.post('/submit', (req, res) => {
   if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
   const q = getQuestion(session.exam_id, question_id);
   if (!q) return res.status(404).json({ ok: false, error: `题目 ${question_id} 在试卷 ${session.exam_id} 中不存在` });
-  const existing = db.prepare('SELECT id FROM answers WHERE session_id = ? AND question_id = ?').get(exam_token, question_id);
-  if (existing) return res.status(409).json({ ok: false, error: `题目 ${question_id} 已回答` });
+  const existing = db.prepare('SELECT id, answer, score, max_score FROM answers WHERE session_id = ? AND question_id = ?').get(exam_token, question_id);
+  if (existing) {
+    return res.status(409).json({
+      ok: false,
+      error: `题目 ${question_id} 已作答，每题只能提交一次，不可重复提交。`,
+      already_answered: true,
+      previous_score: existing.score,
+      max_score: existing.max_score,
+      was_correct: existing.score > 0,
+    });
+  }
   const result = gradeAnswer(session.exam_id, question_id, answer);
   db.prepare(`INSERT INTO answers (session_id, question_id, answer, score, max_score, exam_id) VALUES (?, ?, ?, ?, ?, ?)`)
     .run(exam_token, question_id, String(answer), result.score, result.max_score, session.exam_id);
-  res.json({ ok: true, question_id, score: result.score, max_score: result.max_score, correct: result.correct });
+  res.json({ ok: true, question_id, score: result.score, max_score: result.max_score, correct: result.correct,
+    message: result.correct ? '✅ 回答正确！' : '❌ 回答错误，此题不可重新作答。' });
 });
 
 // POST /api/submit-batch — 批量提交
@@ -91,8 +101,8 @@ router.post('/submit-batch', (req, res) => {
     for (const item of items) {
       const q = getQuestion(examId, item.question_id);
       if (!q) { results.push({ question_id: item.question_id, error: '题目不存在', score: 0, max_score: 0 }); continue; }
-      const existing = db.prepare('SELECT id FROM answers WHERE session_id = ? AND question_id = ?').get(exam_token, item.question_id);
-      if (existing) { results.push({ question_id: item.question_id, error: '已回答', score: 0, max_score: q.score, skipped: true }); continue; }
+      const existing = db.prepare('SELECT id, score, max_score FROM answers WHERE session_id = ? AND question_id = ?').get(exam_token, item.question_id);
+      if (existing) { results.push({ question_id: item.question_id, error: '已作答，每题只能提交一次', score: 0, max_score: q.score, skipped: true, already_answered: true, previous_score: existing.score, was_correct: existing.score > 0 }); continue; }
       const grade = gradeAnswer(examId, item.question_id, item.answer);
       insertStmt.run(exam_token, item.question_id, String(item.answer), grade.score, grade.max_score, examId);
       results.push({ question_id: item.question_id, score: grade.score, max_score: grade.max_score, correct: grade.correct });

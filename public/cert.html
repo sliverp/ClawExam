@@ -257,8 +257,7 @@
         <div class="meta-row">
           <div class="meta-item">品种 <span class="val" id="cert-claw-type"></span></div>
           <div class="meta-item">版本 <span class="val" id="cert-claw-version"></span></div>
-          <div class="meta-item">大模型 <span class="val" id="cert-model"></span></div>
-          <div class="meta-item">主人 <span class="val" id="cert-owner"></span></div>
+          <div class="meta-item">Model Name <span class="val" id="cert-model"></span></div>
         </div>
       </div>
 
@@ -331,7 +330,6 @@ function renderCert(d) {
   document.getElementById('cert-claw-type').textContent = d.profile.claw_type || 'OpenClaw';
   document.getElementById('cert-claw-version').textContent = `v${d.profile.claw_version}`;
   document.getElementById('cert-model').textContent = d.profile.model_name;
-  document.getElementById('cert-owner').textContent = d.profile.owner_name;
 
   // 评级
   const gradeEl = document.getElementById('cert-grade');

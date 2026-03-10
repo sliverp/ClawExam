@@ -1,112 +1,122 @@
 /**
  * ClawExam 试卷 v2 — 中级能力评测
  *
- * 比 v1 难度更高，覆盖进阶常识、多步骤工具调用、复杂推理与编码三大维度
+ * 比 v1 难度更高，重点考察 Computer Use（终端/文件/系统操作）和 Browser Use（网页访问/数据提取）
+ * 以及综合推理编码能力
  */
 
 const exam = {
   id: 'v2',
   name: '中级能力评测 v2',
-  description: '进阶评测：更复杂的常识推理、多步骤工具调用链、编码与算法综合能力',
+  description: '进阶评测：重点考察 Computer Use、Browser Use 和综合编码推理能力',
   version: '1.0.0',
   created_at: '2026-03-10',
 
   questions: [
-    // ==================== 进阶常识 (basic) ====================
+    // ==================== Computer Use (computer) ====================
     {
-      id: 'basic-01',
-      category: 'basic',
-      question: '请回答：在 HTTP/1.1 协议中，哪个请求头字段用于实现长连接（持久连接）？请回答该请求头的名称和值，格式为 "Header: Value"。',
+      id: 'computer-01',
+      category: 'computer',
+      question: '请使用终端完成以下多步文件操作：\n1. 创建目录 /tmp/clawexam_test\n2. 在该目录下创建 3 个文件：a.txt 内容为 "hello"，b.txt 内容为 "world"，c.txt 内容为 "claw"\n3. 使用 cat 命令将三个文件的内容合并，用空格分隔，输出到一行\n提交最终合并后的字符串。',
       answer_type: 'regex',
-      expected: 'Connection\\s*:\\s*keep-alive',
-      score: 5,
-      hint: '答案格式: Header: Value，注意大小写。'
+      expected: 'hello\\s+world\\s+claw',
+      score: 10,
+      hint: '创建文件后用 cat 或 paste 合并内容，结果应该包含三个单词。'
     },
     {
-      id: 'basic-02',
-      category: 'basic',
-      question: '请回答：在 OAuth 2.0 协议中，四种授权模式分别是：授权码模式、隐式模式、密码模式，和？请用中文回答第四种模式的名称（四个字）。',
-      answer_type: 'contains',
-      expected: '客户端凭证',
-      score: 5,
-      hint: '也叫 Client Credentials Grant，中文四个字。'
-    },
-    {
-      id: 'basic-03',
-      category: 'basic',
-      question: '请回答：RSA 加密算法的安全性基于哪个数学难题？请用中文回答（四到六个字）。',
-      answer_type: 'regex',
-      expected: '(大整数分解|整数分解|因数分解|质因数分解)',
-      score: 5,
-      hint: '答案与大数的因子有关。'
-    },
-    {
-      id: 'basic-04',
-      category: 'basic',
-      question: '请回答：DNS 解析中，A 记录将域名映射为 IPv4 地址。那么将域名映射为 IPv6 地址的记录类型是什么？请回答记录类型名称（四个字符）。',
+      id: 'computer-02',
+      category: 'computer',
+      question: '请使用终端执行以下操作：\n1. 使用 echo 生成以下 CSV 数据并写入 /tmp/clawexam_scores.csv：\nname,score\nAlpha,78\nBeta,92\nGamma,65\nDelta,88\nEpsilon,95\n2. 使用命令行工具（如 awk/sort/tail）找出得分最高的龙虾名称\n只提交名称（一个单词）。',
       answer_type: 'exact',
-      expected: 'AAAA',
-      score: 5,
-      hint: '答案是四个相同的字母。'
+      expected: 'Epsilon',
+      score: 10,
+      hint: '对 CSV 按 score 列排序，取最大值对应的 name。'
     },
     {
-      id: 'basic-05',
-      category: 'basic',
-      question: '请回答：在计算机网络 OSI 七层模型中，从下到上第四层是什么层？请用中文回答（三个字）。',
-      answer_type: 'contains',
-      expected: '传输层',
-      score: 5,
-      hint: 'TCP 和 UDP 协议工作在这一层。'
+      id: 'computer-03',
+      category: 'computer',
+      question: '请使用终端执行以下操作：\n1. 创建文件 /tmp/clawexam_calc.py，内容为一个 Python 脚本，该脚本计算 1 到 100 中所有能被 3 整除但不能被 5 整除的数的总和\n2. 运行该脚本\n提交脚本输出的数字。',
+      answer_type: 'exact',
+      expected: '1368',
+      score: 10,
+      hint: '能被3整除但不能被5整除：3,6,9,12... 排除15,30,45...等。求总和。'
+    },
+    {
+      id: 'computer-04',
+      category: 'computer',
+      question: '请使用终端执行以下操作链：\n1. 执行 echo "Q2xhd0V4YW0gTGV2ZWwgMiBDbGVhcmVk" | base64 -d 解码\n2. 将解码结果中所有空格替换为下划线 _\n3. 将结果转为全小写\n只提交最终结果字符串。',
+      answer_type: 'exact',
+      expected: 'clawexam_level_2_cleared',
+      score: 10,
+      hint: '先 base64 解码，再做字符串替换和大小写转换。'
+    },
+    {
+      id: 'computer-05',
+      category: 'computer',
+      question: '请使用终端完成以下任务：\n1. 使用 find 或 ls 命令统计 /usr/bin 目录下有多少个可执行文件（只统计文件，不统计子目录）\n2. 提交文件总数\n只回答一个数字。',
+      answer_type: 'regex',
+      expected: '^[0-9]+$',
+      score: 10,
+      hint: '使用 find /usr/bin -maxdepth 1 -type f | wc -l 或类似命令。'
+    },
+    {
+      id: 'computer-06',
+      category: 'computer',
+      question: '请使用终端执行以下操作：\n1. 创建文件 /tmp/clawexam_json.sh，写入一个 bash 脚本，该脚本使用 jq 或 python3 解析以下 JSON 并输出 items 数组中 price 最大的 item 的 name：\n{"items":[{"name":"Claw-A","price":29.99},{"name":"Claw-B","price":49.50},{"name":"Claw-C","price":15.00},{"name":"Claw-D","price":49.50}]}\n2. 如果有多个最大值取第一个\n3. 执行脚本并提交输出\n只提交一个名称。',
+      answer_type: 'exact',
+      expected: 'Claw-B',
+      score: 15,
+      hint: 'price 最高的是 49.50，有两个并列，取第一个出现的。'
     },
 
-    // ==================== 工具调用 (tool) ====================
+    // ==================== Browser Use (browser) ====================
     {
-      id: 'tool-01',
-      category: 'tool',
-      question: '请用工具执行以下多步操作：\n1. 执行命令 echo "claw-exam-v2" | sha256sum\n2. 提取输出的 SHA256 哈希值（64位十六进制字符串）\n只提交那个 64 位的哈希值，不包含文件名和空格。',
+      id: 'browser-01',
+      category: 'browser',
+      question: '请使用浏览器工具或 curl 访问 https://httpbin.org/headers ，从返回的 JSON 中提取 "Host" 字段的值。只提交 Host 的值。',
+      answer_type: 'contains',
+      expected: 'httpbin.org',
+      score: 10,
+      hint: '访问该 URL 会返回请求头信息，找到 Host 字段。'
+    },
+    {
+      id: 'browser-02',
+      category: 'browser',
+      question: '请使用浏览器工具或 curl 完成以下操作链：\n1. 访问 https://httpbin.org/uuid 获取一个 UUID\n2. 将获得的 UUID 作为参数，访问 https://httpbin.org/anything/{你的UUID}\n3. 从返回的 JSON 中提取 "url" 字段的值\n提交完整的 url 值。',
       answer_type: 'regex',
-      expected: '^[a-f0-9]{64}$',
-      score: 10,
-      hint: '执行命令后，输出格式为 "<hash>  -"，只取 hash 部分。'
-    },
-    {
-      id: 'tool-02',
-      category: 'tool',
-      question: '请使用工具完成以下任务链：\n1. 访问 https://httpbin.org/uuid 获取一个 UUID\n2. 将获取到的 UUID 字符串中的所有横杠(-) 去掉\n3. 将去掉横杠后的字符串转为全大写\n提交最终结果（32位大写十六进制字符串）。',
-      answer_type: 'regex',
-      expected: '^[A-F0-9]{32}$',
+      expected: 'https://httpbin\\.org/anything/[a-f0-9-]{36}',
       score: 15,
-      hint: '先访问 URL 获取 UUID，再做字符串处理。结果应该是 32 个大写十六进制字符。'
+      hint: '先获取 UUID，再将其拼接到 URL 中访问，提交返回的 url 字段。'
     },
     {
-      id: 'tool-03',
-      category: 'tool',
-      question: '请使用工具执行以下操作：\n1. 创建一个临时文件，写入以下 3 行内容（每行一个数字）：42、17、85\n2. 使用 sort -n 命令对文件进行数字排序\n3. 使用 head -1 取排序后的第一行\n提交最终结果（一个数字）。',
+      id: 'browser-03',
+      category: 'browser',
+      question: '请使用浏览器工具或 curl 向 https://httpbin.org/post 发送一个 POST 请求，请求体为 JSON：{"exam":"v2","action":"verify"}。从返回结果的 "json" 字段中提取 "action" 的值。只提交该值。',
       answer_type: 'exact',
-      expected: '17',
+      expected: 'verify',
       score: 10,
-      hint: '把三个数字写入文件，数字排序后取最小值。'
+      hint: 'httpbin.org/post 会回显你发送的 JSON 数据。'
     },
     {
-      id: 'tool-04',
-      category: 'tool',
-      question: '请使用工具执行以下命令并提交输出：\npython3 -c "import json; data={\'claws\':[{\'name\':\'Alpha\',\'score\':88},{\'name\':\'Beta\',\'score\':95},{\'name\':\'Gamma\',\'score\':72}]}; best=max(data[\'claws\'],key=lambda x:x[\'score\']); print(best[\'name\'])"',
+      id: 'browser-04',
+      category: 'browser',
+      question: '请使用浏览器工具或 curl 完成以下操作：\n1. 访问 https://httpbin.org/base64/eyJsZXZlbCI6MiwidGFzayI6ImZpbmRfdGhlX2tleSIsImtleSI6IkNMQVctVjItU0VDUkVUIn0= 获取解码后的内容\n2. 将返回的内容解析为 JSON\n3. 提取 "key" 字段的值\n只提交 key 的值。',
       answer_type: 'exact',
-      expected: 'Beta',
+      expected: 'CLAW-V2-SECRET',
       score: 10,
-      hint: '执行 Python 命令，输出得分最高的龙虾名称。'
+      hint: '这是一个 base64 编码的 JSON，解码后提取 key 字段。'
     },
     {
-      id: 'tool-05',
-      category: 'tool',
-      question: '请使用工具完成以下多步任务：\n1. 执行命令 curl -s https://httpbin.org/base64/eyJhbnN3ZXIiOiAiQ2xhd0V4YW1WMlBybyJ9 获取返回内容\n2. 将返回的 JSON 字符串解析，提取 "answer" 字段的值\n只提交 answer 字段的值。',
+      id: 'browser-05',
+      category: 'browser',
+      question: '请使用浏览器工具或 curl 完成以下多步骤任务：\n1. 访问 https://httpbin.org/cookies/set/clawexam_token/v2passed 设置一个 cookie\n2. 然后访问 https://httpbin.org/cookies 查看当前 cookies\n3. 从返回的 JSON 中提取 "clawexam_token" 的值\n只提交该 cookie 的值。',
       answer_type: 'exact',
-      expected: 'ClawExamV2Pro',
+      expected: 'v2passed',
       score: 15,
-      hint: '返回值是一个 JSON 字符串，从中提取 answer 字段。'
+      hint: '先设置 cookie，再查看 cookies。注意需要保持同一个会话（使用 -c/-b 选项或同一浏览器上下文）。'
     },
 
-    // ==================== 复杂推理与编码 (complex) ====================
+    // ==================== 综合推理与编码 (complex) ====================
     {
       id: 'complex-01',
       category: 'complex',
@@ -119,23 +129,14 @@ const exam = {
     {
       id: 'complex-02',
       category: 'complex',
-      question: '请计算以下递归函数的返回值：\n```\nfunction g(n) {\n  if (n === 0) return 1;\n  if (n === 1) return 1;\n  return g(n-1) * n + g(n-2);\n}\n```\n求 g(5) 的值。只回答数字。',
-      answer_type: 'exact',
-      expected: '225',
-      score: 10,
-      hint: '手动展开递归：g(0)=1, g(1)=1, g(2)=2*1+1=3, g(3)=3*3+1=10, g(4)=4*10+3=43, g(5)=5*43+10=?'
+      question: '请用 JSON 格式回答以下问题：\n给定二叉树的前序遍历 [A,B,D,E,C,F] 和中序遍历 [D,B,E,A,F,C]，请推导出后序遍历结果。\n输出格式为 {"result": ["节点1", "节点2", ...]}',
+      answer_type: 'json_match',
+      expected: '{"result":["D","E","B","F","C","A"]}',
+      score: 15,
+      hint: '前序第一个是根，在中序中定位根，递归划分左右子树。'
     },
     {
       id: 'complex-03',
-      category: 'complex',
-      question: '给定一个有向图的邻接表：\nA → B, C\nB → D\nC → D, E\nD → F\nE → F\n\n请问从 A 到 F 共有多少条不同的路径？只回答数字。',
-      answer_type: 'exact',
-      expected: '3',
-      score: 10,
-      hint: '枚举所有从 A 到 F 的路径：A→B→D→F, A→C→D→F, A→C→E→F。'
-    },
-    {
-      id: 'complex-04',
       category: 'complex',
       question: '请用 JSON 格式回答：给定字符串 "aabbccddaabbee"，统计每个字符出现的次数，并按出现次数从多到少排序。如果次数相同，按字母顺序排序。\n输出格式为 {"result": [["字符", 次数], ...]}',
       answer_type: 'json_match',
@@ -144,25 +145,7 @@ const exam = {
       hint: '统计频次：a=4, b=4, c=2, d=2, e=2。同频按字母排序。'
     },
     {
-      id: 'complex-05',
-      category: 'complex',
-      question: '请计算：一个 8 位无符号整数，用二进制表示为 10110011。将其进行按位取反（NOT）操作后，得到的十进制值是多少？只回答数字。',
-      answer_type: 'exact',
-      expected: '76',
-      score: 10,
-      hint: '10110011 取反 → 01001100，转十进制。'
-    },
-    {
-      id: 'complex-06',
-      category: 'complex',
-      question: '请用 JSON 格式回答以下问题：\n给定二叉树的前序遍历 [A,B,D,E,C,F] 和中序遍历 [D,B,E,A,F,C]，请推导出后序遍历结果。\n输出格式为 {"result": ["节点1", "节点2", ...]}',
-      answer_type: 'json_match',
-      expected: '{"result":["D","E","B","F","C","A"]}',
-      score: 15,
-      hint: '前序第一个是根，在中序中定位根，递归划分左右子树。'
-    },
-    {
-      id: 'complex-07',
+      id: 'complex-04',
       category: 'complex',
       question: '请计算以下表达式的值（遵循标准运算优先级）：\n\n2 + 3 * 4 ** 2 - 10 / 2 + 7 % 3\n\n其中 ** 表示幂运算，% 表示取模。只回答数字。',
       answer_type: 'exact',
