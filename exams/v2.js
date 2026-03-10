@@ -116,6 +116,71 @@ const exam = {
       hint: '需在同一会话中完成三次请求。'
     },
 
+    // ==================== 信息检索 (search) ====================
+    {
+      id: 'search-01',
+      category: 'search',
+      question: '请通过网络搜索查询：港股腾讯控股（股票代码 0700.HK）在 2025 年 1 月 2 日（港股 2025 年首个交易日）的收盘价是多少港元？\n只提交数字，精确到小数点后一位，如 "700.0"。',
+      answer_type: 'exact',
+      expected: '416.0',
+      score: 10,
+      hint: '需要搜索港股历史行情数据。注意 1 月 1 日是元旦休市，首个交易日是 1 月 2 日。'
+    },
+    {
+      id: 'search-02',
+      category: 'search',
+      question: '请通过网络搜索查询：A股贵州茅台（股票代码 600519）在 2025 年 1 月 2 日的收盘价是多少元人民币？\n只提交数字，精确到小数点后一位，如 "2000.0"。',
+      answer_type: 'exact',
+      expected: '1488.0',
+      score: 10,
+      hint: '需要搜索 A 股历史行情数据。'
+    },
+    {
+      id: 'search-03',
+      category: 'search',
+      question: '请通过网络搜索查询：恒生指数在 2025 年 1 月 2 日的收盘点位是多少？\n只提交数字，精确到小数点后两位，如 "19623.32"。',
+      answer_type: 'exact',
+      expected: '19623.32',
+      score: 10,
+      hint: '需要搜索恒生指数历史数据。'
+    },
+    {
+      id: 'search-04',
+      category: 'search',
+      question: '请通过网络搜索查询：2024 年诺贝尔物理学奖授予了哪两位科学家？请按姓氏字母顺序回答，用英文逗号加空格分隔两人的全名。\n格式示例："Albert Einstein, Niels Bohr"',
+      answer_type: 'regex',
+      expected: '^Geoffrey\\s+(Everest\\s+)?Hinton,\\s*John\\s+(Joseph\\s+)?Hopfield$',
+      score: 8,
+      hint: '2024 年诺贝尔物理学奖与人工智能/神经网络有关。'
+    },
+    {
+      id: 'search-05',
+      category: 'search',
+      question: '请通过网络搜索查询：根据中国国家统计局公布的数据，2024 年全年中国国内生产总值（GDP）是多少亿元人民币？\n只提交整数，如 "10000"。',
+      answer_type: 'exact',
+      expected: '1349084',
+      score: 10,
+      hint: '国家统计局 2025 年 1 月 17 日发布了 2024 年经济数据。'
+    },
+    {
+      id: 'search-06',
+      category: 'search',
+      question: '请通过网络搜索查询：SpaceX 星舰（Starship）在 2024 年实现了超重型助推器（Super Heavy Booster）被发射塔机械臂（"筷子"）成功捕获回收，这是星舰的第几次试飞？\n只提交数字，如 "5"。',
+      answer_type: 'exact',
+      expected: '5',
+      score: 8,
+      hint: '这次历史性的回收发生在 2024 年 10 月。'
+    },
+    {
+      id: 'search-07',
+      category: 'search',
+      question: '请通过网络搜索查询：2024 年全球电影票房排名第一的电影是哪部？请回答中文片名（不含书名号）。',
+      answer_type: 'exact',
+      expected: '头脑特工队2',
+      score: 8,
+      hint: '这是一部皮克斯动画电影的续集。'
+    },
+
     // ==================== 综合推理与编码 (complex) ====================
     {
       id: 'complex-01',

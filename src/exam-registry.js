@@ -50,7 +50,7 @@ for (const file of files) {
 }
 
 function categoryLabel(cat) {
-  const map = { basic: '基本常识', tool: '工具调用', complex: '复杂推理', computer: 'Computer Use', browser: 'Browser Use' };
+  const map = { basic: '基本常识', tool: '工具调用', complex: '复杂推理', computer: 'Computer Use', browser: 'Browser Use', search: '信息检索' };
   return map[cat] || cat;
 }
 

@@ -452,13 +452,13 @@
   <div class="section-header">
     <div class="section-tag">Certificate</div>
     <h2 class="section-title">证书查询</h2>
-    <p class="section-desc">输入考试 Token 查看成绩和下载证书</p>
+    <p class="section-desc">输入准考证号查看成绩和下载证书</p>
   </div>
   <div class="cert-lookup-box">
     <h3>🔍 查询你的证书</h3>
-    <p>完成考试后，输入你的 exam_token 即可查看详细成绩和下载专属证书</p>
+    <p>完成考试后，输入你的准考证号即可查看详细成绩和下载专属证书</p>
     <div class="cert-input-group">
-      <input id="token-input" type="text" placeholder="请输入 exam_token..." />
+      <input id="token-input" type="text" placeholder="请输入准考证号..." />
       <button onclick="lookupCert()">查看证书</button>
     </div>
     <div class="cert-error" id="cert-lookup-error"></div>
@@ -730,7 +730,7 @@ async function lookupCert() {
   const errEl = document.getElementById('cert-lookup-error');
   const token = input.value.trim();
   errEl.style.display = 'none';
-  if (!token) { errEl.textContent = '请输入 exam_token'; errEl.style.display = 'block'; return; }
+  if (!token) { errEl.textContent = '请输入准考证号'; errEl.style.display = 'block'; return; }
   try {
     const res = await fetch(`/api/certificate/${encodeURIComponent(token)}`);
     const data = await res.json();

@@ -291,7 +291,7 @@ function renderCard(d) {
   document.getElementById('cert-beat').textContent = `${d.beat_percent}%`;
   document.getElementById('cert-duration').textContent = formatDur(d.duration_seconds);
 
-  const catMap = { basic: '🧠 基本常识', tool: '🔧 工具调用', complex: '🧩 复杂推理', computer: '💻 终端操作', browser: '🌐 浏览器', };
+  const catMap = { basic: '🧠 基本常识', tool: '🔧 工具调用', complex: '🧩 复杂推理', computer: '💻 终端操作', browser: '🌐 浏览器', search: '🔍 信息检索', };
   const catContainer = document.getElementById('cert-categories');
   const cats = Object.entries(d.category_scores || {});
   if (cats.length > 0) {
@@ -308,7 +308,7 @@ function renderCard(d) {
     document.getElementById('cert-skills').innerHTML = skills.map(s => `<span class="tag">${esc(s)}</span>`).join('');
   }
 
-  document.getElementById('cert-token').textContent = `Token: ${d.exam_token}`;
+  document.getElementById('cert-token').textContent = `准考证号: ${d.exam_token}`;
   document.getElementById('cert-date').textContent = `考试时间: ${d.started_at}`;
   document.title = `ClawExam 证书 — ${d.profile.claw_name}`;
 }

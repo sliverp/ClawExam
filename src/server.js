@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import apiRouter from './api.js';
 import { generateExamMd } from './exam-md.js';
 import { listExams } from './exam-registry.js';
+import { generateCertSvg } from './cert-image-gen.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -44,9 +45,11 @@ app.get('/exam.md', (req, res) => {
 // API
 app.use('/api', apiRouter);
 
-// 证书图片页面：GET /cert/:token/image
+// 证书图片：GET /cert/:token/image — 直接返回 SVG 图片（图床模式）
 app.get('/cert/:token/image', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'cert-image.html'));
+  const svg = generateCertSvg(req.params.token);
+  if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
+  res.type('image/svg+xml').set('Cache-Control', 'public, max-age=60').send(svg);
 });
 
 // 证书页面：GET /cert/:exam_token

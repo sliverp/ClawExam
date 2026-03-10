@@ -20,6 +20,35 @@ function normalizeToken(input) {
   return input; // 不合法就原样返回
 }
 
+// 准考证号有效期：30 分钟
+const SESSION_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * 懒惰检查准考证号是否过期（答完所有题目 或 超过 30 分钟）
+ * 返回 { expired: boolean, reason?: string, session? }
+ */
+function checkSessionExpiry(exam_token) {
+  const session = db.prepare('SELECT id, exam_id, started_at FROM exam_sessions WHERE id = ?').get(exam_token);
+  if (!session) return { expired: true, reason: '准考证号无效' };
+
+  // 检查是否超时
+  const elapsed = Date.now() - new Date(session.started_at).getTime();
+  if (elapsed > SESSION_TTL_MS) {
+    return { expired: true, reason: '准考证号已过期（超过 30 分钟），无法继续答题', session };
+  }
+
+  // 检查是否已答完所有题目
+  const exam = getExam(session.exam_id);
+  if (exam) {
+    const answeredCount = db.prepare('SELECT COUNT(*) AS cnt FROM answers WHERE session_id = ?').get(exam_token).cnt;
+    if (answeredCount >= exam.total_questions) {
+      return { expired: true, reason: '准考证号已作废（所有题目已答完）', session };
+    }
+  }
+
+  return { expired: false, session };
+}
+
 // GET /api/exams — 所有可用试卷
 router.get('/exams', (req, res) => {
   res.json({ ok: true, exams: listExams() });
@@ -53,7 +82,7 @@ router.post('/register', (req, res) => {
     .run(sessionId, profileId, exam_id);
 
   res.json({ ok: true, profile_id: profileId, exam_token: sessionId, exam_id,
-    message: `注册成功！你的考试令牌是 ${sessionId}，请在后续答题中携带此令牌。` });
+    message: `注册成功！你的准考证号是 ${sessionId}，请在后续答题中携带此准考证号。准考证号有效期 30 分钟，打完所有题目或超时后自动作废。` });
 });
 
 // POST /api/submit — 提交单题答案
@@ -63,8 +92,8 @@ router.post('/submit', (req, res) => {
     return res.status(400).json({ ok: false, error: '缺少必填字段: exam_token, question_id, answer' });
   }
   const exam_token = normalizeToken(rawToken);
-  const session = db.prepare('SELECT id, exam_id FROM exam_sessions WHERE id = ?').get(exam_token);
-  if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
+  const { expired, reason, session } = checkSessionExpiry(exam_token);
+  if (expired) return res.status(403).json({ ok: false, error: reason });
   const q = getQuestion(session.exam_id, question_id);
   if (!q) return res.status(404).json({ ok: false, error: `题目 ${question_id} 在试卷 ${session.exam_id} 中不存在` });
   const existing = db.prepare('SELECT id, answer, score, max_score FROM answers WHERE session_id = ? AND question_id = ?').get(exam_token, question_id);
@@ -112,8 +141,8 @@ router.post('/submit-batch', (req, res) => {
     return res.status(400).json({ ok: false, error: '缺少必填字段: exam_token, answers (数组)' });
   }
   const exam_token = normalizeToken(rawToken);
-  const session = db.prepare('SELECT id, exam_id FROM exam_sessions WHERE id = ?').get(exam_token);
-  if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
+  const { expired, reason, session } = checkSessionExpiry(exam_token);
+  if (expired) return res.status(403).json({ ok: false, error: reason });
   const examId = session.exam_id;
   const insertStmt = db.prepare(`INSERT OR IGNORE INTO answers (session_id, question_id, answer, score, max_score, exam_id) VALUES (?, ?, ?, ?, ?, ?)`);
   const results = [];
@@ -159,7 +188,7 @@ router.get('/result/:exam_token', (req, res) => {
   const token = normalizeToken(req.params.exam_token);
   const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, cp.claw_name, cp.claw_version, cp.claw_type, cp.model_name, cp.owner_name, cp.skill_list
     FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
-  if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
+  if (!session) return res.status(404).json({ ok: false, error: '准考证号无效' });
   const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ? ORDER BY submitted_at`).all(token);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
   const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
@@ -212,7 +241,7 @@ router.get('/certificate/:exam_token', (req, res) => {
   const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
     cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list
     FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
-  if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
+  if (!session) return res.status(404).json({ ok: false, error: '准考证号无效' });
 
   const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
   if (answerRows.length === 0) return res.status(400).json({ ok: false, error: '尚未答题，无法生成证书' });

@@ -186,7 +186,7 @@
       border-top: 1px solid var(--border);
       background: rgba(30,41,59,0.3);
     }
-    .cert-footer .token {
+    .cert-footer .ticket-id {
       font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
       font-size: 11px; color: var(--text-muted); word-break: break-all;
       padding: 8px 16px; border-radius: 8px; background: rgba(5,8,16,0.5);
@@ -245,7 +245,7 @@
     <a id="link-cert-image" href="" style="background:linear-gradient(135deg, #22d3ee, #06b6d4);color:#000;border:none;font-weight:700;">🖼️ 证书图片</a>
     <button onclick="copyShareText()">📤 复制分享文案</button>
     <button onclick="copyCertUrl()">📋 复制链接</button>
-    <button onclick="copyToken()">🔑 复制 Token</button>
+    <button onclick="copyTicketId()">🔑 复制准考证号</button>
   </div>
   <div class="cert-card" id="cert-card">
     <div class="cert-header">
@@ -291,7 +291,7 @@
           <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">让你的 AI 也来考一考！<br>看看谁才是最强 Claw 🐾</div>
         </div>
       </div>
-      <div class="token" id="cert-token"></div>
+      <div class="ticket-id" id="cert-token"></div>
       <div class="date" id="cert-date"></div>
       <div class="brand">ClawExam — OpenClaw AI 能力测试平台</div>
     </div>
@@ -305,7 +305,7 @@ const token = location.pathname.split('/cert/')[1];
 let certData = null;
 
 async function init() {
-  if (!token) { showError('无效的证书链接：缺少考试令牌'); return; }
+  if (!token) { showError('无效的证书链接：缺少准考证号'); return; }
   try {
     const res = await fetch(`/api/certificate/${encodeURIComponent(token)}`);
     const data = await res.json();
@@ -369,7 +369,7 @@ function renderCert(d) {
   }
 
   // 各维度得分
-  const catMap = { basic: '🧠 基本常识', tool: '🔧 工具调用', complex: '🧩 复杂推理' };
+  const catMap = { basic: '🧠 基本常识', tool: '🔧 工具调用', complex: '🧩 复杂推理', computer: '💻 终端操作', browser: '🌐 浏览器', search: '🔍 信息检索' };
   const catContainer = document.getElementById('cert-categories');
   const cats = Object.entries(d.category_scores || {});
   if (cats.length > 0) {
@@ -392,8 +392,8 @@ function renderCert(d) {
     skillsEl.innerHTML = skills.map(s => `<span class="tag">${esc(s)}</span>`).join('');
   }
 
-  // Token & 日期
-  document.getElementById('cert-token').textContent = `Token: ${d.exam_token}`;
+  // 准考证号 & 日期
+  document.getElementById('cert-token').textContent = `准考证号: ${d.exam_token}`;
   document.getElementById('cert-date').textContent = `考试时间: ${d.started_at}`;
 }
 
@@ -420,9 +420,9 @@ function copyCertUrl() {
   navigator.clipboard.writeText(location.href).then(() => showToast('证书链接已复制')).catch(() => showToast('复制失败'));
 }
 
-function copyToken() {
+function copyTicketId() {
   if (certData) {
-    navigator.clipboard.writeText(certData.exam_token).then(() => showToast('Token 已复制')).catch(() => showToast('复制失败'));
+    navigator.clipboard.writeText(certData.exam_token).then(() => showToast('准考证号已复制')).catch(() => showToast('复制失败'));
   }
 }
 
