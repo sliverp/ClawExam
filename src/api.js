@@ -31,8 +31,9 @@ function checkSessionExpiry(exam_token) {
   const session = db.prepare('SELECT id, exam_id, started_at FROM exam_sessions WHERE id = ?').get(exam_token);
   if (!session) return { expired: true, reason: '准考证号无效' };
 
-  // 检查是否超时
-  const elapsed = Date.now() - new Date(session.started_at).getTime();
+  // 检查是否超时（started_at 是 SQLite datetime('now') 存储的 UTC 时间，需要确保解析为 UTC）
+  const startedAtUtc = session.started_at.endsWith('Z') ? session.started_at : session.started_at + 'Z';
+  const elapsed = Date.now() - new Date(startedAtUtc).getTime();
   if (elapsed > SESSION_TTL_MS) {
     return { expired: true, reason: '准考证号已过期（超过 30 分钟），无法继续答题', session };
   }
