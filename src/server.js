@@ -43,6 +43,11 @@ app.get('/exam.md', (req, res) => {
 // API
 app.use('/api', apiRouter);
 
+// 证书页面：GET /cert/:exam_token
+app.get('/cert/:token', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'cert.html'));
+});
+
 // SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));

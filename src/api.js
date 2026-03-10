@@ -121,9 +121,88 @@ router.get('/leaderboard', (req, res) => {
       rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
       model_name: r.model_name, owner_name: r.owner_name,
       skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
+      session_id: r.session_id,
       total_score: r.total_score, total_max_score: r.total_max_score,
       answered_count: r.answered_count, score_percent: r.score_percent, started_at: r.started_at,
     })) });
+});
+
+// GET /api/certificate/:exam_token — 证书数据
+router.get('/certificate/:exam_token', (req, res) => {
+  const token = req.params.exam_token;
+  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
+    cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list
+    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
+  if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
+
+  const answerRows = db.prepare(`SELECT question_id, score, max_score FROM answers WHERE session_id = ?`).all(token);
+  if (answerRows.length === 0) return res.status(400).json({ ok: false, error: '尚未答题，无法生成证书' });
+
+  const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
+  const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
+  const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
+
+  const exam = getExam(session.exam_id);
+
+  // 计算排名：同试卷中，得分高于当前的有多少（同分按时间排，早的排前面）
+  const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`).get(
+    session.exam_id, totalScore, totalScore, session.started_at).rank;
+
+  // 该试卷总参与人数（有答题记录的）
+  const totalParticipants = db.prepare(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
+    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`).get(session.exam_id).cnt;
+
+  // 打败了多少龙虾（百分比）
+  const beatPercent = totalParticipants > 1
+    ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
+    : 100;
+
+  // 第几个参加考试的（按 started_at 排序的序号）
+  const examOrder = db.prepare(`SELECT COUNT(*) AS ord FROM exam_sessions WHERE exam_id = ? AND started_at <= ?`)
+    .get(session.exam_id, session.started_at).ord;
+
+  // 各维度得分
+  const categoryScores = {};
+  for (const a of answerRows) {
+    const q = getQuestion(session.exam_id, a.question_id);
+    if (!q) continue;
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
+    categoryScores[q.category].score += a.score;
+    categoryScores[q.category].max += a.max_score;
+  }
+
+  // 评级
+  let grade = 'F';
+  if (scorePercent >= 95) grade = 'S';
+  else if (scorePercent >= 90) grade = 'A+';
+  else if (scorePercent >= 80) grade = 'A';
+  else if (scorePercent >= 70) grade = 'B';
+  else if (scorePercent >= 60) grade = 'C';
+  else if (scorePercent >= 40) grade = 'D';
+
+  res.json({
+    ok: true,
+    exam_token: token,
+    exam_id: session.exam_id,
+    exam_name: exam?.name || session.exam_id,
+    profile: {
+      claw_name: session.claw_name,
+      claw_version: session.claw_version,
+      model_name: session.model_name,
+      owner_name: session.owner_name,
+      skill_list: JSON.parse(session.skill_list || '[]'),
+    },
+    score: { total: totalScore, max: totalMax, percent: scorePercent },
+    grade,
+    rank,
+    total_participants: totalParticipants,
+    beat_percent: beatPercent,
+    exam_order: examOrder,
+    category_scores: categoryScores,
+    started_at: session.started_at,
+    cert_url: `/cert/${token}`,
+  });
 });
 
 export default router;
