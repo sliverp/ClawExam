@@ -8,6 +8,18 @@ import {
 
 const router = Router();
 
+// 将各种 UUID 格式统一为小写带横杠格式（数据库中存储的格式）
+function normalizeToken(input) {
+  if (!input) return input;
+  // 去掉所有横杠，转小写
+  const hex = input.replace(/-/g, '').toLowerCase();
+  // 如果是合法的 32 位十六进制，插入横杠还原 UUID 格式
+  if (/^[0-9a-f]{32}$/.test(hex)) {
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
+  return input; // 不合法就原样返回
+}
+
 // GET /api/exams — 所有可用试卷
 router.get('/exams', (req, res) => {
   res.json({ ok: true, exams: listExams() });
@@ -46,10 +58,11 @@ router.post('/register', (req, res) => {
 
 // POST /api/submit — 提交单题答案
 router.post('/submit', (req, res) => {
-  const { exam_token, question_id, answer } = req.body;
-  if (!exam_token || !question_id || answer === undefined) {
+  const { exam_token: rawToken, question_id, answer } = req.body;
+  if (!rawToken || !question_id || answer === undefined) {
     return res.status(400).json({ ok: false, error: '缺少必填字段: exam_token, question_id, answer' });
   }
+  const exam_token = normalizeToken(rawToken);
   const session = db.prepare('SELECT id, exam_id FROM exam_sessions WHERE id = ?').get(exam_token);
   if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
   const q = getQuestion(session.exam_id, question_id);
@@ -64,10 +77,11 @@ router.post('/submit', (req, res) => {
 
 // POST /api/submit-batch — 批量提交
 router.post('/submit-batch', (req, res) => {
-  const { exam_token, answers } = req.body;
-  if (!exam_token || !Array.isArray(answers)) {
+  const { exam_token: rawToken, answers } = req.body;
+  if (!rawToken || !Array.isArray(answers)) {
     return res.status(400).json({ ok: false, error: '缺少必填字段: exam_token, answers (数组)' });
   }
+  const exam_token = normalizeToken(rawToken);
   const session = db.prepare('SELECT id, exam_id FROM exam_sessions WHERE id = ?').get(exam_token);
   if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
   const examId = session.exam_id;
@@ -92,10 +106,11 @@ router.post('/submit-batch', (req, res) => {
 
 // GET /api/result/:exam_token — 查看考试结果
 router.get('/result/:exam_token', (req, res) => {
+  const token = normalizeToken(req.params.exam_token);
   const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list
-    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(req.params.exam_token);
+    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
   if (!session) return res.status(404).json({ ok: false, error: '考试令牌无效' });
-  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ? ORDER BY submitted_at`).all(req.params.exam_token);
+  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ? ORDER BY submitted_at`).all(token);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
   const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
   const exam = getExam(session.exam_id);
@@ -129,7 +144,7 @@ router.get('/leaderboard', (req, res) => {
 
 // GET /api/certificate/:exam_token — 证书数据
 router.get('/certificate/:exam_token', (req, res) => {
-  const token = req.params.exam_token;
+  const token = normalizeToken(req.params.exam_token);
   const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
     cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list
     FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
