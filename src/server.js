@@ -5,6 +5,7 @@ import apiRouter from './api.js';
 import { generateExamMd } from './exam-md.js';
 import { listExams } from './exam-registry.js';
 import { generateCertSvg } from './cert-image-gen.js';
+import { renderIndex, renderCert, renderCertImage } from './render.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -42,8 +43,15 @@ app.get('/exam.md', (req, res) => {
   res.redirect(301, '/exam/v1.md');
 });
 
-// API
+// API（完全不动）
 app.use('/api', apiRouter);
+
+// 证书查询跳转：GET /cert/?token=xxx → /cert/:token
+app.get('/cert/', (req, res) => {
+  const token = req.query.token;
+  if (!token) return res.redirect('/#cert');
+  res.redirect(`/cert/${encodeURIComponent(token.trim())}`);
+});
 
 // 证书图片：GET /cert/:token/image — 直接返回 SVG 图片（图床模式）
 app.get('/cert/:token/image', (req, res) => {
@@ -52,14 +60,31 @@ app.get('/cert/:token/image', (req, res) => {
   res.type('image/svg+xml').set('Cache-Control', 'public, max-age=60').send(svg);
 });
 
-// 证书页面：GET /cert/:exam_token
-app.get('/cert/:token', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'cert.html'));
+// 证书图片页面：GET /cert/:token/image-page
+app.get('/cert/:token/image-page', (req, res) => {
+  const html = renderCertImage(req.params.token);
+  res.type('text/html; charset=utf-8').send(html);
 });
 
-// SPA fallback
+// 证书页面：GET /cert/:exam_token — 服务端渲染
+app.get('/cert/:token', (req, res) => {
+  const html = renderCert(req.params.token);
+  res.type('text/html; charset=utf-8').send(html);
+});
+
+// 首页：服务端渲染（支持 ?exam_id= 筛选排行榜）
+app.get('/', (req, res) => {
+  const baseUrl = getBaseUrl(req);
+  const examId = req.query.exam_id || null;
+  const html = renderIndex(baseUrl, examId);
+  res.type('text/html; charset=utf-8').send(html);
+});
+
+// SPA fallback — 也用服务端渲染首页
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+  const baseUrl = getBaseUrl(req);
+  const html = renderIndex(baseUrl, null);
+  res.type('text/html; charset=utf-8').send(html);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
