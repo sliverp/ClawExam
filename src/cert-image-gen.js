@@ -22,8 +22,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let qrcodeBase64 = '';
 try {
   const qrPath = path.join(__dirname, '..', 'data', 'qrcode.png');
+  console.log('二维码路径:', qrPath, '存在:', fs.existsSync(qrPath));
   const qrBuf = fs.readFileSync(qrPath);
   qrcodeBase64 = `data:image/png;base64,${qrBuf.toString('base64')}`;
+  console.log('二维码加载成功, base64 长度:', qrcodeBase64.length);
 } catch (e) {
   console.warn('二维码图片加载失败:', e.message);
 }
@@ -200,7 +202,7 @@ export function generateCertSvg(rawToken) {
   let curY = 0;
 
   // ===== 开始拼接 SVG =====
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">
   <defs>
     <style>
       text { font-family: 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
@@ -403,7 +405,7 @@ export function generateCertSvg(rawToken) {
     const qrY = footerY + (footerContentH - qrSize) / 2;
     svg += `<rect x="${qrX - 6 + 3}" y="${qrY - 6 + 3}" width="${qrSize + 12}" height="${qrSize + 12}" fill="#333"/>`;
     svg += `<rect x="${qrX - 6}" y="${qrY - 6}" width="${qrSize + 12}" height="${qrSize + 12}" fill="${COLORS.white}" stroke="#444" stroke-width="2"/>`;
-    svg += `<image href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
+    svg += `<image xlink:href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
   } else {
     // 无二维码时居中显示文字
     svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 18 + 3}" width="460" height="26" fill="#333"/>`;

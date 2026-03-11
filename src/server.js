@@ -59,6 +59,7 @@ app.get('/cert/:token/image', (req, res) => {
   try {
     const svg = generateCertSvg(req.params.token);
     if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
+    console.log('SVG 包含 image 标签:', svg.includes('<image'), 'SVG 长度:', svg.length);
     const resvg = new Resvg(svg, {
       fitTo: { mode: 'width', value: 800 },
       font: {
