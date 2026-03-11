@@ -10,8 +10,23 @@
  * - Space Grotesk 字体
  */
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import db from './db.js';
 import { getExam, getQuestion } from './exam-registry.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// 预加载二维码图片为 base64（只读一次）
+let qrcodeBase64 = '';
+try {
+  const qrPath = path.join(__dirname, '..', 'data', 'qrcode.png');
+  const qrBuf = fs.readFileSync(qrPath);
+  qrcodeBase64 = `data:image/png;base64,${qrBuf.toString('base64')}`;
+} catch (e) {
+  console.warn('二维码图片加载失败:', e.message);
+}
 
 function normalizeToken(input) {
   if (!input) return input;
@@ -177,7 +192,7 @@ export function generateCertSvg(rawToken) {
   const catRowH = 52;
   const catSectionH = cats.length > 0 ? cats.length * catRowH + 20 : 0;
   const skillSectionH = skills.length > 0 ? 70 : 0;
-  const footerH = 120;
+  const footerH = 130;
   const padding = 30;
 
   const totalH = headerH + clawInfoH + gradeH + statsH + catTitleH + catSectionH + skillSectionH + footerH + padding * 2;
@@ -213,7 +228,7 @@ export function generateCertSvg(rawToken) {
   svg += `
   <rect x="0" y="0" width="${contentW}" height="${headerH}" fill="${COLORS.red}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
   <text x="${contentW / 2}" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="${COLORS.yellow}" letter-spacing="6" text-transform="uppercase">CLAWEXAM CERTIFICATE</text>
-  <text x="${contentW / 2}" y="72" text-anchor="middle" font-size="32" font-weight="800" fill="${COLORS.white}">&#x1F99E; 能力认证证书</text>
+  <text x="${contentW / 2}" y="72" text-anchor="middle" font-size="32" font-weight="800" fill="${COLORS.white}">能力认证证书</text>
   <text x="${contentW / 2}" y="92" text-anchor="middle" font-size="14" font-weight="600" fill="${COLORS.yellow}">${esc(d.exam_name)}</text>`;
   curY = headerH;
 
@@ -357,23 +372,46 @@ export function generateCertSvg(rawToken) {
     curY += tagH + skillSectionH - tagH;
   }
 
-  // ===== 底部信息 =====
+  // ===== 底部信息 + 二维码 =====
   svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
 
-  // 底部黑色区域
   const footerY = curY;
-  svg += `<rect x="0" y="${footerY}" width="${contentW}" height="${contentH - footerY}" fill="${COLORS.fg}"/>`;
+  const qrSize = 100;
+  const footerContentH = 130;
+  svg += `<rect x="0" y="${footerY}" width="${contentW}" height="${footerContentH}" fill="${COLORS.fg}"/>`;
 
-  // 准考证号
-  svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 18 + 3}" width="460" height="30" fill="#333"/>`;
-  svg += `<rect x="${contentW / 2 - 230}" y="${footerY + 18}" width="460" height="30" fill="#222" stroke="#444" stroke-width="2"/>`;
-  svg += `<text x="${contentW / 2}" y="${footerY + 38}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+  if (qrcodeBase64) {
+    // 左侧：文字信息
+    const textCenterX = (contentW - qrSize - 40) / 2;
 
-  // 考试时间
-  svg += `<text x="${contentW / 2}" y="${footerY + 68}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+    // 准考证号
+    svg += `<rect x="${textCenterX - 200 + 3}" y="${footerY + 14 + 3}" width="400" height="26" fill="#333"/>`;
+    svg += `<rect x="${textCenterX - 200}" y="${footerY + 14}" width="400" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 32}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
 
-  // 品牌
-  svg += `<text x="${contentW / 2}" y="${footerY + 96}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">&#x1F99E; ClawExam — OpenClaw AI 能力测试平台</text>`;
+    // 考试时间
+    svg += `<text x="${textCenterX}" y="${footerY + 60}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+
+    // 品牌
+    svg += `<text x="${textCenterX}" y="${footerY + 84}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+
+    // 扫码提示
+    svg += `<text x="${textCenterX}" y="${footerY + 106}" text-anchor="middle" font-size="11" fill="#666">扫描右侧二维码查看完整证书 →</text>`;
+
+    // 右侧：二维码（白色背景框 + 二维码图片）
+    const qrX = contentW - qrSize - 24;
+    const qrY = footerY + (footerContentH - qrSize) / 2;
+    svg += `<rect x="${qrX - 6 + 3}" y="${qrY - 6 + 3}" width="${qrSize + 12}" height="${qrSize + 12}" fill="#333"/>`;
+    svg += `<rect x="${qrX - 6}" y="${qrY - 6}" width="${qrSize + 12}" height="${qrSize + 12}" fill="${COLORS.white}" stroke="#444" stroke-width="2"/>`;
+    svg += `<image href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
+  } else {
+    // 无二维码时居中显示文字
+    svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 18 + 3}" width="460" height="26" fill="#333"/>`;
+    svg += `<rect x="${contentW / 2 - 230}" y="${footerY + 18}" width="460" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 36}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 66}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 96}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+  }
 
   svg += '\n</svg>';
 
