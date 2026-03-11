@@ -192,8 +192,9 @@ router.get('/result/:exam_token', (req, res) => {
   if (!session) return res.status(404).json({ ok: false, error: '准考证号无效' });
   const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ? ORDER BY submitted_at`).all(token);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
   const exam = getExam(session.exam_id);
+  // 总分分母使用试卷满分，未答题以 0 分计入
+  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
 
   // 计算作答用时（秒）
   let durationSeconds = 0;
@@ -221,19 +222,33 @@ router.get('/leaderboard', (req, res) => {
   } else {
     rows = db.prepare('SELECT * FROM leaderboard LIMIT 100').all();
   }
-  const exam = examId ? getExam(examId) : null;
-  res.json({ ok: true, exam_id: examId || null, exam_name: exam?.name || null,
-    leaderboard: rows.map((r, i) => ({
-      rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
-      claw_type: r.claw_type || 'OpenClaw',
-      model_name: r.model_name, owner_name: r.owner_name,
-      skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
-      session_id: r.session_id,
-      total_score: r.total_score, total_max_score: r.total_max_score,
-      answered_count: r.answered_count, score_percent: r.score_percent,
-      duration_seconds: r.duration_seconds || 0,
-      started_at: r.started_at,
-    })) });
+  // 缓存试卷满分，用于修正 score_percent（VIEW 中只统计已答题满分，未答题需补0）
+  const examScoreCache = {};
+  const getExamTotalScore = (eid) => {
+    if (!(eid in examScoreCache)) {
+      const e = getExam(eid);
+      examScoreCache[eid] = e?.total_score || 0;
+    }
+    return examScoreCache[eid];
+  };
+
+  const examMeta = examId ? getExam(examId) : null;
+  res.json({ ok: true, exam_id: examId || null, exam_name: examMeta?.name || null,
+    leaderboard: rows.map((r, i) => {
+      const realMax = getExamTotalScore(r.exam_id) || r.total_max_score;
+      const realPercent = realMax > 0 ? Math.round(r.total_score * 1000 / realMax) / 10 : 0;
+      return {
+        rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
+        claw_type: r.claw_type || 'OpenClaw',
+        model_name: r.model_name, owner_name: r.owner_name,
+        skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
+        session_id: r.session_id,
+        total_score: r.total_score, total_max_score: realMax,
+        answered_count: r.answered_count, score_percent: realPercent,
+        duration_seconds: r.duration_seconds || 0,
+        started_at: r.started_at,
+      };
+    }) });
 });
 
 // GET /api/certificate/:exam_token — 证书数据
@@ -247,8 +262,10 @@ router.get('/certificate/:exam_token', (req, res) => {
   const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
   if (answerRows.length === 0) return res.status(400).json({ ok: false, error: '尚未答题，无法生成证书' });
 
+  const exam = getExam(session.exam_id);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
+  // 总分分母使用试卷满分，未答题以 0 分计入
+  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   // 计算作答用时（秒）
@@ -256,8 +273,6 @@ router.get('/certificate/:exam_token', (req, res) => {
   const lastSubmitMs = submittedTimes.length > 0 ? Math.max(...submittedTimes) : 0;
   const startMs = new Date(session.started_at).getTime();
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
-
-  const exam = getExam(session.exam_id);
 
   // 计算排名：同试卷中，得分高于当前的有多少（同分按时间排，早的排前面）
   const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
@@ -277,14 +292,19 @@ router.get('/certificate/:exam_token', (req, res) => {
   const examOrder = db.prepare(`SELECT COUNT(*) AS ord FROM exam_sessions WHERE exam_id = ? AND started_at <= ?`)
     .get(session.exam_id, session.started_at).ord;
 
-  // 各维度得分
+  // 各维度得分：先从试卷定义初始化所有分类（确保未答分类也显示）
   const categoryScores = {};
+  if (exam) {
+    for (const q of exam.questions) {
+      if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
+      else categoryScores[q.category].max += q.score;
+    }
+  }
   for (const a of answerRows) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
-    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: a.max_score };
     categoryScores[q.category].score += a.score;
-    categoryScores[q.category].max += a.max_score;
   }
 
   // 评级

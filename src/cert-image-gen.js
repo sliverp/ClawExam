@@ -102,16 +102,16 @@ function getCertData(rawToken) {
   const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
   if (answerRows.length === 0) return null;
 
+  const exam = getExam(session.exam_id);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  const totalMax = answerRows.reduce((s, a) => s + a.max_score, 0);
+  // 总分分母使用试卷满分，未答题以 0 分计入
+  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
   const lastSubmitMs = submittedTimes.length > 0 ? Math.max(...submittedTimes) : 0;
   const startMs = new Date(session.started_at).getTime();
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
-
-  const exam = getExam(session.exam_id);
 
   const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
     WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`).get(
@@ -124,13 +124,19 @@ function getCertData(rawToken) {
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
+  // 各维度得分：先从试卷定义初始化所有分类（确保未答题的分类也显示）
   const categoryScores = {};
+  if (exam) {
+    for (const q of exam.questions) {
+      if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
+      else categoryScores[q.category].max += q.score;
+    }
+  }
   for (const a of answerRows) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
-    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: a.max_score };
     categoryScores[q.category].score += a.score;
-    categoryScores[q.category].max += a.max_score;
   }
 
   let grade = 'F';
