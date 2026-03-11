@@ -917,7 +917,12 @@ export function renderCert(rawToken) {
     ${BASE_CSS}
 
     /* === CERT CONTENT === */
-    .cert-content{position:relative;z-index:1}
+    .cert-content{
+      position:relative;z-index:1;
+      max-width:720px;margin:40px auto 48px;
+      border:var(--bw) solid var(--fg);box-shadow:var(--shadow-xl);
+      background:var(--white);
+    }
     .cert-header{
       background:var(--red);color:var(--white);text-align:center;
       padding:36px 24px 28px;border-bottom:var(--bw) solid var(--fg);
@@ -963,7 +968,7 @@ export function renderCert(rawToken) {
     .stat-val{font-size:30px;font-weight:800;font-family:'Syne',system-ui,sans-serif}
     .stat-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#777;margin-top:6px}
 
-    .cats-section{max-width:700px;margin:0 auto;padding:44px 24px}
+    .cats-section{padding:44px 24px}
     .cats-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:24px;text-align:center;font-family:'Syne',system-ui,sans-serif}
     .cat-row{
       display:flex;align-items:center;gap:12px;margin-bottom:14px;
@@ -1010,6 +1015,7 @@ export function renderCert(rawToken) {
     .token-val{font-family:'Courier New',monospace;font-size:13px;color:#777}
 
     @media(max-width:768px){
+      .cert-content{margin:0 auto;border-left:none;border-right:none;box-shadow:none}
       .stats-grid{grid-template-columns:repeat(2,1fr)}
       .stat-cell:nth-child(2){border-right:none}
       .stat-cell:nth-child(1),.stat-cell:nth-child(2){border-bottom:var(--bw) solid var(--fg)}
