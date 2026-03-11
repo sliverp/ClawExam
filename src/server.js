@@ -5,6 +5,7 @@ import apiRouter from './api.js';
 import { generateExamMd } from './exam-md.js';
 import { listExams } from './exam-registry.js';
 import { generateCertSvg } from './cert-image-gen.js';
+import { Resvg } from '@resvg/resvg-js';
 import { renderIndex, renderCert, renderCertImage } from './render.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,11 +54,25 @@ app.get('/cert/', (req, res) => {
   res.redirect(`/cert/${encodeURIComponent(token.trim())}`);
 });
 
-// 证书图片：GET /cert/:token/image — 直接返回 SVG 图片（图床模式）
+// 证书图片：GET /cert/:token/image — 返回 PNG 图片（图床模式）
 app.get('/cert/:token/image', (req, res) => {
-  const svg = generateCertSvg(req.params.token);
-  if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
-  res.type('image/svg+xml').set('Cache-Control', 'public, max-age=60').send(svg);
+  try {
+    const svg = generateCertSvg(req.params.token);
+    if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
+    const resvg = new Resvg(svg, {
+      fitTo: { mode: 'width', value: 800 },
+      font: { loadSystemFonts: true },
+    });
+    const pngData = resvg.render();
+    const pngBuffer = pngData.asPng();
+    res.type('image/png')
+      .set('Cache-Control', 'public, max-age=300')
+      .set('Content-Length', pngBuffer.length)
+      .send(pngBuffer);
+  } catch (err) {
+    console.error('证书图片生成失败:', err);
+    res.status(500).type('text/plain').send('图片生成失败');
+  }
 });
 
 // 证书图片页面：GET /cert/:token/image-page
