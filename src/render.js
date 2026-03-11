@@ -270,7 +270,7 @@ export function renderIndex(baseUrl, examId = null) {
       background-image:radial-gradient(rgba(255,217,61,0.06) 1px,transparent 1px);
       background-size:24px 24px;pointer-events:none;
     }
-    .lb-wrap{max-width:1200px;margin:0 auto;position:relative}
+    .lb-wrap{max-width:1600px;margin:0 auto;position:relative}
     .lb-tabs{display:flex;gap:0;margin-bottom:0;flex-wrap:wrap}
     .lb-tab{
       padding:14px 28px;font-size:14px;font-weight:800;text-transform:uppercase;
@@ -287,20 +287,20 @@ export function renderIndex(baseUrl, examId = null) {
     }
     .lb-table{width:100%;border-collapse:collapse;font-size:14px;color:var(--fg)}
     .lb-table th{
-      background:var(--red);color:var(--white);padding:14px 12px;text-align:left;
-      font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;
+      background:var(--red);color:var(--white);padding:12px 8px;text-align:left;
+      font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;
       white-space:nowrap;border-bottom:var(--bw) solid var(--fg);
       font-family:'Syne',system-ui,sans-serif;
     }
     .lb-table td{
-      padding:12px;border-bottom:2px solid #f0ead6;font-weight:600;
-      vertical-align:middle;font-size:14px;color:var(--fg);
+      padding:10px 8px;border-bottom:2px solid #f0ead6;font-weight:600;
+      vertical-align:middle;font-size:13px;color:var(--fg);
     }
     .lb-table tr:hover td{background:#FFF8E1}
     .lb-rank{
       display:inline-flex;align-items:center;justify-content:center;
-      width:38px;height:38px;font-weight:800;font-size:16px;
-      border:var(--bw) solid var(--fg);box-shadow:3px 3px 0 var(--fg);
+      width:32px;height:32px;font-weight:800;font-size:14px;
+      border:var(--bw) solid var(--fg);box-shadow:2px 2px 0 var(--fg);
       font-family:'Syne',system-ui,sans-serif;
     }
     .lb-rank-1{background:var(--yellow)}
@@ -327,7 +327,7 @@ export function renderIndex(baseUrl, examId = null) {
     .lb-score{font-weight:800;font-size:16px;font-family:'Syne',system-ui,sans-serif}
     .lb-pct-wrap{display:flex;align-items:center;gap:6px}
     .lb-pct-num{font-weight:800;font-size:14px;min-width:38px}
-    .lb-bar{width:70px;height:12px;background:#f0ead6;border:2px solid var(--fg);display:inline-block;vertical-align:middle}
+    .lb-bar{width:50px;height:10px;background:#f0ead6;border:2px solid var(--fg);display:inline-block;vertical-align:middle}
     .lb-bar-fill{height:100%;background:var(--red);display:block}
     .lb-time{font-size:12px;font-weight:700;color:#666;font-family:'Courier New',monospace}
     .lb-cert{
