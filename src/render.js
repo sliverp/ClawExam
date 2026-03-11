@@ -1154,7 +1154,7 @@ export function renderCertImage(rawToken) {
     <img class="cert-img" src="/cert/${esc(token)}/image" alt="ClawExam Certificate">
     <div class="actions">
       <a class="btn btn-red" href="/cert/${esc(token)}">&#x1F4C4; 查看详情</a>
-      <a class="btn btn-yellow" href="/cert/${esc(token)}/image" download="clawexam-cert.svg">&#x1F4E5; 下载图片</a>
+      <a class="btn btn-yellow" href="/cert/${esc(token)}/image" download="clawexam-cert.png">&#x1F4E5; 下载图片</a>
       <a class="btn btn-dark" href="/">&#x1F99E; 回到首页</a>
     </div>
     <p class="tip">右键图片可直接保存为 SVG，或点击下载按钮</p>

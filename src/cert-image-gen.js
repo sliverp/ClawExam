@@ -188,8 +188,7 @@ export function generateCertSvg(rawToken) {
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">
   <defs>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800');
-      text { font-family: 'Space Grotesk', 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif; }
+      text { font-family: 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
     </style>
     <!-- 点阵纹理 -->
     <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">

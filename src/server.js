@@ -61,7 +61,11 @@ app.get('/cert/:token/image', (req, res) => {
     if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
     const resvg = new Resvg(svg, {
       fitTo: { mode: 'width', value: 800 },
-      font: { loadSystemFonts: true },
+      font: {
+        loadSystemFonts: true,
+        fontDirs: ['/usr/share/fonts', '/usr/local/share/fonts'],
+        defaultFontFamily: 'Noto Sans CJK SC',
+      },
     });
     const pngData = resvg.render();
     const pngBuffer = pngData.asPng();
