@@ -873,10 +873,15 @@ export async function renderCert(rawToken) {
 
   // 各维度得分：基于 session_questions 中的实际题目
   const categoryScores = {};
-  const sessionQIds = new Set(sessionQuestionIds.map(r => r.question_id));
+  // 如果 session_questions 为空（旧数据），用 answerRows 的 question_id 回退
+  const sessionQIds = new Set(
+    sessionQuestionIds.length > 0
+      ? sessionQuestionIds.map(r => r.question_id)
+      : answerRows.map(r => r.question_id)
+  );
   if (exam) {
     for (const q of exam.questions) {
-      if (sessionQIds.size > 0 && !sessionQIds.has(q.id)) continue;
+      if (!sessionQIds.has(q.id)) continue;
       if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
       else categoryScores[q.category].max += q.score;
     }
