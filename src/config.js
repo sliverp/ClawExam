@@ -29,6 +29,11 @@ const config = {
     timezone: '+00:00',
     // 支持多条语句（迁移需要）
     multipleStatements: true,
+    // 掉线重连相关配置
+    enableKeepAlive: true,           // 开启 TCP keep-alive，防止被防火墙/NAT 切断
+    keepAliveInitialDelay: 30000,    // keep-alive 首次探测延迟 30s
+    idleTimeout: 60000,              // 空闲连接 60s 后自动释放，避免拿到被服务端关闭的死连接
+    maxIdle: 5,                      // 最大空闲连接数，超出的空闲连接会被关闭
   },
   port: parseInt(process.env.PORT || '3210', 10),
 };
