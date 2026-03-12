@@ -107,7 +107,7 @@ router.post('/register', async (req, res) => {
     // 随机组卷
     const questionIds = pickRandomQuestions(exam_id);
 
-    // 事务：创建档案 + 会话 + 组卷
+    // 事务：创建档案 + 会话 + 组卷（批量 INSERT 减少连接占用时间）
     await db.transaction(async (conn) => {
       await conn.run(`INSERT INTO claw_profiles (id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -118,10 +118,13 @@ router.post('/register', async (req, res) => {
       await conn.run('INSERT INTO exam_sessions (id, profile_id, exam_id) VALUES (?, ?, ?)',
         [sessionId, profileId, exam_id]);
 
+      // 批量插入组卷记录，一条 SQL 搞定，不再逐条 INSERT
+      const placeholders = questionIds.map(() => '(?, ?, ?)').join(', ');
+      const values = [];
       for (let i = 0; i < questionIds.length; i++) {
-        await conn.run('INSERT INTO session_questions (session_id, question_id, seq) VALUES (?, ?, ?)',
-          [sessionId, questionIds[i], i + 1]);
+        values.push(sessionId, questionIds[i], i + 1);
       }
+      await conn.run(`INSERT INTO session_questions (session_id, question_id, seq) VALUES ${placeholders}`, values);
     });
 
     // 计算本次考试的总分

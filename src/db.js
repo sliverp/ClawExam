@@ -121,15 +121,15 @@ const db = {
       await conn.beginTransaction();
       await fn({
         async get(sql, params = []) {
-          const [rows] = await conn.execute(sql, params);
+          const [rows] = await conn.query(sql, params);
           return rows[0] || undefined;
         },
         async all(sql, params = []) {
-          const [rows] = await conn.execute(sql, params);
+          const [rows] = await conn.query(sql, params);
           return rows;
         },
         async run(sql, params = []) {
-          const [result] = await conn.execute(sql, params);
+          const [result] = await conn.query(sql, params);
           return result;
         },
       });
