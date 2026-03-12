@@ -314,42 +314,49 @@ router.get('/leaderboard', async (req, res) => {
       rows = await db.all('SELECT * FROM leaderboard LIMIT 100');
     }
 
-    // 计算每个 session 的实际满分（优先用 answers.max_score，不受题库分值调整影响）
-    const getSessionMax = async (sessionId, eid) => {
-      // 已答题的满分从 answers.max_score 累加
-      const answerMax = await db.get('SELECT SUM(max_score) AS m, COUNT(*) AS cnt FROM answers WHERE session_id = ?', [sessionId]);
-      const sqRows = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [sessionId]);
+    if (rows.length === 0) {
+      const examMeta = examId ? getExam(examId) : null;
+      return res.json({ ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] });
+    }
 
-      if (sqRows.length === 0) {
-        // 没有组卷记录（极早期数据），fallback 到题库配置
-        const e = getExam(eid);
-        return answerMax?.m || e?.total_score || 0;
-      }
+    // 批量查询所有 session 的 answers.max_score 合计（一条 SQL 代替 N 条）
+    const sessionIds = rows.map(r => r.session_id);
+    const placeholders = sessionIds.map(() => '?').join(',');
+    const answerMaxRows = await db.all(
+      `SELECT session_id, SUM(max_score) AS m, COUNT(*) AS cnt FROM answers WHERE session_id IN (${placeholders}) GROUP BY session_id`,
+      sessionIds
+    );
+    const answerMaxMap = {};
+    for (const r of answerMaxRows) answerMaxMap[r.session_id] = { m: r.m, cnt: r.cnt };
 
-      // 如果全部答完，直接用 answers.max_score
-      if (answerMax && answerMax.cnt >= sqRows.length) {
-        return answerMax.m;
-      }
-
-      // 部分答完：已答题用 answers.max_score + 未答题用当前题库分值
-      let max = answerMax?.m || 0;
-      const answeredIds = new Set();
-      const answerRows = await db.all('SELECT question_id FROM answers WHERE session_id = ?', [sessionId]);
-      for (const r of answerRows) answeredIds.add(r.question_id);
-      for (const row of sqRows) {
-        if (!answeredIds.has(row.question_id)) {
-          const q = getQuestion(eid, row.question_id);
-          if (q) max += q.score;
-        }
-      }
-      return max;
-    };
+    // 批量查询所有 session 的组卷题目数（一条 SQL 代替 N 条）
+    const sqCountRows = await db.all(
+      `SELECT session_id, COUNT(*) AS cnt FROM session_questions WHERE session_id IN (${placeholders}) GROUP BY session_id`,
+      sessionIds
+    );
+    const sqCountMap = {};
+    for (const r of sqCountRows) sqCountMap[r.session_id] = r.cnt;
 
     const examMeta = examId ? getExam(examId) : null;
     const leaderboard = [];
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      const realMax = (await getSessionMax(r.session_id, r.exam_id)) || r.total_max_score;
+      const am = answerMaxMap[r.session_id];
+      const sqCount = sqCountMap[r.session_id] || 0;
+
+      let realMax;
+      if (am && sqCount > 0 && am.cnt >= sqCount) {
+        // 全部答完，直接用 answers.max_score
+        realMax = am.m;
+      } else if (am) {
+        // 有答题记录但数据不完整，用 answers.max_score 作为 fallback
+        realMax = am.m;
+      } else {
+        // 没有答题记录，用排行榜视图中的值
+        realMax = r.total_max_score;
+      }
+      realMax = realMax || r.total_max_score;
+
       const realPercent = realMax > 0 ? Math.round(r.total_score * 1000 / realMax) / 10 : 0;
       leaderboard.push({
         rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
