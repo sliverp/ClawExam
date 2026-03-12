@@ -206,14 +206,9 @@ router.post('/submit', async (req, res) => {
 
     if (allDone) {
       const baseUrl = `${req.protocol}://${req.headers['x-forwarded-host'] || req.get('host')}`;
-      const scoreRow = await db.get('SELECT SUM(score) AS s FROM answers WHERE session_id = ?', [exam_token]);
+      const scoreRow = await db.get('SELECT SUM(score) AS s, SUM(max_score) AS m FROM answers WHERE session_id = ?', [exam_token]);
       const totalScore = scoreRow.s || 0;
-      const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [exam_token]);
-      let sessionMax = 0;
-      for (const row of sessionQuestionIds) {
-        const qq = getQuestion(session.exam_id, row.question_id);
-        if (qq) sessionMax += qq.score;
-      }
+      const sessionMax = scoreRow.m || 0;
       response.all_done = true;
       response.summary = `🎉 恭喜！你已完成全部 ${totalRow.cnt} 道题！总得分：${totalScore} / ${sessionMax}`;
       response.next_step = `📋 请继续执行【获取证书】步骤！`;
@@ -265,14 +260,25 @@ router.get('/result/:exam_token', async (req, res) => {
     const answerRows = await db.all('SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ? ORDER BY submitted_at', [token]);
     const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
 
+    // 满分优先从 answers.max_score 累加（答题时记录，不受后续题库分值调整影响）
+    const totalMaxFromAnswers = answerRows.reduce((s, a) => s + a.max_score, 0);
     const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
-    let sessionMax = 0;
-    for (const row of sessionQuestionIds) {
-      const q = getQuestion(session.exam_id, row.question_id);
-      if (q) sessionMax += q.score;
-    }
-    const totalMax = sessionMax || answerRows.reduce((s, a) => s + a.max_score, 0);
     const totalQuestions = sessionQuestionIds.length || answerRows.length;
+
+    // 如果已全部答完，用 answers.max_score；否则未答题用当前题库分值补充
+    let totalMax;
+    if (answerRows.length >= totalQuestions) {
+      totalMax = totalMaxFromAnswers;
+    } else {
+      totalMax = totalMaxFromAnswers;
+      const answeredIds = new Set(answerRows.map(a => a.question_id));
+      for (const row of sessionQuestionIds) {
+        if (!answeredIds.has(row.question_id)) {
+          const q = getQuestion(session.exam_id, row.question_id);
+          if (q) totalMax += q.score;
+        }
+      }
+    }
 
     let durationSeconds = 0;
     if (answerRows.length > 0) {
@@ -305,17 +311,33 @@ router.get('/leaderboard', async (req, res) => {
       rows = await db.all('SELECT * FROM leaderboard LIMIT 100');
     }
 
-    // 计算每个 session 的实际满分（基于 session_questions）
+    // 计算每个 session 的实际满分（优先用 answers.max_score，不受题库分值调整影响）
     const getSessionMax = async (sessionId, eid) => {
+      // 已答题的满分从 answers.max_score 累加
+      const answerMax = await db.get('SELECT SUM(max_score) AS m, COUNT(*) AS cnt FROM answers WHERE session_id = ?', [sessionId]);
       const sqRows = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [sessionId]);
+
       if (sqRows.length === 0) {
+        // 没有组卷记录（极早期数据），fallback 到题库配置
         const e = getExam(eid);
-        return e?.total_score || 0;
+        return answerMax?.m || e?.total_score || 0;
       }
-      let max = 0;
+
+      // 如果全部答完，直接用 answers.max_score
+      if (answerMax && answerMax.cnt >= sqRows.length) {
+        return answerMax.m;
+      }
+
+      // 部分答完：已答题用 answers.max_score + 未答题用当前题库分值
+      let max = answerMax?.m || 0;
+      const answeredIds = new Set();
+      const answerRows = await db.all('SELECT question_id FROM answers WHERE session_id = ?', [sessionId]);
+      for (const r of answerRows) answeredIds.add(r.question_id);
       for (const row of sqRows) {
-        const q = getQuestion(eid, row.question_id);
-        if (q) max += q.score;
+        if (!answeredIds.has(row.question_id)) {
+          const q = getQuestion(eid, row.question_id);
+          if (q) max += q.score;
+        }
       }
       return max;
     };
@@ -361,13 +383,24 @@ router.get('/certificate/:exam_token', async (req, res) => {
     const exam = getExam(session.exam_id);
 
     const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
-    let sessionMax = 0;
-    for (const row of sessionQuestionIds) {
-      const q = getQuestion(session.exam_id, row.question_id);
-      if (q) sessionMax += q.score;
-    }
+
+    // 满分优先用 answers.max_score（不受题库分值调整影响）
     const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-    const totalMax = sessionMax || exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+    const totalMaxFromAnswers = answerRows.reduce((s, a) => s + a.max_score, 0);
+    const totalQuestions = sessionQuestionIds.length || answerRows.length;
+    let totalMax;
+    if (answerRows.length >= totalQuestions) {
+      totalMax = totalMaxFromAnswers;
+    } else {
+      totalMax = totalMaxFromAnswers;
+      const answeredIds = new Set(answerRows.map(a => a.question_id));
+      for (const row of sessionQuestionIds) {
+        if (!answeredIds.has(row.question_id)) {
+          const q = getQuestion(session.exam_id, row.question_id);
+          if (q) totalMax += q.score;
+        }
+      }
+    }
     const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
     const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -392,21 +425,26 @@ router.get('/certificate/:exam_token', async (req, res) => {
     const examOrderRow = await db.get('SELECT COUNT(*) AS ord FROM exam_sessions WHERE exam_id = ? AND started_at <= ?',
       [session.exam_id, session.started_at]);
 
-    // 各维度得分
+    // 各维度得分（用 answers.max_score 作为各题满分，保证历史数据准确）
     const categoryScores = {};
+    // 先用 answers 中记录的 max_score 初始化各 category
+    for (const a of answerRows) {
+      const q = getQuestion(session.exam_id, a.question_id);
+      const cat = q?.category || 'unknown';
+      if (!categoryScores[cat]) categoryScores[cat] = { score: 0, max: 0 };
+      categoryScores[cat].score += a.score;
+      categoryScores[cat].max += a.max_score;
+    }
+    // 未答题的 category 满分用当前题库补充
+    const answeredIds = new Set(answerRows.map(a => a.question_id));
     const sessionQIds = new Set(sessionQuestionIds.map(r => r.question_id));
     if (exam) {
       for (const q of exam.questions) {
         if (sessionQIds.size > 0 && !sessionQIds.has(q.id)) continue;
-        if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
-        else categoryScores[q.category].max += q.score;
+        if (answeredIds.has(q.id)) continue;
+        if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
+        categoryScores[q.category].max += q.score;
       }
-    }
-    for (const a of answerRows) {
-      const q = getQuestion(session.exam_id, a.question_id);
-      if (!q) continue;
-      if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: a.max_score };
-      categoryScores[q.category].score += a.score;
     }
 
     let grade = 'F';
