@@ -82,6 +82,7 @@ const gradeStyles = {
 const examHeaderColors = {
   'v1': { bg: '#6EE7B7', text: '#1a1a1a', accent: '#1a1a1a' },  // 初级 — 浅绿色
   'v2': { bg: '#FF6B35', text: '#FFFFFF', accent: '#FFD93D' },  // 中级 — 橙色
+  'v3': { bg: '#E63B2E', text: '#FFFFFF', accent: '#FFD93D' },  // 毕业考试 — 红色
 };
 const defaultHeaderColor = { bg: COLORS.red, text: COLORS.white, accent: COLORS.yellow };
 
@@ -94,6 +95,7 @@ const catConfig = {
   search:   { name: '信息检索', color: COLORS.yellow },
   reasoning:{ name: '复杂推理', color: COLORS.purple },
   research: { name: '深度检索', color: COLORS.blue },
+  practical:{ name: '实战操作', color: COLORS.green },
 };
 
 /**
@@ -186,6 +188,31 @@ async function getCertData(rawToken) {
   else if (scorePercent >= 60) grade = 'C';
   else if (scorePercent >= 40) grade = 'D';
 
+  // 勋章计算
+  const earnedBadges = [];
+  if (exam?.badges && Array.isArray(exam.badges)) {
+    for (const badge of exam.badges) {
+      const cond = badge.condition;
+      let earned = false;
+      if (cond.type === 'total_percent') {
+        earned = scorePercent >= cond.min;
+      } else if (cond.type === 'category_percent') {
+        const cat = categoryScores[cond.category];
+        if (cat && cat.max > 0) {
+          const catPct = Math.round(cat.score * 1000 / cat.max) / 10;
+          earned = catPct >= cond.min;
+        }
+      } else if (cond.type === 'duration_seconds') {
+        earned = durationSeconds > 0 && durationSeconds <= cond.max;
+      }
+      if (earned) {
+        earnedBadges.push({ id: badge.id, name: badge.name, description: badge.description, icon: badge.icon || '' });
+      }
+    }
+  }
+
+  const graduated = exam?.pass_percent > 0 && scorePercent >= exam.pass_percent;
+
   return {
     exam_token: token,
     exam_id: session.exam_id,
@@ -200,10 +227,12 @@ async function getCertData(rawToken) {
     },
     score: { total: totalScore, max: totalMax, percent: scorePercent },
     grade,
+    graduated,
     rank,
     total_participants: totalParticipants,
     beat_percent: beatPercent,
     category_scores: categoryScores,
+    badges: earnedBadges,
     started_at: session.started_at,
     duration_seconds: durationSeconds,
   };
@@ -320,7 +349,19 @@ export async function generateCertSvg(rawToken) {
   svg += `
   <text x="${gradeCx}" y="${gradeCy + gradeSize / 2 + 28}" text-anchor="middle" font-size="16" font-weight="800" fill="${COLORS.fg}">${esc(gs.label)}</text>
   <text x="${gradeCx}" y="${gradeCy + gradeSize / 2 + 48}" text-anchor="middle" font-size="14" font-weight="600" fill="#666">得分率 ${d.score.percent}%</text>`;
-  curY += gradeH;
+
+  // 毕业证书标识（仅 v3 且及格时显示）
+  if (d.graduated) {
+    svg += `
+    <text x="${gradeCx}" y="${gradeCy + gradeSize / 2 + 72}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.green}" letter-spacing="3">🎓 已毕业</text>`;
+    curY += gradeH + 10;
+  } else if (d.exam_id === 'v3') {
+    svg += `
+    <text x="${gradeCx}" y="${gradeCy + gradeSize / 2 + 72}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.red}" letter-spacing="3">未达毕业线 (60%)</text>`;
+    curY += gradeH + 10;
+  } else {
+    curY += gradeH;
+  }
 
   // ===== 分割线 =====
   svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
@@ -415,6 +456,44 @@ export async function generateCertSvg(rawToken) {
       skillX += tw + 10;
     }
     curY += tagH + 10;
+  }
+
+  // ===== 勋章展示 =====
+  const badges = d.badges || [];
+  if (badges.length > 0) {
+    curY += 8;
+    svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
+    curY += 20;
+    svg += `<text x="${contentW / 2}" y="${curY + 16}" text-anchor="middle" font-size="12" font-weight="800" fill="${COLORS.fg}" letter-spacing="4">获得勋章</text>`;
+    curY += 36;
+
+    const badgeSize = 60;
+    const badgeGap = 16;
+    const totalBadgeW = badges.length * badgeSize + (badges.length - 1) * badgeGap;
+    let badgeX = (contentW - totalBadgeW) / 2;
+    const badgeColors = [COLORS.yellow, COLORS.blue, COLORS.purple, COLORS.green, COLORS.orange, COLORS.pink, COLORS.red];
+
+    for (let i = 0; i < badges.length; i++) {
+      const b = badges[i];
+      const bc = badgeColors[i % badgeColors.length];
+
+      // 勋章方块（Neobrutalism 风格）
+      svg += `<rect x="${badgeX + 4}" y="${curY + 4}" width="${badgeSize}" height="${badgeSize}" fill="${COLORS.fg}"/>`;
+      svg += `<rect x="${badgeX}" y="${curY}" width="${badgeSize}" height="${badgeSize}" fill="${bc}" stroke="${COLORS.fg}" stroke-width="2"/>`;
+
+      // 勋章图标（如果有 icon 则显示，否则用 emoji 占位）
+      if (b.icon) {
+        svg += `<image xlink:href="${esc(b.icon)}" x="${badgeX + 8}" y="${curY + 4}" width="${badgeSize - 16}" height="${badgeSize - 20}"/>`;
+      } else {
+        svg += `<text x="${badgeX + badgeSize / 2}" y="${curY + 36}" text-anchor="middle" font-size="28">🏅</text>`;
+      }
+
+      // 勋章名称
+      svg += `<text x="${badgeX + badgeSize / 2}" y="${curY + badgeSize + 18}" text-anchor="middle" font-size="10" font-weight="800" fill="${COLORS.fg}">${esc(b.name)}</text>`;
+
+      badgeX += badgeSize + badgeGap;
+    }
+    curY += badgeSize + 30;
   }
 
   // ===== 底部信息 + 二维码 =====

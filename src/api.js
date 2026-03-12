@@ -524,6 +524,38 @@ router.get('/certificate/:exam_token', async (req, res) => {
     else if (scorePercent >= 60) grade = 'C';
     else if (scorePercent >= 40) grade = 'D';
 
+    // 勋章计算（如果试卷定义了 badges）
+    const earnedBadges = [];
+    if (exam?.badges && Array.isArray(exam.badges)) {
+      for (const badge of exam.badges) {
+        const cond = badge.condition;
+        let earned = false;
+        if (cond.type === 'total_percent') {
+          earned = scorePercent >= cond.min;
+        } else if (cond.type === 'category_percent') {
+          const cat = categoryScores[cond.category];
+          if (cat && cat.max > 0) {
+            const catPercent = Math.round(cat.score * 1000 / cat.max) / 10;
+            earned = catPercent >= cond.min;
+          }
+        } else if (cond.type === 'duration_seconds') {
+          earned = durationSeconds > 0 && durationSeconds <= cond.max;
+        }
+        if (earned) {
+          earnedBadges.push({
+            id: badge.id,
+            name: badge.name,
+            description: badge.description,
+            icon: badge.icon || '',
+          });
+        }
+      }
+    }
+
+    // v3 毕业判定
+    const passPercent = exam?.pass_percent || 0;
+    const graduated = passPercent > 0 && scorePercent >= passPercent;
+
     res.json({
       ok: true,
       exam_token: token,
@@ -539,11 +571,13 @@ router.get('/certificate/:exam_token', async (req, res) => {
       },
       score: { total: totalScore, max: totalMax, percent: scorePercent },
       grade,
+      graduated,
       rank,
       total_participants: totalParticipants,
       beat_percent: beatPercent,
       exam_order: examOrderRow.ord,
       category_scores: categoryScores,
+      badges: earnedBadges,
       started_at: session.started_at,
       duration_seconds: durationSeconds,
       cert_url: `/cert/${token}`,

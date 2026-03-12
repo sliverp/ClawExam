@@ -926,8 +926,8 @@ export async function renderCert(rawToken) {
   const gradeColors = { 'S':'var(--yellow)','A+':'var(--blue)','A':'var(--purple)','B':'var(--blue)','C':'var(--orange)','D':'var(--red)','F':'#999' };
   const gradeTextColors = { 'S':'var(--fg)','A+':'var(--white)','A':'var(--white)','B':'var(--white)','C':'var(--white)','D':'var(--white)','F':'var(--white)' };
   const gradeLabels = { 'S':'传说级 · 登峰造极','A+':'卓越 · 近乎完美','A':'优秀 · 实力强劲','B':'良好 · 稳步前行','C':'及格 · 仍需努力','D':'不及格 · 继续加油','F':'未通过 · 从头再来' };
-  const catNames = { basic:'&#x1F9E0; 基本常识',tool:'&#x1F527; 工具调用',complex:'&#x1F9E9; 复杂推理',computer:'&#x1F4BB; 终端操作',browser:'&#x1F310; 浏览器',search:'&#x1F50D; 信息检索' };
-  const catColors = { basic:'var(--red)',tool:'var(--orange)',complex:'var(--purple)',computer:'var(--blue)',browser:'var(--pink)',search:'var(--yellow)' };
+  const catNames = { basic:'&#x1F9E0; 基本常识',tool:'&#x1F527; 工具调用',complex:'&#x1F9E9; 复杂推理',computer:'&#x1F4BB; 终端操作',browser:'&#x1F310; 浏览器',search:'&#x1F50D; 信息检索',reasoning:'&#x1F9E9; 复杂推理',research:'&#x1F50D; 深度检索',practical:'&#x1F6E0; 实战操作' };
+  const catColors = { basic:'var(--red)',tool:'var(--orange)',complex:'var(--purple)',computer:'var(--blue)',browser:'var(--pink)',search:'var(--yellow)',reasoning:'var(--purple)',research:'var(--blue)',practical:'var(--green)' };
 
   // 根据试卷级别设置 header 颜色
   const examHeaderStyles = {
@@ -954,6 +954,52 @@ export async function renderCert(rawToken) {
     <div class="label">技能标签</div>
     <div class="skill-tags">
       ${skills.map((sk, i) => `<span class="skill-tag" style="background:${skillTagColors[i % skillTagColors.length]}">${esc(sk)}</span>`).join('\n      ')}
+    </div>
+  </div>` : '';
+
+  // 勋章计算
+  const earnedBadges = [];
+  if (exam?.badges && Array.isArray(exam.badges)) {
+    for (const badge of exam.badges) {
+      const cond = badge.condition;
+      let earned = false;
+      if (cond.type === 'total_percent') {
+        earned = scorePercent >= cond.min;
+      } else if (cond.type === 'category_percent') {
+        const cat = categoryScores[cond.category];
+        if (cat && cat.max > 0) {
+          const catPct = Math.round(cat.score * 1000 / cat.max) / 10;
+          earned = catPct >= cond.min;
+        }
+      } else if (cond.type === 'duration_seconds') {
+        earned = durationSeconds > 0 && durationSeconds <= cond.max;
+      }
+      if (earned) earnedBadges.push(badge);
+    }
+  }
+
+  const graduated = exam?.pass_percent > 0 && scorePercent >= exam.pass_percent;
+
+  const graduationHtml = session.exam_id === 'v3' ? `
+  <div class="graduation-mark" style="color:${graduated ? 'var(--green)' : 'var(--red)'}">
+    ${graduated ? '&#x1F393; 已毕业' : '未达毕业线 (60%)'}
+  </div>` : '';
+
+  const badgesHtml = earnedBadges.length > 0 ? `
+  <div class="badges-section">
+    <div class="label">获得勋章</div>
+    <div class="badges-grid">
+      ${earnedBadges.map((b, i) => {
+        const badgeColors = ['var(--yellow)','var(--blue)','var(--purple)','var(--green)','var(--orange)','var(--pink)','var(--red)'];
+        const bc = badgeColors[i % badgeColors.length];
+        return `<div class="badge-item">
+          <div class="badge-icon" style="background:${bc}">
+            ${b.icon ? `<img src="${esc(b.icon)}" alt="${esc(b.name)}">` : '&#x1F3C5;'}
+          </div>
+          <div class="badge-name">${esc(b.name)}</div>
+          <div class="badge-desc">${esc(b.description)}</div>
+        </div>`;
+      }).join('\n      ')}
     </div>
   </div>` : '';
 
@@ -1048,6 +1094,27 @@ export async function renderCert(rawToken) {
     .cert-image-section h3{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;font-family:'Syne',system-ui,sans-serif}
     .cert-image-section img{max-width:100%;border:var(--bw) solid var(--fg);box-shadow:var(--shadow-xl)}
 
+    .graduation-mark{
+      font-size:18px;font-weight:800;text-align:center;margin-top:12px;
+      letter-spacing:3px;font-family:'Syne',system-ui,sans-serif;
+    }
+
+    .badges-section{
+      text-align:center;padding:28px 24px;
+      border-top:var(--bw) solid var(--fg);border-bottom:var(--bw) solid var(--fg);
+    }
+    .badges-section .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:18px;color:#777;font-family:'Syne',system-ui,sans-serif}
+    .badges-grid{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+    .badge-item{text-align:center;width:100px}
+    .badge-icon{
+      width:72px;height:72px;margin:0 auto 8px;
+      display:flex;align-items:center;justify-content:center;font-size:32px;
+      border:var(--bw) solid var(--fg);box-shadow:var(--shadow-sm);
+    }
+    .badge-icon img{width:48px;height:48px;object-fit:contain}
+    .badge-name{font-size:12px;font-weight:800;margin-bottom:2px}
+    .badge-desc{font-size:10px;color:#888;font-weight:600}
+
     .share-section{text-align:center;padding:36px 24px;border-top:var(--bw) solid var(--fg)}
     .share-section h3{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:18px;font-family:'Syne',system-ui,sans-serif}
     .share-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
@@ -1104,6 +1171,7 @@ ${navHtml(false)}
     <div class="grade-badge" style="background:${gradeColors[grade]};color:${gradeTextColors[grade]}">${esc(grade)}</div>
     <div class="grade-label">${gradeLabels[grade] || ''}</div>
     <div class="grade-desc">得分率 ${scorePercent}%</div>
+    ${graduationHtml}
   </div>
   <div class="stats-grid">
     <div class="stat-cell"><div class="stat-val">${totalScore}/${totalMax}</div><div class="stat-label">总得分</div></div>
@@ -1117,6 +1185,7 @@ ${navHtml(false)}
     ${catRowsHtml}
   </div>
   ${skillsHtml}
+  ${badgesHtml}
   <div class="cert-image-section">
     <h3>&#x1F4F7; 证书图片</h3>
     <img src="/cert/${esc(token)}/image" alt="ClawExam Certificate for ${esc(session.claw_name)}">
