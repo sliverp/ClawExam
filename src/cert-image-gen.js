@@ -78,6 +78,13 @@ const gradeStyles = {
   'F':  { bg: '#999',        text: COLORS.white, label: '未通过 · 从头再来' },
 };
 
+// 不同试卷对应的 header 颜色
+const examHeaderColors = {
+  'v1': { bg: '#6EE7B7', text: '#1a1a1a', accent: '#1a1a1a' },  // 初级 — 浅绿色
+  'v2': { bg: '#FF6B35', text: '#FFFFFF', accent: '#FFD93D' },  // 中级 — 橙色
+};
+const defaultHeaderColor = { bg: COLORS.red, text: COLORS.white, accent: COLORS.yellow };
+
 const catConfig = {
   basic:    { name: '基本常识', color: COLORS.red },
   tool:     { name: '工具调用', color: COLORS.orange },
@@ -160,6 +167,7 @@ async function getCertData(rawToken) {
 
   return {
     exam_token: token,
+    exam_id: session.exam_id,
     exam_name: exam?.name || session.exam_id,
     profile: {
       claw_name: session.claw_name,
@@ -243,12 +251,13 @@ export async function generateCertSvg(rawToken) {
   const innerRight = contentW - 40;
   const innerW = innerRight - innerLeft;
 
-  // ===== 顶部红色标题栏 =====
+  // ===== 顶部标题栏（根据试卷级别变色）=====
+  const hc = examHeaderColors[d.exam_id] || defaultHeaderColor;
   svg += `
-  <rect x="0" y="0" width="${contentW}" height="${headerH}" fill="${COLORS.red}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
-  <text x="${contentW / 2}" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="${COLORS.yellow}" letter-spacing="6" text-transform="uppercase">CLAWEXAM CERTIFICATE</text>
-  <text x="${contentW / 2}" y="72" text-anchor="middle" font-size="32" font-weight="800" fill="${COLORS.white}">能力认证证书</text>
-  <text x="${contentW / 2}" y="92" text-anchor="middle" font-size="14" font-weight="600" fill="${COLORS.yellow}">${esc(d.exam_name)}</text>`;
+  <rect x="0" y="0" width="${contentW}" height="${headerH}" fill="${hc.bg}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
+  <text x="${contentW / 2}" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="${hc.accent}" letter-spacing="6" text-transform="uppercase">CLAWEXAM CERTIFICATE</text>
+  <text x="${contentW / 2}" y="72" text-anchor="middle" font-size="32" font-weight="800" fill="${hc.text}">能力认证证书</text>
+  <text x="${contentW / 2}" y="92" text-anchor="middle" font-size="14" font-weight="600" fill="${hc.accent}">${esc(d.exam_name)}</text>`;
   curY = headerH;
 
   // ===== 虾名 + 元信息 =====

@@ -902,6 +902,13 @@ export async function renderCert(rawToken) {
   const catNames = { basic:'&#x1F9E0; 基本常识',tool:'&#x1F527; 工具调用',complex:'&#x1F9E9; 复杂推理',computer:'&#x1F4BB; 终端操作',browser:'&#x1F310; 浏览器',search:'&#x1F50D; 信息检索' };
   const catColors = { basic:'var(--red)',tool:'var(--orange)',complex:'var(--purple)',computer:'var(--blue)',browser:'var(--pink)',search:'var(--yellow)' };
 
+  // 根据试卷级别设置 header 颜色
+  const examHeaderStyles = {
+    'v1': { bg: 'var(--green)', text: 'var(--fg)', accent: 'var(--fg)', tagBorder: 'var(--fg)' },  // 初级 — 浅绿色
+    'v2': { bg: 'var(--orange)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' },  // 中级 — 橙色
+  };
+  const headerStyle = examHeaderStyles[session.exam_id] || { bg: 'var(--red)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' };
+
   const skills = JSON.parse(session.skill_list || '[]');
   const skillTagColors = ['var(--yellow)','var(--blue)','var(--purple)','var(--orange)','var(--green)','var(--pink)'];
 
@@ -941,7 +948,7 @@ export async function renderCert(rawToken) {
       background:var(--white);
     }
     .cert-header{
-      background:var(--red);color:var(--white);text-align:center;
+      color:var(--white);text-align:center;
       padding:36px 24px 28px;border-bottom:var(--bw) solid var(--fg);
     }
     .cert-header .tag{
@@ -1051,10 +1058,10 @@ export async function renderCert(rawToken) {
 ${navHtml(false)}
 
 <div class="cert-content">
-  <div class="cert-header">
-    <div class="tag">CLAWEXAM CERTIFICATE</div>
-    <h1>&#x1F99E; 能力认证证书</h1>
-    <div class="exam-name">${esc(exam?.name || session.exam_id)}</div>
+  <div class="cert-header" style="background:${headerStyle.bg};color:${headerStyle.text}">
+    <div class="tag" style="color:${headerStyle.accent};border-color:${headerStyle.tagBorder}">CLAWEXAM CERTIFICATE</div>
+    <h1 style="color:${headerStyle.text}">&#x1F99E; 能力认证证书</h1>
+    <div class="exam-name" style="color:${headerStyle.accent}">${esc(exam?.name || session.exam_id)}</div>
   </div>
   <div class="claw-info">
     <div class="claw-name">${esc(session.claw_name)}</div>
