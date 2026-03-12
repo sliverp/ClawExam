@@ -211,7 +211,7 @@ export async function generateCertSvg(rawToken) {
   const catRowH = 52;
   const catSectionH = cats.length > 0 ? cats.length * catRowH + 20 : 0;
   const skillSectionH = skills.length > 0 ? 70 : 0;
-  const footerH = 200;
+  const footerH = 220;
   const padding = 30;
 
   const totalH = headerH + clawInfoH + gradeH + statsH + catTitleH + catSectionH + skillSectionH + footerH + padding * 2;
@@ -395,47 +395,41 @@ export async function generateCertSvg(rawToken) {
   svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
 
   const footerY = curY;
-  const qrSize = 150;
-  const footerContentH = 200;
+  const qrSize = 170;
+  const footerContentH = 220;
   svg += `<rect x="0" y="${footerY}" width="${contentW}" height="${footerContentH}" fill="${COLORS.fg}"/>`;
 
   if (qrcodeBase64) {
-    // 左侧：二维码（大尺寸 + 醒目白色背景框）
-    const qrX = 30;
+    // 左侧：二维码（大尺寸，无额外方框）
+    const qrX = 25;
     const qrY = footerY + (footerContentH - qrSize) / 2;
-    svg += `<rect x="${qrX - 8 + 4}" y="${qrY - 8 + 4}" width="${qrSize + 16}" height="${qrSize + 16}" fill="#333"/>`;
-    svg += `<rect x="${qrX - 8}" y="${qrY - 8}" width="${qrSize + 16}" height="${qrSize + 16}" fill="${COLORS.white}" stroke="${COLORS.yellow}" stroke-width="3"/>`;
     svg += `<image xlink:href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
 
     // 右侧：文字信息
-    const textLeft = qrX + qrSize + 40;
+    const textLeft = qrX + qrSize + 30;
     const textCenterX = textLeft + (contentW - textLeft - 20) / 2;
 
-    // 醒目提示语
-    svg += `<text x="${textCenterX}" y="${footerY + 40}" text-anchor="middle" font-size="20" font-weight="800" fill="${COLORS.yellow}">🦞 快来测测你的龙虾</text>`;
-    svg += `<text x="${textCenterX}" y="${footerY + 68}" text-anchor="middle" font-size="20" font-weight="800" fill="${COLORS.yellow}">是什么等级！</text>`;
+    // 醒目提示语（更大更粗 + 白色描边效果）
+    svg += `<text x="${textCenterX}" y="${footerY + 45}" text-anchor="middle" font-size="28" font-weight="900" fill="${COLORS.yellow}" letter-spacing="2">快来测测你的龙虾</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 80}" text-anchor="middle" font-size="28" font-weight="900" fill="${COLORS.yellow}" letter-spacing="2">是什么等级！</text>`;
 
     // 扫码提示
-    svg += `<text x="${textCenterX}" y="${footerY + 96}" text-anchor="middle" font-size="14" font-weight="600" fill="#ccc">← 扫描二维码立即挑战</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 108}" text-anchor="middle" font-size="14" font-weight="700" fill="${COLORS.white}">← 扫描二维码立即挑战</text>`;
 
     // 准考证号
-    svg += `<rect x="${textCenterX - 180 + 3}" y="${footerY + 112 + 3}" width="360" height="24" fill="#333"/>`;
-    svg += `<rect x="${textCenterX - 180}" y="${footerY + 112}" width="360" height="24" fill="#222" stroke="#444" stroke-width="2"/>`;
-    svg += `<text x="${textCenterX}" y="${footerY + 129}" text-anchor="middle" font-size="10" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 140}" text-anchor="middle" font-size="10" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
 
     // 考试时间
-    svg += `<text x="${textCenterX}" y="${footerY + 156}" text-anchor="middle" font-size="11" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 162}" text-anchor="middle" font-size="11" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
 
     // 品牌
-    svg += `<text x="${textCenterX}" y="${footerY + 180}" text-anchor="middle" font-size="13" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 190}" text-anchor="middle" font-size="13" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
   } else {
     // 无二维码时居中显示文字
-    svg += `<text x="${contentW / 2}" y="${footerY + 36}" text-anchor="middle" font-size="20" font-weight="800" fill="${COLORS.yellow}">🦞 快来测测你的龙虾是什么等级！</text>`;
-    svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 52 + 3}" width="460" height="26" fill="#333"/>`;
-    svg += `<rect x="${contentW / 2 - 230}" y="${footerY + 52}" width="460" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 70}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 100}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 130}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 50}" text-anchor="middle" font-size="28" font-weight="900" fill="${COLORS.yellow}" letter-spacing="2">快来测测你的龙虾是什么等级！</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 90}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 120}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 155}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
   }
 
   svg += '\n</svg>';
