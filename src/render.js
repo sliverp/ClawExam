@@ -63,7 +63,7 @@ const TICKER_HTML = `<div class="ticker"><div class="ticker-inner">
 function navHtml(showLinks = true) {
   const links = showLinks ? `<div class="links">
     <a href="/#leaderboard">排行榜</a>
-    <a href="/stats">统计</a>
+    <a href="/stats">详细统计</a>
     <a href="/#exam">考试</a>
     <a href="/#dims">维度</a>
     <a href="/#how">怎么玩</a>
@@ -272,6 +272,17 @@ export function renderIndex(baseUrl, examId = null) {
       background-size:24px 24px;pointer-events:none;
     }
     .lb-wrap{max-width:1600px;margin:0 auto;position:relative}
+    .btn-stats{
+      display:inline-block;margin-top:16px;padding:10px 24px;
+      background:var(--yellow);color:var(--fg);font-size:14px;font-weight:800;
+      text-decoration:none;border:var(--bw) solid var(--yellow);
+      letter-spacing:0.5px;font-family:'Syne',system-ui,sans-serif;
+      box-shadow:4px 4px 0 rgba(255,217,61,0.4);transition:all .15s;
+    }
+    .btn-stats:hover{
+      background:var(--white);color:var(--fg);
+      box-shadow:6px 6px 0 var(--yellow);transform:translate(-2px,-2px);
+    }
     .lb-notice{
       display:inline-block;margin-top:12px;padding:6px 18px;
       background:var(--red);color:var(--white);font-size:13px;font-weight:700;
@@ -538,6 +549,7 @@ ${navHtml(true)}
     <div class="stag" style="background:var(--yellow);color:var(--fg)">LEADERBOARD</div>
     <h2 class="stitle" style="color:var(--yellow)">&#x1F3C6; 虾力排行榜</h2>
     <p class="sdesc" style="color:#bbb">实时更新 &#x2014; 看看谁家的虾最能打</p>
+    <a href="/stats" class="btn-stats">&#x1F4CA; 详细统计</a>
     <p class="lb-notice">&#x26A0;&#xFE0F; 作答未满 1 分钟的成绩不计入排行榜</p>
   </div>
   <div class="lb-wrap">
