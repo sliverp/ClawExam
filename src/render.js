@@ -841,7 +841,17 @@ export async function renderCert(rawToken) {
   if (answerRows.length === 0) return renderCertError('尚未答题，无法生成证书');
 
   const exam = getExam(session.exam_id);
-  const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
+
+  // 按 question_id 去重（同一题多次提交只取最高分）
+  const bestByQid = {};
+  for (const a of answerRows) {
+    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
+      bestByQid[a.question_id] = a;
+    }
+  }
+  const dedupedAnswers = Object.values(bestByQid);
+
+  const totalScore = dedupedAnswers.reduce((s, a) => s + a.score, 0);
 
   // 计算本 session 的满分（基于 session_questions）
   const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
@@ -850,7 +860,7 @@ export async function renderCert(rawToken) {
     const q = getQuestion(session.exam_id, row.question_id);
     if (q) sessionMax += q.score;
   }
-  const totalMax = sessionMax || exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+  const totalMax = sessionMax || exam?.total_score || dedupedAnswers.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -871,17 +881,9 @@ export async function renderCert(rawToken) {
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：按 category 分组
+  // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
-  // 按 question_id 去重（同一题多次提交只取最高分）
-  const bestByQid = {};
-  for (const a of answerRows) {
-    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
-      bestByQid[a.question_id] = a;
-    }
-  }
-  // 按 category 累加去重后的得分
-  for (const a of Object.values(bestByQid)) {
+  for (const a of dedupedAnswers) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
     if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
@@ -902,7 +904,6 @@ export async function renderCert(rawToken) {
         const standardMax = pickCount * perScore;
         cs.max = Math.max(cs.max, standardMax);
       }
-      // 兜底：score 超过 max 时，把 max 提升到 score
       if (cs.score > cs.max) cs.max = cs.score;
     }
   }

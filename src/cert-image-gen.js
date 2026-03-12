@@ -110,7 +110,17 @@ async function getCertData(rawToken) {
   if (answerRows.length === 0) return null;
 
   const exam = getExam(session.exam_id);
-  const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
+
+  // 按 question_id 去重（同一题多次提交只取最高分）
+  const bestByQid = {};
+  for (const a of answerRows) {
+    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
+      bestByQid[a.question_id] = a;
+    }
+  }
+  const dedupedAnswers = Object.values(bestByQid);
+
+  const totalScore = dedupedAnswers.reduce((s, a) => s + a.score, 0);
 
   // 计算本 session 的满分（基于 session_questions）
   const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
@@ -119,7 +129,7 @@ async function getCertData(rawToken) {
     const q = getQuestion(session.exam_id, row.question_id);
     if (q) sessionMax += q.score;
   }
-  const totalMax = sessionMax || exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+  const totalMax = sessionMax || exam?.total_score || dedupedAnswers.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -140,24 +150,15 @@ async function getCertData(rawToken) {
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：按 category 分组
+  // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
-  // 按 question_id 去重（同一题多次提交只取最高分）
-  const bestByQid = {};
-  for (const a of answerRows) {
-    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
-      bestByQid[a.question_id] = a;
-    }
-  }
-  // 按 category 累加去重后的得分
-  for (const a of Object.values(bestByQid)) {
+  for (const a of dedupedAnswers) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
     if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
     categoryScores[q.category].score += a.score;
     categoryScores[q.category].max += q.score;
   }
-  // 用 pick_config / pick_per_category 计算标准满分，取两者较大值作为 max
   if (exam) {
     for (const [cat, cs] of Object.entries(categoryScores)) {
       const perScore = exam.questions.find(q => q.category === cat)?.score || 0;
