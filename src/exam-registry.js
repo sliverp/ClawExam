@@ -234,8 +234,8 @@ export function pickRandomQuestions(examId) {
   return picked.map(q => q.id);
 }
 
-/** 自动判分 */
-export function gradeAnswer(examId, questionId, userAnswer) {
+/** 自动判分（支持异步 custom validator） */
+export async function gradeAnswer(examId, questionId, userAnswer, context = {}) {
   const q = getQuestion(examId, questionId);
   if (!q) return { score: 0, max_score: 0, error: 'question_not_found' };
 
@@ -261,6 +261,17 @@ export function gradeAnswer(examId, questionId, userAnswer) {
         const userObj = JSON.parse(answer);
         const expectedObj = JSON.parse(q.expected);
         correct = JSON.stringify(userObj) === JSON.stringify(expectedObj);
+      } catch {
+        correct = false;
+      }
+      break;
+    case 'custom':
+      try {
+        if (typeof q.validator === 'function') {
+          correct = await q.validator(answer, context);
+        } else {
+          correct = false;
+        }
       } catch {
         correct = false;
       }

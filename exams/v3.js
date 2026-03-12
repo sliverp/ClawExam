@@ -6,8 +6,8 @@
  *
  * 3 个 category，题库冗余，每次随机抽题
  * reasoning : 题库 5 题，每次抽 2 题，每题 20 分
- * research  : 题库 7 题，每次抽 2 题，每题 20 分
- * practical : 题库 5 题，每次抽 2 题，每题 20 分
+ * research  : 题库 3 题，每次抽 2 题，每题 20 分
+ * practical : 题库 2 题，每次抽 2 题，每题 20 分
  * 每次考试: 6 题，满分 120 分，72 分及格（60%）
  */
 
@@ -130,7 +130,7 @@ const exam = {
       hint: 'sum([1,4,9,16,25,36,49,64,81,100])=385, sqrt(385)≈19.62→floor=19, log2(1024)=10→ceil=10, set("mississippi")={m,i,s,p}→len=4。19+10-4=25。'
     },
 
-    // ==================== 深度信息检索 (research) — 5 题，每题 20 分 ====================
+    // ==================== 深度信息检索 (research) — 3 题，每题 20 分 ====================
     {
       id: 'research-01',
       category: 'research',
@@ -138,43 +138,7 @@ const exam = {
       answer_type: 'exact',
       expected: '254463269',
       score: 20,
-      hint: '毕导是 B 站知名科普 UP 主，清华大学化工系博士。他的个人空间 URL 中包含 UID。'
-    },
-    {
-      id: 'research-02',
-      category: 'research',
-      question: '请通过网络搜索，完成以下多步信息检索任务：\n\n1. 找到 Linux 内核 6.0 版本的正式发布日期\n2. 找到该日期当天，标普500指数（S&P 500）的收盘点位\n\n请按以下格式回答：\n第一行：Linux 6.0 发布日期（格式 YYYY-MM-DD）\n第二行：当天标普500收盘点位（精确到小数点后两位）\n\n用竖线分隔两个答案，格式为 "日期|点位"，如 "2022-10-02|3500.00"',
-      answer_type: 'exact',
-      expected: '2022-10-02|3585.62',
-      score: 20,
-      hint: 'Linux 6.0 在 2022 年 10 月发布。需要交叉检索两个领域的精确数据。'
-    },
-    {
-      id: 'research-03',
-      category: 'research',
-      question: '请通过网络搜索，回答以下精确数据检索题：\n\n根据 GitHub 官方公布的数据，截至 2024 年，GitHub 上使用最多的前三名编程语言分别是什么？\n\n请按排名顺序回答，用英文逗号分隔，如 "Language1,Language2,Language3"',
-      answer_type: 'exact',
-      expected: 'JavaScript,Python,TypeScript',
-      score: 20,
-      hint: '参考 GitHub Octoverse 2024 报告中的编程语言排名。'
-    },
-    {
-      id: 'research-04',
-      category: 'research',
-      question: '请通过网络搜索，完成以下深度信息检索：\n\nOpenAI 的 GPT-4 论文（"GPT-4 Technical Report"）在 arXiv 上的编号是什么？\n请回答完整的 arXiv ID，格式如 "2303.XXXXX"',
-      answer_type: 'exact',
-      expected: '2303.08774',
-      score: 20,
-      hint: 'GPT-4 技术报告于 2023 年 3 月发布在 arXiv 上。'
-    },
-    {
-      id: 'research-05',
-      category: 'research',
-      question: '请通过网络搜索，回答以下问题：\n\n在 2025 年 2 月，DeepSeek 发布了一篇关于其 DeepSeek-R1 推理模型的技术论文。\n\n请回答：\n1. 该论文的标题（英文）\n2. 论文中提到 DeepSeek-R1 在 AIME 2024（美国数学邀请赛）基准测试中的 pass@1 得分是多少百分比？\n\n用竖线分隔两个答案，格式为 "论文标题|得分"，得分格式如 "79.8%"',
-      answer_type: 'regex',
-      expected: 'DeepSeek-R1.*Incentiviz.*79\\.8%',
-      score: 20,
-      hint: 'DeepSeek-R1 是 2025 年初发布的推理模型，论文标题提到了 incentivizing reasoning。'
+      hint: '暂无提示'
     },
     {
       id: 'research-06',
@@ -195,51 +159,41 @@ const exam = {
       hint: '前往微博搜索微软中国官方账号，浏览其 2023 年 4 月 14 日的帖子，仔细查看评论区。'
     },
 
-    // ==================== 实战操作 (practical) — 5 题，每题 20 分 ====================
+    // ==================== 实战操作 (practical) — 2 题，每题 20 分 ====================
     {
       id: 'practical-01',
       category: 'practical',
-      question: '请制作一个 Excel 表格（.xlsx 格式），保存到 /tmp/clawexam_hk0700.xlsx。\n\n表格要求：\n- 第一列标题为"日期"，第二列标题为"收盘价(港元)"\n- 收录港股腾讯控股（0700.HK）在 2024 年 1 月 1 日到 2024 年 1 月 31 日期间，所有开盘日（交易日）的收盘价格\n- 收盘价精确到一位小数点\n- 日期格式为 YYYY-MM-DD\n\n完成后，请读取该文件，将第一个交易日和最后一个交易日的收盘价用竖线分隔提交。\n格式如 "298.8|273.8"',
-      answer_type: 'regex',
-      expected: '29[5-9]\\.[0-9]\\|27[0-9]\\.[0-9]',
+      question: '请在微博（weibo.com）上找到刘亦菲的官方账号，获取她的头像图片（172×172 大小）。\n\n将该头像图片转为 Base64 编码（含 Data URI 前缀），然后返回前 64 个字符。\n\n注意：前 64 个字符包含 "data:image/png;base64," 前缀部分。',
+      answer_type: 'exact',
+      expected: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALMAAACzCAIAAA',
       score: 20,
-      hint: '2024 年 1 月 1 日是元旦休市。港股首个交易日是 1 月 2 日，最后一个交易日是 1 月 31 日。需要安装 openpyxl 或 xlsxwriter 来创建 Excel 文件。'
+      hint: '前往微博搜索刘亦菲官方账号，获取头像图片 URL（注意选择 179×179 尺寸），下载后用 base64 编码工具转换为 Data URI 格式，取前 64 个字符（含 data:image/png;base64, 前缀）。'
     },
     {
       id: 'practical-02',
       category: 'practical',
-      question: '请在终端执行以下操作：\n1. 创建文件 /tmp/clawexam_grad.py，写入一个 Python 脚本\n2. 脚本功能：模拟一个简易的成绩管理系统，给定以下学生成绩数据：\n   students = [\n     {"name": "Alice", "math": 92, "english": 88, "science": 95},\n     {"name": "Bob", "math": 78, "english": 92, "science": 80},\n     {"name": "Charlie", "math": 95, "english": 76, "science": 88},\n     {"name": "Diana", "math": 88, "english": 95, "science": 92},\n     {"name": "Eve", "math": 90, "english": 85, "science": 78}\n   ]\n3. 计算每个学生的加权平均分（math 权重 0.4, english 权重 0.3, science 权重 0.3）\n4. 输出加权平均分最高的学生姓名和分数\n格式为 "姓名:分数"，分数精确到一位小数，如 "Alice:91.7"',
-      answer_type: 'exact',
-      expected: 'Diana:91.3',
+      question: '请前往 GitHub 仓库 https://github.com/sliverp/ClawExamAnswerSheet\n\n在该仓库下提交一个 Issue，要求：\n- Issue 的标题必须是你的准考证号（即 exam_token）\n- Issue 内容不限\n\n提交成功后，请返回该 Issue 的编号（纯数字，如 "1"、"2"、"3"）。\n\n系统会自动验证该 Issue 是否存在，以及标题是否为你的准考证号。',
+      answer_type: 'custom',
+      expected: null,
       score: 20,
-      hint: 'Diana: 88*0.4+95*0.3+92*0.3 = 35.2+28.5+27.6 = 91.3'
-    },
-    {
-      id: 'practical-03',
-      category: 'practical',
-      question: '请在终端完成以下操作：\n1. 创建文件 /tmp/clawexam_api.json，写入以下 JSON 数据：\n{"users":[{"id":1,"name":"张三","orders":[{"product":"手机","price":5999},{"product":"耳机","price":299}]},{"id":2,"name":"李四","orders":[{"product":"笔记本","price":8999},{"product":"鼠标","price":149},{"product":"键盘","price":599}]},{"id":3,"name":"王五","orders":[{"product":"平板","price":3999}]}]}\n2. 使用 Python 或 jq 解析该 JSON\n3. 找出消费总金额最高的用户，输出其姓名和总消费金额\n格式为 "姓名:金额"，如 "张三:6298"',
-      answer_type: 'exact',
-      expected: '李四:9747',
-      score: 20,
-      hint: '张三: 5999+299=6298, 李四: 8999+149+599=9747, 王五: 3999。'
-    },
-    {
-      id: 'practical-04',
-      category: 'practical',
-      question: '请在终端完成以下操作：\n1. 创建文件 /tmp/clawexam_log.txt，写入以下模拟日志内容（每行一条）：\n2026-03-12 10:00:01 ERROR Database connection failed\n2026-03-12 10:00:05 INFO Server started on port 3000\n2026-03-12 10:00:12 WARN Memory usage above 80%\n2026-03-12 10:01:03 ERROR Timeout waiting for response\n2026-03-12 10:01:15 INFO Request processed successfully\n2026-03-12 10:02:00 ERROR Disk space critically low\n2026-03-12 10:02:30 WARN CPU usage spike detected\n2026-03-12 10:03:00 INFO Backup completed\n2026-03-12 10:03:45 ERROR Authentication service unavailable\n2026-03-12 10:04:00 INFO Cache cleared\n2. 使用命令行工具统计：ERROR 出现的次数、WARN 出现的次数、INFO 出现的次数\n3. 输出格式为 "ERROR:次数,WARN:次数,INFO:次数"',
-      answer_type: 'exact',
-      expected: 'ERROR:4,WARN:2,INFO:4',
-      score: 20,
-      hint: '使用 grep -c 或 awk 统计各级别日志出现次数。'
-    },
-    {
-      id: 'practical-05',
-      category: 'practical',
-      question: '请在终端执行以下操作：\n1. 创建文件 /tmp/clawexam_crypto.py，写入 Python 脚本\n2. 脚本功能：\n   a. 生成字符串 "ClawExam-Graduation-2026" 的 SHA256 哈希值（小写十六进制）\n   b. 取哈希值的前 16 个字符作为密钥\n   c. 用这个密钥对字符串 "I graduated from ClawExam!" 进行简单异或加密（XOR），输出加密结果的十六进制表示\n3. 执行脚本并提交 SHA256 哈希值的前 16 个字符\n只提交前 16 个字符。',
-      answer_type: 'regex',
-      expected: '^[a-f0-9]{16}$',
-      score: 20,
-      hint: '使用 Python hashlib.sha256 计算哈希，然后取前 16 个字符。'
+      hint: '前往 GitHub 仓库页面，点击 Issues → New Issue，将你的准考证号作为标题提交，然后返回 Issue 编号。',
+      validator: async (answer, context) => {
+        const issueNumber = String(answer).trim();
+        if (!/^\d+$/.test(issueNumber)) return false;
+        const examToken = context.exam_token;
+        if (!examToken) return false;
+        try {
+          const resp = await fetch(
+            `https://api.github.com/repos/sliverp/ClawExamAnswerSheet/issues/${issueNumber}`,
+            { headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'ClawExam' } }
+          );
+          if (!resp.ok) return false;
+          const data = await resp.json();
+          return data.title && data.title.trim().toLowerCase() === examToken.toLowerCase();
+        } catch {
+          return false;
+        }
+      }
     },
   ],
 };

@@ -188,7 +188,7 @@ router.post('/submit', async (req, res) => {
       });
     }
 
-    const result = gradeAnswer(session.exam_id, question_id, answer);
+    const result = await gradeAnswer(session.exam_id, question_id, answer, { exam_token });
     await db.run(`INSERT INTO answers (session_id, question_id, answer, score, max_score, exam_id) VALUES (?, ?, ?, ?, ?, ?)`,
       [exam_token, question_id, String(answer), result.score, result.max_score, session.exam_id]);
 
