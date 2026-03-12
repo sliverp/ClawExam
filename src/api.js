@@ -340,54 +340,18 @@ router.get('/leaderboard', async (req, res) => {
         return { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] };
       }
 
-      // 批量查询所有 session 的 answers.max_score 合计
-      const sessionIds = rows.map(r => r.session_id);
-      const placeholders = sessionIds.map(() => '?').join(',');
-      const answerMaxRows = await db.all(
-        `SELECT session_id, SUM(max_score) AS m, COUNT(*) AS cnt FROM answers WHERE session_id IN (${placeholders}) GROUP BY session_id`,
-        sessionIds
-      );
-      const answerMaxMap = {};
-      for (const r of answerMaxRows) answerMaxMap[r.session_id] = { m: r.m, cnt: r.cnt };
-
-      // 批量查询所有 session 的组卷题目数
-      const sqCountRows = await db.all(
-        `SELECT session_id, COUNT(*) AS cnt FROM session_questions WHERE session_id IN (${placeholders}) GROUP BY session_id`,
-        sessionIds
-      );
-      const sqCountMap = {};
-      for (const r of sqCountRows) sqCountMap[r.session_id] = r.cnt;
-
       const examMeta = examId ? getExam(examId) : null;
-      const leaderboard = [];
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i];
-        const am = answerMaxMap[r.session_id];
-        const sqCount = sqCountMap[r.session_id] || 0;
-
-        let realMax;
-        if (am && sqCount > 0 && am.cnt >= sqCount) {
-          realMax = am.m;
-        } else if (am) {
-          realMax = am.m;
-        } else {
-          realMax = r.total_max_score;
-        }
-        realMax = realMax || r.total_max_score;
-
-        const realPercent = realMax > 0 ? Math.round(r.total_score * 1000 / realMax) / 10 : 0;
-        leaderboard.push({
-          rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
-          claw_type: r.claw_type || 'OpenClaw',
-          model_name: r.model_name, owner_name: r.owner_name,
-          skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
-          session_id: r.session_id,
-          total_score: r.total_score, total_max_score: realMax,
-          answered_count: r.answered_count, score_percent: realPercent,
-          duration_seconds: r.duration_seconds || 0,
-          started_at: r.started_at,
-        });
-      }
+      const leaderboard = rows.map((r, i) => ({
+        rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
+        claw_type: r.claw_type || 'OpenClaw',
+        model_name: r.model_name, owner_name: r.owner_name,
+        skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
+        session_id: r.session_id,
+        total_score: r.total_score, total_max_score: r.total_max_score,
+        answered_count: r.answered_count, score_percent: r.score_percent || 0,
+        duration_seconds: r.duration_seconds || 0,
+        started_at: r.started_at,
+      }));
 
       const data = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
 

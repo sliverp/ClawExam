@@ -22,9 +22,9 @@ const config = {
     password: process.env.MYSQL_PASSWORD || '',
     database: process.env.MYSQL_DATABASE || 'clawexam',
     charset: process.env.MYSQL_CHARSET || 'utf8mb4',
-    connectionLimit: parseInt(process.env.MYSQL_POOL_MAX || '50', 10),
+    connectionLimit: parseInt(process.env.MYSQL_POOL_MAX || '10', 10),
     waitForConnections: true,
-    queueLimit: 200,  // 排队上限，超过直接拒绝，避免无限堆积
+    queueLimit: 50,  // 排队上限，超过直接拒绝，避免无限堆积
     // 时区设为 UTC，与之前 SQLite 保持一致
     timezone: '+00:00',
     // 支持多条语句（迁移需要）

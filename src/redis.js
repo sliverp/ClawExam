@@ -124,8 +124,8 @@ const cache = {
 
     const lockKey = CACHE_PREFIX + 'lock:' + key;
     try {
-      // 尝试抢锁，5 秒过期（防止进程挂了死锁）
-      const locked = await redis.set(lockKey, '1', 'EX', 5, 'NX');
+      // 尝试抢锁，10 秒过期（防止进程挂了死锁）
+      const locked = await redis.set(lockKey, '1', 'EX', 10, 'NX');
 
       if (locked) {
         // 抢到锁：执行 fn 重建缓存
@@ -138,14 +138,31 @@ const cache = {
         }
       } else {
         // 没抢到锁：等其他进程重建完，轮询缓存
-        for (let i = 0; i < 50; i++) { // 最多等 5 秒
+        for (let i = 0; i < 100; i++) { // 最多等 10 秒（100 × 100ms）
           await sleep(100);
           const cached = await this.getRaw(key);
           if (cached) {
             return JSON.parse(cached);
           }
+          // 检查锁是否已释放但缓存还没写入（锁持有者 crash 了）
+          if (i > 0 && i % 30 === 0) {
+            const lockExists = await redis.exists(lockKey);
+            if (!lockExists) {
+              // 锁已释放但缓存还没有，说明重建可能失败了，自己来重建
+              const retryLock = await redis.set(lockKey, '1', 'EX', 10, 'NX');
+              if (retryLock) {
+                try {
+                  return await fn();
+                } finally {
+                  await redis.del(lockKey).catch(() => {});
+                }
+              }
+            }
+          }
         }
-        // 超时兜底：直接查 DB
+        // 超时兜底：最后再查一次缓存，实在没有才查 DB
+        const lastTry = await this.getRaw(key);
+        if (lastTry) return JSON.parse(lastTry);
         return fn();
       }
     } catch {
