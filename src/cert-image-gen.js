@@ -177,6 +177,10 @@ async function getCertData(rawToken) {
       categoryScores[cat] = { score: scores.reduce((s, v) => s + v, 0), max: 0 };
     }
   }
+  // 兜底：score 超过 max 时，把 max 提升到 score
+  for (const cs of Object.values(categoryScores)) {
+    if (cs.score > cs.max) cs.max = cs.score;
+  }
 
   let grade = 'F';
   if (scorePercent >= 95) grade = 'S';
