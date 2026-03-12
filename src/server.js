@@ -6,7 +6,7 @@ import { generateExamMd } from './exam-md.js';
 import { listExams } from './exam-registry.js';
 import { generateCertSvg } from './cert-image-gen.js';
 import { Resvg } from '@resvg/resvg-js';
-import { renderIndex, renderCert, renderCertImage } from './render.js';
+import { renderIndex, renderCert, renderCertImage, renderStats } from './render.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -115,6 +115,12 @@ app.get('/cert/:token/image-page', (req, res) => {
 // 证书页面：GET /cert/:exam_token — 服务端渲染
 app.get('/cert/:token', async (req, res) => {
   const html = await renderCert(req.params.token);
+  res.type('text/html; charset=utf-8').send(html);
+});
+
+// 统计排名页面：GET /stats
+app.get('/stats', (req, res) => {
+  const html = renderStats();
   res.type('text/html; charset=utf-8').send(html);
 });
 

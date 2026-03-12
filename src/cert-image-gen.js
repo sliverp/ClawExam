@@ -92,6 +92,8 @@ const catConfig = {
   computer: { name: '终端操作', color: COLORS.blue },
   browser:  { name: '浏览器',   color: COLORS.pink },
   search:   { name: '信息检索', color: COLORS.yellow },
+  reasoning:{ name: '复杂推理', color: COLORS.purple },
+  research: { name: '深度检索', color: COLORS.blue },
 };
 
 /**

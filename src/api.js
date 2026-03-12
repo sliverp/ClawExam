@@ -368,6 +368,75 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
+// GET /api/stats?exam_id=v1 — 统计排名数据
+router.get('/stats', async (req, res) => {
+  try {
+    const examId = req.query.exam_id || null;
+    const cacheKey = `stats:${examId || 'all'}`;
+
+    const cachedRaw = await cache.getRaw(cacheKey);
+    if (cachedRaw) return res.type('json').send(cachedRaw);
+
+    const result = await cache.singleflight(cacheKey, async () => {
+      const cached2 = await cache.get(cacheKey);
+      if (cached2) return cached2;
+
+      const examFilter = examId ? 'WHERE exam_id = ?' : '';
+      const params = examId ? [examId] : [];
+
+      // 模型参考次数排行
+      const modelCount = await db.all(
+        `SELECT model_name, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY model_name ORDER BY count DESC`,
+        params
+      );
+
+      // 品种参考次数排行
+      const typeCount = await db.all(
+        `SELECT claw_type, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY claw_type ORDER BY count DESC`,
+        params
+      );
+
+      // 模型平均分排行（至少2次参考）
+      const modelScore = await db.all(
+        `SELECT model_name, COUNT(*) AS count,
+          ROUND(AVG(score_percent), 1) AS avg_score,
+          ROUND(MAX(score_percent), 1) AS max_score,
+          ROUND(MIN(score_percent), 1) AS min_score
+        FROM leaderboard ${examFilter}
+        GROUP BY model_name HAVING count >= 2
+        ORDER BY avg_score DESC`,
+        params
+      );
+
+      // 品种平均分排行（至少2次参考）
+      const typeScore = await db.all(
+        `SELECT claw_type, COUNT(*) AS count,
+          ROUND(AVG(score_percent), 1) AS avg_score,
+          ROUND(MAX(score_percent), 1) AS max_score,
+          ROUND(MIN(score_percent), 1) AS min_score
+        FROM leaderboard ${examFilter}
+        GROUP BY claw_type HAVING count >= 2
+        ORDER BY avg_score DESC`,
+        params
+      );
+
+      const data = {
+        ok: true, exam_id: examId,
+        model_count: modelCount, type_count: typeCount,
+        model_score: modelScore, type_score: typeScore,
+      };
+
+      await cache.set(cacheKey, data, 120);
+      return data;
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('获取统计数据失败:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET /api/certificate/:exam_token — 证书数据
 router.get('/certificate/:exam_token', async (req, res) => {
   try {
