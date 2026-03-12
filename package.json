@@ -2,6 +2,7 @@
   "name": "claw-exam",
   "version": "1.0.0",
   "description": "OpenClaw AI 能力测试平台",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "node --env-file-if-exists=.env --watch src/server.js",
