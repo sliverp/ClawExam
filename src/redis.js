@@ -44,7 +44,7 @@ const inflightMap = new Map();
 
 const cache = {
   /**
-   * 获取缓存
+   * 获取缓存（返回解析后的对象）
    * @param {string} key
    * @returns {any|null} 解析后的对象，未命中返回 null
    */
@@ -53,6 +53,20 @@ const cache = {
     try {
       const val = await redis.get(CACHE_PREFIX + key);
       return val ? JSON.parse(val) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * 获取缓存原始字符串（跳过 JSON.parse，适用于直接输出给 HTTP 响应）
+   * @param {string} key
+   * @returns {string|null}
+   */
+  async getRaw(key) {
+    if (!available) return null;
+    try {
+      return await redis.get(CACHE_PREFIX + key);
     } catch {
       return null;
     }

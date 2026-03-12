@@ -316,10 +316,10 @@ router.get('/leaderboard', async (req, res) => {
     const examId = req.query.exam_id;
     const cacheKey = `leaderboard:${examId || 'all'}`;
 
-    // 1. 尝试命中缓存
-    const cached = await cache.get(cacheKey);
-    if (cached) {
-      return res.json(cached);
+    // 1. 尝试命中缓存（直接拿原始 JSON 字符串，跳过 parse + stringify）
+    const cachedRaw = await cache.getRaw(cacheKey);
+    if (cachedRaw) {
+      return res.type('json').send(cachedRaw);
     }
 
     // 2. 缓存未命中，singleflight 保证同一 key 只有一个请求去查 DB

@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: 'clawexam',
     script: 'src/server.js',
-    instances: 'max',
+    instances: 2,
     exec_mode: 'cluster',
     env: {
       PORT: 3210,
