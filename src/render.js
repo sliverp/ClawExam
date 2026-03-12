@@ -885,8 +885,13 @@ export async function renderCert(rawToken) {
   if (exam) {
     for (const [cat, scores] of Object.entries(catAnswers)) {
       let limit = scores.length;
+      // pick_config: 按 category 独立配置抽题数
       if (exam.pick_config && exam.pick_config[cat] != null) {
         limit = Math.min(limit, exam.pick_config[cat]);
+      }
+      // pick_per_category: 所有 category 统一抽题数
+      else if (exam.pick_per_category != null) {
+        limit = Math.min(limit, exam.pick_per_category);
       }
       // 取得分最高的 limit 条
       scores.sort((a, b) => b - a);

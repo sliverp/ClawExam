@@ -154,6 +154,8 @@ async function getCertData(rawToken) {
       let limit = scores.length;
       if (exam.pick_config && exam.pick_config[cat] != null) {
         limit = Math.min(limit, exam.pick_config[cat]);
+      } else if (exam.pick_per_category != null) {
+        limit = Math.min(limit, exam.pick_per_category);
       }
       scores.sort((a, b) => b - a);
       const topScores = scores.slice(0, limit);
