@@ -1013,7 +1013,8 @@ export async function renderCert(rawToken) {
     .stat-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#777;margin-top:6px}
 
     .cats-section{padding:44px 24px}
-    .cats-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:24px;text-align:center;font-family:'Syne',system-ui,sans-serif}
+    .cats-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:8px;text-align:center;font-family:'Syne',system-ui,sans-serif}
+    .cats-hint{font-size:11px;color:#999;text-align:center;margin-bottom:20px;font-style:italic}
     .cat-row{
       display:flex;align-items:center;gap:12px;margin-bottom:14px;
       background:var(--white);border:var(--bw) solid var(--fg);
@@ -1104,6 +1105,7 @@ ${navHtml(false)}
   </div>
   <div class="cats-section">
     <div class="cats-title">各维度得分</div>
+    <div class="cats-hint">* 各维度题目由题库随机抽取，维度满分因抽题而异，与总分独立计算</div>
     ${catRowsHtml}
   </div>
   ${skillsHtml}

@@ -356,7 +356,8 @@ export async function generateCertSvg(rawToken) {
   if (cats.length > 0) {
     curY += 20;
     svg += `<text x="${contentW / 2}" y="${curY + 20}" text-anchor="middle" font-size="12" font-weight="800" fill="${COLORS.fg}" letter-spacing="4">各维度得分</text>`;
-    curY += 50;
+    svg += `<text x="${contentW / 2}" y="${curY + 38}" text-anchor="middle" font-size="9" fill="#999" font-style="italic">* 各维度题目由题库随机抽取，维度满分因抽题而异，与总分独立计算</text>`;
+    curY += 58;
 
     for (const [cat, s] of cats) {
       const pct = s.max > 0 ? Math.round(s.score * 100 / s.max) : 0;
