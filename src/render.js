@@ -871,26 +871,37 @@ export async function renderCert(rawToken) {
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：基于 session_questions 中的实际题目
+  // 各维度得分
   const categoryScores = {};
-  // 如果 session_questions 为空（旧数据），用 answerRows 的 question_id 回退
+  // 先从 answerRows 累加各维度实际得分
+  for (const a of answerRows) {
+    const q = getQuestion(session.exam_id, a.question_id);
+    if (!q) continue;
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
+    categoryScores[q.category].score += a.score;
+  }
+  // 计算各维度满分：优先用 session_questions，其次用 pick_config，最后用 answerRows
   const sessionQIds = new Set(
     sessionQuestionIds.length > 0
       ? sessionQuestionIds.map(r => r.question_id)
       : answerRows.map(r => r.question_id)
   );
   if (exam) {
+    // 收集每个 category 的每题分值和 session 中该 category 的题数
+    const catInfo = {};
     for (const q of exam.questions) {
-      if (!sessionQIds.has(q.id)) continue;
-      if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
-      else categoryScores[q.category].max += q.score;
+      if (!catInfo[q.category]) catInfo[q.category] = { perScore: q.score, count: 0 };
+      if (sessionQIds.has(q.id)) catInfo[q.category].count++;
     }
-  }
-  for (const a of answerRows) {
-    const q = getQuestion(session.exam_id, a.question_id);
-    if (!q) continue;
-    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: a.max_score };
-    categoryScores[q.category].score += a.score;
+    for (const [cat, info] of Object.entries(catInfo)) {
+      // 如果有 pick_config，用它限定该维度的题数上限
+      let count = info.count;
+      if (exam.pick_config && exam.pick_config[cat] != null) {
+        count = Math.min(count, exam.pick_config[cat]);
+      }
+      if (!categoryScores[cat]) categoryScores[cat] = { score: 0, max: 0 };
+      categoryScores[cat].max = count * info.perScore;
+    }
   }
 
   let grade = 'F';
