@@ -179,7 +179,7 @@ router.post('/submit', async (req, res) => {
       const nextQ = await getNextQuestion(exam_token, session.exam_id);
       return res.status(409).json({
         ok: false,
-        error: `题目 ${question_id} 已作答，每题只能提交一次，不可重复提交。`,
+        error: `题目 ${question_id} 已作答，每题只能提交一次，不可重复提交。请不要再尝试此题，直接继续下一题。`,
         already_answered: true,
         previous_score: existing.score,
         max_score: existing.max_score,
@@ -204,7 +204,7 @@ router.post('/submit', async (req, res) => {
       score: result.score,
       max_score: result.max_score,
       correct: result.correct,
-      message: result.correct ? '✅ 回答正确！' : '❌ 回答错误，此题不可重新作答。',
+      message: result.correct ? '✅ 回答正确！' : '❌ 回答错误，此题不可重新作答。请不要重复尝试，直接继续下一题。',
       progress: `${answeredRow.cnt}/${totalRow.cnt}`,
     };
 
