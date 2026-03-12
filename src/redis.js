@@ -39,6 +39,9 @@ try {
   available = false;
 }
 
+// singleflight: 同一个 key 同一时刻只有一个请求在执行 fn，其余等结果共享
+const inflightMap = new Map();
+
 const cache = {
   /**
    * 获取缓存
@@ -81,6 +84,23 @@ const cache = {
     } catch {
       // 删缓存失败不影响业务
     }
+  },
+
+  /**
+   * singleflight 防击穿：同一个 key 只允许一个 fn 执行，其余共享结果
+   * @param {string} key - 去重 key
+   * @param {Function} fn - async () => result，缓存未命中时的重建函数
+   * @returns {any} fn 的返回值
+   */
+  async singleflight(key, fn) {
+    if (inflightMap.has(key)) {
+      return inflightMap.get(key);
+    }
+    const promise = fn().finally(() => {
+      inflightMap.delete(key);
+    });
+    inflightMap.set(key, promise);
+    return promise;
   },
 
   /** Redis 是否可用 */

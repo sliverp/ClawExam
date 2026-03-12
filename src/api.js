@@ -310,7 +310,7 @@ router.get('/result/:exam_token', async (req, res) => {
   }
 });
 
-// GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选，带 Redis 缓存）
+// GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选，带 Redis 缓存 + singleflight 防击穿）
 router.get('/leaderboard', async (req, res) => {
   try {
     const examId = req.query.exam_id;
@@ -322,75 +322,80 @@ router.get('/leaderboard', async (req, res) => {
       return res.json(cached);
     }
 
-    // 2. 缓存未命中，查 DB
-    let rows;
-    if (examId) {
-      rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 100', [examId]);
-    } else {
-      rows = await db.all('SELECT * FROM leaderboard LIMIT 100');
-    }
+    // 2. 缓存未命中，singleflight 保证同一 key 只有一个请求去查 DB
+    const result = await cache.singleflight(cacheKey, async () => {
+      // 再查一次缓存（可能前一个 singleflight 已经写入了）
+      const cached2 = await cache.get(cacheKey);
+      if (cached2) return cached2;
 
-    if (rows.length === 0) {
-      const examMeta = examId ? getExam(examId) : null;
-      return res.json({ ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] });
-    }
-
-    // 批量查询所有 session 的 answers.max_score 合计（一条 SQL 代替 N 条）
-    const sessionIds = rows.map(r => r.session_id);
-    const placeholders = sessionIds.map(() => '?').join(',');
-    const answerMaxRows = await db.all(
-      `SELECT session_id, SUM(max_score) AS m, COUNT(*) AS cnt FROM answers WHERE session_id IN (${placeholders}) GROUP BY session_id`,
-      sessionIds
-    );
-    const answerMaxMap = {};
-    for (const r of answerMaxRows) answerMaxMap[r.session_id] = { m: r.m, cnt: r.cnt };
-
-    // 批量查询所有 session 的组卷题目数（一条 SQL 代替 N 条）
-    const sqCountRows = await db.all(
-      `SELECT session_id, COUNT(*) AS cnt FROM session_questions WHERE session_id IN (${placeholders}) GROUP BY session_id`,
-      sessionIds
-    );
-    const sqCountMap = {};
-    for (const r of sqCountRows) sqCountMap[r.session_id] = r.cnt;
-
-    const examMeta = examId ? getExam(examId) : null;
-    const leaderboard = [];
-    for (let i = 0; i < rows.length; i++) {
-      const r = rows[i];
-      const am = answerMaxMap[r.session_id];
-      const sqCount = sqCountMap[r.session_id] || 0;
-
-      let realMax;
-      if (am && sqCount > 0 && am.cnt >= sqCount) {
-        // 全部答完，直接用 answers.max_score
-        realMax = am.m;
-      } else if (am) {
-        // 有答题记录但数据不完整，用 answers.max_score 作为 fallback
-        realMax = am.m;
+      let rows;
+      if (examId) {
+        rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 100', [examId]);
       } else {
-        // 没有答题记录，用排行榜视图中的值
-        realMax = r.total_max_score;
+        rows = await db.all('SELECT * FROM leaderboard LIMIT 100');
       }
-      realMax = realMax || r.total_max_score;
 
-      const realPercent = realMax > 0 ? Math.round(r.total_score * 1000 / realMax) / 10 : 0;
-      leaderboard.push({
-        rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
-        claw_type: r.claw_type || 'OpenClaw',
-        model_name: r.model_name, owner_name: r.owner_name,
-        skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
-        session_id: r.session_id,
-        total_score: r.total_score, total_max_score: realMax,
-        answered_count: r.answered_count, score_percent: realPercent,
-        duration_seconds: r.duration_seconds || 0,
-        started_at: r.started_at,
-      });
-    }
+      if (rows.length === 0) {
+        const examMeta = examId ? getExam(examId) : null;
+        return { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] };
+      }
 
-    const result = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
+      // 批量查询所有 session 的 answers.max_score 合计
+      const sessionIds = rows.map(r => r.session_id);
+      const placeholders = sessionIds.map(() => '?').join(',');
+      const answerMaxRows = await db.all(
+        `SELECT session_id, SUM(max_score) AS m, COUNT(*) AS cnt FROM answers WHERE session_id IN (${placeholders}) GROUP BY session_id`,
+        sessionIds
+      );
+      const answerMaxMap = {};
+      for (const r of answerMaxRows) answerMaxMap[r.session_id] = { m: r.m, cnt: r.cnt };
 
-    // 3. 写入缓存，TTL 60s
-    await cache.set(cacheKey, result, 60);
+      // 批量查询所有 session 的组卷题目数
+      const sqCountRows = await db.all(
+        `SELECT session_id, COUNT(*) AS cnt FROM session_questions WHERE session_id IN (${placeholders}) GROUP BY session_id`,
+        sessionIds
+      );
+      const sqCountMap = {};
+      for (const r of sqCountRows) sqCountMap[r.session_id] = r.cnt;
+
+      const examMeta = examId ? getExam(examId) : null;
+      const leaderboard = [];
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const am = answerMaxMap[r.session_id];
+        const sqCount = sqCountMap[r.session_id] || 0;
+
+        let realMax;
+        if (am && sqCount > 0 && am.cnt >= sqCount) {
+          realMax = am.m;
+        } else if (am) {
+          realMax = am.m;
+        } else {
+          realMax = r.total_max_score;
+        }
+        realMax = realMax || r.total_max_score;
+
+        const realPercent = realMax > 0 ? Math.round(r.total_score * 1000 / realMax) / 10 : 0;
+        leaderboard.push({
+          rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
+          claw_type: r.claw_type || 'OpenClaw',
+          model_name: r.model_name, owner_name: r.owner_name,
+          skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
+          session_id: r.session_id,
+          total_score: r.total_score, total_max_score: realMax,
+          answered_count: r.answered_count, score_percent: realPercent,
+          duration_seconds: r.duration_seconds || 0,
+          started_at: r.started_at,
+        });
+      }
+
+      const data = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
+
+      // 写入缓存，TTL 60s
+      await cache.set(cacheKey, data, 60);
+
+      return data;
+    });
 
     res.json(result);
   } catch (err) {
