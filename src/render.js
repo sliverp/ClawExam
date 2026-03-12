@@ -871,52 +871,40 @@ export async function renderCert(rawToken) {
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：按 category 分组，受 pick_config 限制
+  // 各维度得分：按 category 分组
   const categoryScores = {};
-  // 先按 question_id 去重（同一题多次提交只取最高分）
+  // 按 question_id 去重（同一题多次提交只取最高分）
   const bestByQid = {};
   for (const a of answerRows) {
     if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
       bestByQid[a.question_id] = a;
     }
   }
-  // 按 category 收集每题最高分
-  const catAnswers = {};
+  // 按 category 累加去重后的得分
   for (const a of Object.values(bestByQid)) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
-    if (!catAnswers[q.category]) catAnswers[q.category] = [];
-    catAnswers[q.category].push(a.score);
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
+    categoryScores[q.category].score += a.score;
+    categoryScores[q.category].max += q.score;
   }
-  // 确定每个 category 的实际题数上限
+  // 用 pick_config / pick_per_category 计算标准满分，取两者较大值作为 max
   if (exam) {
-    for (const [cat, scores] of Object.entries(catAnswers)) {
-      let limit = scores.length;
-      // pick_config: 按 category 独立配置抽题数
-      if (exam.pick_config && exam.pick_config[cat] != null) {
-        limit = Math.min(limit, exam.pick_config[cat]);
-      }
-      // pick_per_category: 所有 category 统一抽题数
-      else if (exam.pick_per_category != null) {
-        limit = Math.min(limit, exam.pick_per_category);
-      }
-      // 取得分最高的 limit 条
-      scores.sort((a, b) => b - a);
-      const topScores = scores.slice(0, limit);
+    for (const [cat, cs] of Object.entries(categoryScores)) {
       const perScore = exam.questions.find(q => q.category === cat)?.score || 0;
-      categoryScores[cat] = {
-        score: topScores.reduce((s, v) => s + v, 0),
-        max: limit * perScore,
-      };
+      let pickCount = null;
+      if (exam.pick_config && exam.pick_config[cat] != null) {
+        pickCount = exam.pick_config[cat];
+      } else if (exam.pick_per_category != null) {
+        pickCount = exam.pick_per_category;
+      }
+      if (pickCount != null) {
+        const standardMax = pickCount * perScore;
+        cs.max = Math.max(cs.max, standardMax);
+      }
+      // 兜底：score 超过 max 时，把 max 提升到 score
+      if (cs.score > cs.max) cs.max = cs.score;
     }
-  } else {
-    for (const [cat, scores] of Object.entries(catAnswers)) {
-      categoryScores[cat] = { score: scores.reduce((s, v) => s + v, 0), max: 0 };
-    }
-  }
-  // 兜底：score 超过 max 时，把 max 提升到 score
-  for (const cs of Object.values(categoryScores)) {
-    if (cs.score > cs.max) cs.max = cs.score;
   }
 
   let grade = 'F';
