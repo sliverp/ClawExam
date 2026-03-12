@@ -39,14 +39,15 @@ try {
   available = false;
 }
 
-// singleflight: 同一个 key 同一时刻只有一个请求在执行 fn，其余等结果共享
+// singleflight: 进程内去重（同进程的并发请求共享一个 Promise）
 const inflightMap = new Map();
+
+// sleep 工具
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 const cache = {
   /**
    * 获取缓存（返回解析后的对象）
-   * @param {string} key
-   * @returns {any|null} 解析后的对象，未命中返回 null
    */
   async get(key) {
     if (!available) return null;
@@ -59,9 +60,7 @@ const cache = {
   },
 
   /**
-   * 获取缓存原始字符串（跳过 JSON.parse，适用于直接输出给 HTTP 响应）
-   * @param {string} key
-   * @returns {string|null}
+   * 获取缓存原始字符串（跳过 JSON.parse）
    */
   async getRaw(key) {
     if (!available) return null;
@@ -74,9 +73,6 @@ const cache = {
 
   /**
    * 写入缓存
-   * @param {string} key
-   * @param {any} value - 会被 JSON.stringify
-   * @param {number} ttl - 过期秒数，默认 60
    */
   async set(key, value, ttl = DEFAULT_TTL) {
     if (!available) return;
@@ -89,7 +85,6 @@ const cache = {
 
   /**
    * 删除缓存（主动失效）
-   * @param {string} key
    */
   async del(key) {
     if (!available) return;
@@ -101,20 +96,62 @@ const cache = {
   },
 
   /**
-   * singleflight 防击穿：同一个 key 只允许一个 fn 执行，其余共享结果
-   * @param {string} key - 去重 key
-   * @param {Function} fn - async () => result，缓存未命中时的重建函数
-   * @returns {any} fn 的返回值
+   * 进程内 singleflight + 跨进程 Redis 分布式锁防击穿
+   *
+   * 流程:
+   *   1. 进程内有 inflight → 直接共享 Promise
+   *   2. 尝试 Redis SET NX 抢锁
+   *      - 抢到锁 → 执行 fn → 写缓存 → 删锁
+   *      - 没抢到 → 轮询等缓存出现（其他进程正在重建）
    */
   async singleflight(key, fn) {
+    // 1. 进程内去重
     if (inflightMap.has(key)) {
       return inflightMap.get(key);
     }
-    const promise = fn().finally(() => {
+
+    const promise = this._distributedSingleflight(key, fn).finally(() => {
       inflightMap.delete(key);
     });
     inflightMap.set(key, promise);
     return promise;
+  },
+
+  async _distributedSingleflight(key, fn) {
+    if (!available) {
+      return fn();
+    }
+
+    const lockKey = CACHE_PREFIX + 'lock:' + key;
+    try {
+      // 尝试抢锁，5 秒过期（防止进程挂了死锁）
+      const locked = await redis.set(lockKey, '1', 'EX', 5, 'NX');
+
+      if (locked) {
+        // 抢到锁：执行 fn 重建缓存
+        try {
+          const result = await fn();
+          return result;
+        } finally {
+          // 释放锁
+          await redis.del(lockKey).catch(() => {});
+        }
+      } else {
+        // 没抢到锁：等其他进程重建完，轮询缓存
+        for (let i = 0; i < 50; i++) { // 最多等 5 秒
+          await sleep(100);
+          const cached = await this.getRaw(key);
+          if (cached) {
+            return JSON.parse(cached);
+          }
+        }
+        // 超时兜底：直接查 DB
+        return fn();
+      }
+    } catch {
+      // Redis 异常，直接走 DB
+      return fn();
+    }
   },
 
   /** Redis 是否可用 */
