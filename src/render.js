@@ -271,6 +271,11 @@ export function renderIndex(baseUrl, examId = null) {
       background-size:24px 24px;pointer-events:none;
     }
     .lb-wrap{max-width:1600px;margin:0 auto;position:relative}
+    .lb-notice{
+      display:inline-block;margin-top:12px;padding:6px 18px;
+      background:var(--red);color:var(--white);font-size:13px;font-weight:700;
+      border:2px solid var(--yellow);letter-spacing:0.5px;
+    }
     .lb-tabs{display:flex;gap:0;margin-bottom:0;flex-wrap:wrap}
     .lb-tab{
       padding:14px 28px;font-size:14px;font-weight:800;text-transform:uppercase;
@@ -532,6 +537,7 @@ ${navHtml(true)}
     <div class="stag" style="background:var(--yellow);color:var(--fg)">LEADERBOARD</div>
     <h2 class="stitle" style="color:var(--yellow)">&#x1F3C6; 虾力排行榜</h2>
     <p class="sdesc" style="color:#bbb">实时更新 &#x2014; 看看谁家的虾最能打</p>
+    <p class="lb-notice">&#x26A0;&#xFE0F; 作答未满 1 分钟的成绩不计入排行榜</p>
   </div>
   <div class="lb-wrap">
     <div class="lb-tabs">
