@@ -221,7 +221,6 @@ export async function generateCertSvg(rawToken) {
   const BW = 3; // border width
   const gs = gradeStyles[d.grade] || gradeStyles['F'];
 
-  // ===== 计算各区域高度 =====
   const cats = Object.entries(d.category_scores || {});
   const skills = d.profile.skill_list || [];
 
@@ -229,19 +228,16 @@ export async function generateCertSvg(rawToken) {
   const clawInfoH = 110;    // 虾名 + 元信息
   const gradeH = 180;       // 等级徽章
   const statsH = 100;       // 四格统计
-  const catTitleH = cats.length > 0 ? 50 : 0;
   const catRowH = 52;
-  const catSectionH = cats.length > 0 ? cats.length * catRowH + 20 : 0;
-  const skillSectionH = skills.length > 0 ? 70 : 0;
-  const footerH = 220;
-  const padding = 30;
+  const footerContentH = 220;
 
-  const totalH = headerH + clawInfoH + gradeH + statsH + catTitleH + catSectionH + skillSectionH + footerH + padding * 2;
+  // 用占位符，绘制完毕后替换为实际高度
+  const HEIGHT_PLACEHOLDER = '__TOTAL_HEIGHT__';
 
   let curY = 0;
 
-  // ===== 开始拼接 SVG =====
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">
+  // ===== 开始拼接 SVG（高度先用占位符）=====
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${HEIGHT_PLACEHOLDER}" viewBox="0 0 ${W} ${HEIGHT_PLACEHOLDER}">
   <defs>
     <style>
       text { font-family: 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
@@ -252,15 +248,14 @@ export async function generateCertSvg(rawToken) {
     </pattern>
   </defs>
 
-  <!-- 外框：硬阴影 -->
-  <rect x="8" y="8" width="${W - 8}" height="${totalH - 8}" fill="${COLORS.fg}"/>
-  <rect x="0" y="0" width="${W - 8}" height="${totalH - 8}" fill="${COLORS.bg}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
+  <!-- 外框：硬阴影（尺寸占位，绘制完成后替换） -->
+  <rect x="8" y="8" width="${W - 8}" height="${HEIGHT_PLACEHOLDER}_INNER" fill="${COLORS.fg}"/>
+  <rect x="0" y="0" width="${W - 8}" height="${HEIGHT_PLACEHOLDER}_INNER" fill="${COLORS.bg}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
 
   <!-- 点阵纹理覆盖 -->
-  <rect x="0" y="0" width="${W - 8}" height="${totalH - 8}" fill="url(#dots)"/>`;
+  <rect x="0" y="0" width="${W - 8}" height="${HEIGHT_PLACEHOLDER}_INNER" fill="url(#dots)"/>`;
 
   const contentW = W - 8;
-  const contentH = totalH - 8;
   const innerLeft = 40;
   const innerRight = contentW - 40;
   const innerW = innerRight - innerLeft;
@@ -356,7 +351,7 @@ export async function generateCertSvg(rawToken) {
   if (cats.length > 0) {
     curY += 20;
     svg += `<text x="${contentW / 2}" y="${curY + 20}" text-anchor="middle" font-size="12" font-weight="800" fill="${COLORS.fg}" letter-spacing="4">各维度得分</text>`;
-    curY += catTitleH;
+    curY += 50;
 
     for (const [cat, s] of cats) {
       const pct = s.max > 0 ? Math.round(s.score * 100 / s.max) : 0;
@@ -411,7 +406,7 @@ export async function generateCertSvg(rawToken) {
       svg += `<text x="${skillX + tw / 2}" y="${curY + 18}" text-anchor="middle" font-size="11" font-weight="800" fill="${COLORS.fg}">${esc(sk)}</text>`;
       skillX += tw + 10;
     }
-    curY += tagH + skillSectionH - tagH;
+    curY += tagH + 10;
   }
 
   // ===== 底部信息 + 二维码 =====
@@ -419,7 +414,6 @@ export async function generateCertSvg(rawToken) {
 
   const footerY = curY;
   const qrSize = 170;
-  const footerContentH = 220;
   svg += `<rect x="0" y="${footerY}" width="${contentW}" height="${footerContentH}" fill="${COLORS.fg}"/>`;
 
   if (qrcodeBase64) {
@@ -456,6 +450,12 @@ export async function generateCertSvg(rawToken) {
   }
 
   svg += '\n</svg>';
+
+  // ===== 计算实际总高度并替换占位符 =====
+  const totalH = curY + footerContentH + 8; // 8 为外框硬阴影偏移
+  const innerH = totalH - 8;
+  svg = svg.replaceAll(HEIGHT_PLACEHOLDER + '_INNER', String(innerH));
+  svg = svg.replaceAll(HEIGHT_PLACEHOLDER, String(totalH));
 
   return svg;
 }
