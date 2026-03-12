@@ -14,6 +14,30 @@
  *   PORT           - HTTP 服务端口（默认: 3210）
  */
 
+import { readFileSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// 手动加载 .env（兼容 pm2 cluster 模式，不依赖 --env-file）
+try {
+  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const envPath = resolve(__dirname, '..', '.env');
+  const envContent = readFileSync(envPath, 'utf-8');
+  for (const line of envContent.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx <= 0) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const val = trimmed.slice(eqIdx + 1).trim();
+    if (!(key in process.env)) {
+      process.env[key] = val;
+    }
+  }
+} catch {
+  // .env 不存在时静默跳过
+}
+
 const config = {
   mysql: {
     host: process.env.MYSQL_HOST || '127.0.0.1',
