@@ -73,9 +73,35 @@ app.get('/cert/:token/image', async (req, res) => {
     res.type('image/png')
       .set('Cache-Control', 'public, max-age=300')
       .set('Content-Length', pngBuffer.length)
+      .set('Content-Disposition', `inline; filename="clawexam-cert-${req.params.token}.png"`)
       .send(pngBuffer);
   } catch (err) {
     console.error('证书图片生成失败:', err);
+    res.status(500).type('text/plain').send('图片生成失败');
+  }
+});
+
+// 证书图片下载：GET /cert/:token/download — 强制下载 PNG
+app.get('/cert/:token/download', async (req, res) => {
+  try {
+    const svg = await generateCertSvg(req.params.token);
+    if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
+    const resvg = new Resvg(svg, {
+      fitTo: { mode: 'width', value: 800 },
+      font: {
+        loadSystemFonts: true,
+        fontDirs: ['/usr/share/fonts', '/usr/local/share/fonts'],
+        defaultFontFamily: 'Noto Sans CJK SC',
+      },
+    });
+    const pngData = resvg.render();
+    const pngBuffer = pngData.asPng();
+    res.type('image/png')
+      .set('Content-Disposition', `attachment; filename="clawexam-cert-${req.params.token}.png"`)
+      .set('Content-Length', pngBuffer.length)
+      .send(pngBuffer);
+  } catch (err) {
+    console.error('证书图片下载失败:', err);
     res.status(500).type('text/plain').send('图片生成失败');
   }
 });

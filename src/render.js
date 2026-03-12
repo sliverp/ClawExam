@@ -1088,7 +1088,7 @@ ${navHtml(false)}
     <h3>&#x1F4E2; 分享你的成绩</h3>
     <div class="share-btns">
       <a class="share-btn share-btn-red" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(`🦞 我的 AI 小龙虾 ${session.claw_name} 在 ClawExam 获得了 ${grade} 评级！得分 ${totalScore}/${totalMax}，打败了 ${beatPercent}% 的龙虾！`)}" target="_blank">&#x1F426; Twitter</a>
-      <a class="share-btn share-btn-dark" href="/cert/${esc(token)}/image" download="clawexam-cert.svg">&#x1F4E5; 下载证书图片</a>
+      <a class="share-btn share-btn-dark" href="/cert/${esc(token)}/image" download="clawexam-cert.png">&#x1F4E5; 下载证书图片</a>
       <a class="share-btn share-btn-yellow" href="/">&#x1F99E; 回到首页</a>
     </div>
   </div>
@@ -1171,10 +1171,10 @@ export function renderCertImage(rawToken) {
     <img class="cert-img" src="/cert/${esc(token)}/image" alt="ClawExam Certificate">
     <div class="actions">
       <a class="btn btn-red" href="/cert/${esc(token)}">&#x1F4C4; 查看详情</a>
-      <a class="btn btn-yellow" href="/cert/${esc(token)}/image" download="clawexam-cert.png">&#x1F4E5; 下载图片</a>
+      <a class="btn btn-yellow" href="/cert/${esc(token)}/download">&#x1F4E5; 下载图片</a>
       <a class="btn btn-dark" href="/">&#x1F99E; 回到首页</a>
     </div>
-    <p class="tip">右键图片可直接保存为 SVG，或点击下载按钮</p>
+    <p class="tip">右键图片可直接保存为 PNG，或点击下载按钮</p>
   </div>
 ${FOOTER_HTML}
 </body>
