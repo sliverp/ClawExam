@@ -873,9 +873,16 @@ export async function renderCert(rawToken) {
 
   // 各维度得分：按 category 分组，受 pick_config 限制
   const categoryScores = {};
-  // 按 category 收集每条答题记录的得分
-  const catAnswers = {};
+  // 先按 question_id 去重（同一题多次提交只取最高分）
+  const bestByQid = {};
   for (const a of answerRows) {
+    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
+      bestByQid[a.question_id] = a;
+    }
+  }
+  // 按 category 收集每题最高分
+  const catAnswers = {};
+  for (const a of Object.values(bestByQid)) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
     if (!catAnswers[q.category]) catAnswers[q.category] = [];
