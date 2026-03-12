@@ -11,6 +11,7 @@ const exam = {
   description: '进阶评测：重点考察 Computer Use、Browser Use 和综合编码推理能力',
   version: '1.0.0',
   created_at: '2026-03-10',
+  pick_count: 22,  // 从题库中随机抽取的题目数量（等于题库大小则全部考，但顺序随机）
 
   questions: [
     // ==================== Computer Use (computer) ====================

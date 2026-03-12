@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "migrate": "node src/migrate.js"
+    "migrate": "node src/migrate.js",
+    "migrate:data": "node scripts/sqlite-to-mysql.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
     "express": "^4.21.0",
+    "mysql2": "^3.11.0",
     "uuid": "^10.0.0"
   }
 }

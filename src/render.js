@@ -828,22 +828,29 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 // 证书页面
 // ============================================================
-export function renderCert(rawToken) {
+export async function renderCert(rawToken) {
   const token = normalizeToken(rawToken);
   if (!token) return renderCertError('缺少准考证号');
 
-  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
+  const session = await db.get(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
     cp.claw_name, cp.claw_version, cp.claw_type, cp.model_name, cp.owner_name, cp.skill_list
-    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
+    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`, [token]);
   if (!session) return renderCertError('准考证号无效');
 
-  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
+  const answerRows = await db.all('SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?', [token]);
   if (answerRows.length === 0) return renderCertError('尚未答题，无法生成证书');
 
   const exam = getExam(session.exam_id);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  // 总分分母使用试卷满分，未答题以 0 分计入
-  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+
+  // 计算本 session 的满分（基于 session_questions）
+  const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
+  let sessionMax = 0;
+  for (const row of sessionQuestionIds) {
+    const q = getQuestion(session.exam_id, row.question_id);
+    if (q) sessionMax += q.score;
+  }
+  const totalMax = sessionMax || exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -851,21 +858,25 @@ export function renderCert(rawToken) {
   const startMs = new Date(session.started_at).getTime();
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
-  const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`).get(
-    session.exam_id, totalScore, totalScore, session.started_at).rank;
+  const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, session.started_at]);
+  const rank = rankRow.rank;
 
-  const totalParticipants = db.prepare(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
-    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`).get(session.exam_id).cnt;
+  const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
+    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
+  const totalParticipants = participantRow.cnt;
 
   const beatPercent = totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：先从试卷定义初始化所有分类（确保未答分类也显示）
+  // 各维度得分：基于 session_questions 中的实际题目
   const categoryScores = {};
+  const sessionQIds = new Set(sessionQuestionIds.map(r => r.question_id));
   if (exam) {
     for (const q of exam.questions) {
+      if (sessionQIds.size > 0 && !sessionQIds.has(q.id)) continue;
       if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
       else categoryScores[q.category].max += q.score;
     }

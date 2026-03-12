@@ -1,44 +1,41 @@
-import Database from 'better-sqlite3';
+import mysql from 'mysql2/promise';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import config from './config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'data', 'clawexam.db');
-const MIGRATE_DIR = path.join(__dirname, '..', 'migrate');
+const MIGRATE_DIR = path.join(__dirname, '..', 'migrate-mysql');
 
-// 确保 data 目录存在
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+async function runMigrations() {
+  const conn = await mysql.createConnection({
+    ...config.mysql,
+    multipleStatements: true,
+  });
 
-const db = new Database(DB_PATH, { verbose: process.env.DEBUG ? console.log : undefined });
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+  console.log('🗄️  ClawExam 数据库迁移（MySQL）');
+  console.log(`   MySQL: ${config.mysql.host}:${config.mysql.port}/${config.mysql.database}`);
+  console.log(`   迁移目录: ${MIGRATE_DIR}`);
 
-// 获取已执行的迁移
-function getAppliedMigrations() {
-  try {
-    return db.prepare('SELECT name FROM migrations ORDER BY id').all().map(r => r.name);
-  } catch {
-    // migrations 表不存在，返回空
-    return [];
-  }
-}
+  // 确保 migrations 表存在
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS migrations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
 
-// 获取所有迁移文件（按文件名排序）
-function getMigrationFiles() {
-  return fs.readdirSync(MIGRATE_DIR)
-    .filter(f => f.endsWith('.sql'))
-    .sort();
-}
+  // 获取已执行的迁移
+  const [applied] = await conn.execute('SELECT name FROM migrations ORDER BY id');
+  const appliedNames = applied.map(r => r.name);
 
-// 执行迁移
-function runMigrations() {
-  const applied = getAppliedMigrations();
-  const files = getMigrationFiles();
+  // 获取所有迁移文件
+  const files = fs.readdirSync(MIGRATE_DIR).filter(f => f.endsWith('.sql')).sort();
   let count = 0;
 
   for (const file of files) {
-    if (applied.includes(file)) {
+    if (appliedNames.includes(file)) {
       console.log(`  ✓ ${file} (已执行)`);
       continue;
     }
@@ -46,15 +43,8 @@ function runMigrations() {
     const sql = fs.readFileSync(path.join(MIGRATE_DIR, file), 'utf-8');
     console.log(`  ▶ 执行迁移: ${file}`);
 
-    db.exec(sql);
-
-    // 记录迁移（migrations 表由第一个迁移脚本创建）
-    try {
-      db.prepare('INSERT INTO migrations (name) VALUES (?)').run(file);
-    } catch {
-      // 如果 migrations 表刚被创建，重试
-      db.prepare('INSERT INTO migrations (name) VALUES (?)').run(file);
-    }
+    await conn.query(sql);
+    await conn.execute('INSERT INTO migrations (name) VALUES (?)', [file]);
 
     count++;
     console.log(`  ✓ ${file} 完成`);
@@ -65,11 +55,12 @@ function runMigrations() {
   } else {
     console.log(`  共执行 ${count} 个迁移。`);
   }
+
+  await conn.end();
+  console.log('✅ 迁移完成');
 }
 
-console.log('🗄️  ClawExam 数据库迁移');
-console.log(`   数据库: ${DB_PATH}`);
-console.log(`   迁移目录: ${MIGRATE_DIR}`);
-runMigrations();
-db.close();
-console.log('✅ 迁移完成');
+runMigrations().catch(err => {
+  console.error('❌ 迁移失败:', err.message);
+  process.exit(1);
+});

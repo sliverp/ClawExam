@@ -90,22 +90,29 @@ const catConfig = {
 /**
  * 获取证书数据
  */
-function getCertData(rawToken) {
+async function getCertData(rawToken) {
   const token = normalizeToken(rawToken);
   if (!token) return null;
 
-  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
+  const session = await db.get(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
     cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list, cp.claw_type
-    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
+    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`, [token]);
   if (!session) return null;
 
-  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
+  const answerRows = await db.all('SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?', [token]);
   if (answerRows.length === 0) return null;
 
   const exam = getExam(session.exam_id);
   const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  // 总分分母使用试卷满分，未答题以 0 分计入
-  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+
+  // 计算本 session 的满分（基于 session_questions）
+  const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
+  let sessionMax = 0;
+  for (const row of sessionQuestionIds) {
+    const q = getQuestion(session.exam_id, row.question_id);
+    if (q) sessionMax += q.score;
+  }
+  const totalMax = sessionMax || exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -113,21 +120,25 @@ function getCertData(rawToken) {
   const startMs = new Date(session.started_at).getTime();
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
-  const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`).get(
-    session.exam_id, totalScore, totalScore, session.started_at).rank;
+  const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, session.started_at]);
+  const rank = rankRow.rank;
 
-  const totalParticipants = db.prepare(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
-    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`).get(session.exam_id).cnt;
+  const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
+    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
+  const totalParticipants = participantRow.cnt;
 
   const beatPercent = totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：先从试卷定义初始化所有分类（确保未答题的分类也显示）
+  // 各维度得分：基于 session_questions 中的实际题目
   const categoryScores = {};
+  const sessionQIds = new Set(sessionQuestionIds.map(r => r.question_id));
   if (exam) {
     for (const q of exam.questions) {
+      if (sessionQIds.size > 0 && !sessionQIds.has(q.id)) continue;
       if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
       else categoryScores[q.category].max += q.score;
     }
@@ -180,8 +191,8 @@ function neoRect(x, y, w, h, fill, shadowOffset = 4) {
 /**
  * 生成证书 SVG 图片 — Neobrutalism 风格
  */
-export function generateCertSvg(rawToken) {
-  const d = getCertData(rawToken);
+export async function generateCertSvg(rawToken) {
+  const d = await getCertData(rawToken);
   if (!d) return null;
 
   const W = 800;
@@ -200,7 +211,7 @@ export function generateCertSvg(rawToken) {
   const catRowH = 52;
   const catSectionH = cats.length > 0 ? cats.length * catRowH + 20 : 0;
   const skillSectionH = skills.length > 0 ? 70 : 0;
-  const footerH = 130;
+  const footerH = 200;
   const padding = 30;
 
   const totalH = headerH + clawInfoH + gradeH + statsH + catTitleH + catSectionH + skillSectionH + footerH + padding * 2;
@@ -384,41 +395,47 @@ export function generateCertSvg(rawToken) {
   svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
 
   const footerY = curY;
-  const qrSize = 100;
-  const footerContentH = 130;
+  const qrSize = 150;
+  const footerContentH = 200;
   svg += `<rect x="0" y="${footerY}" width="${contentW}" height="${footerContentH}" fill="${COLORS.fg}"/>`;
 
   if (qrcodeBase64) {
-    // 左侧：文字信息
-    const textCenterX = (contentW - qrSize - 40) / 2;
+    // 左侧：二维码（大尺寸 + 醒目白色背景框）
+    const qrX = 30;
+    const qrY = footerY + (footerContentH - qrSize) / 2;
+    svg += `<rect x="${qrX - 8 + 4}" y="${qrY - 8 + 4}" width="${qrSize + 16}" height="${qrSize + 16}" fill="#333"/>`;
+    svg += `<rect x="${qrX - 8}" y="${qrY - 8}" width="${qrSize + 16}" height="${qrSize + 16}" fill="${COLORS.white}" stroke="${COLORS.yellow}" stroke-width="3"/>`;
+    svg += `<image xlink:href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
 
-    // 准考证号
-    svg += `<rect x="${textCenterX - 200 + 3}" y="${footerY + 14 + 3}" width="400" height="26" fill="#333"/>`;
-    svg += `<rect x="${textCenterX - 200}" y="${footerY + 14}" width="400" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
-    svg += `<text x="${textCenterX}" y="${footerY + 32}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    // 右侧：文字信息
+    const textLeft = qrX + qrSize + 40;
+    const textCenterX = textLeft + (contentW - textLeft - 20) / 2;
 
-    // 考试时间
-    svg += `<text x="${textCenterX}" y="${footerY + 60}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
-
-    // 品牌
-    svg += `<text x="${textCenterX}" y="${footerY + 84}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+    // 醒目提示语
+    svg += `<text x="${textCenterX}" y="${footerY + 40}" text-anchor="middle" font-size="20" font-weight="800" fill="${COLORS.yellow}">🦞 快来测测你的龙虾</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 68}" text-anchor="middle" font-size="20" font-weight="800" fill="${COLORS.yellow}">是什么等级！</text>`;
 
     // 扫码提示
-    svg += `<text x="${textCenterX}" y="${footerY + 106}" text-anchor="middle" font-size="11" fill="#666">扫描右侧二维码查看完整证书 →</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 96}" text-anchor="middle" font-size="14" font-weight="600" fill="#ccc">← 扫描二维码立即挑战</text>`;
 
-    // 右侧：二维码（白色背景框 + 二维码图片）
-    const qrX = contentW - qrSize - 24;
-    const qrY = footerY + (footerContentH - qrSize) / 2;
-    svg += `<rect x="${qrX - 6 + 3}" y="${qrY - 6 + 3}" width="${qrSize + 12}" height="${qrSize + 12}" fill="#333"/>`;
-    svg += `<rect x="${qrX - 6}" y="${qrY - 6}" width="${qrSize + 12}" height="${qrSize + 12}" fill="${COLORS.white}" stroke="#444" stroke-width="2"/>`;
-    svg += `<image xlink:href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
+    // 准考证号
+    svg += `<rect x="${textCenterX - 180 + 3}" y="${footerY + 112 + 3}" width="360" height="24" fill="#333"/>`;
+    svg += `<rect x="${textCenterX - 180}" y="${footerY + 112}" width="360" height="24" fill="#222" stroke="#444" stroke-width="2"/>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 129}" text-anchor="middle" font-size="10" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+
+    // 考试时间
+    svg += `<text x="${textCenterX}" y="${footerY + 156}" text-anchor="middle" font-size="11" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+
+    // 品牌
+    svg += `<text x="${textCenterX}" y="${footerY + 180}" text-anchor="middle" font-size="13" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
   } else {
     // 无二维码时居中显示文字
-    svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 18 + 3}" width="460" height="26" fill="#333"/>`;
-    svg += `<rect x="${contentW / 2 - 230}" y="${footerY + 18}" width="460" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 36}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 66}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 96}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 36}" text-anchor="middle" font-size="20" font-weight="800" fill="${COLORS.yellow}">🦞 快来测测你的龙虾是什么等级！</text>`;
+    svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 52 + 3}" width="460" height="26" fill="#333"/>`;
+    svg += `<rect x="${contentW / 2 - 230}" y="${footerY + 52}" width="460" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 70}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 100}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 130}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
   }
 
   svg += '\n</svg>';

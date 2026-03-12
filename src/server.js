@@ -55,9 +55,9 @@ app.get('/cert/', (req, res) => {
 });
 
 // 证书图片：GET /cert/:token/image — 返回 PNG 图片（图床模式）
-app.get('/cert/:token/image', (req, res) => {
+app.get('/cert/:token/image', async (req, res) => {
   try {
-    const svg = generateCertSvg(req.params.token);
+    const svg = await generateCertSvg(req.params.token);
     if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
     console.log('SVG 包含 image 标签:', svg.includes('<image'), 'SVG 长度:', svg.length);
     const resvg = new Resvg(svg, {
@@ -87,8 +87,8 @@ app.get('/cert/:token/image-page', (req, res) => {
 });
 
 // 证书页面：GET /cert/:exam_token — 服务端渲染
-app.get('/cert/:token', (req, res) => {
-  const html = renderCert(req.params.token);
+app.get('/cert/:token', async (req, res) => {
+  const html = await renderCert(req.params.token);
   res.type('text/html; charset=utf-8').send(html);
 });
 

@@ -31,6 +31,7 @@ for (const file of files) {
 
   // 计算汇总信息
   const totalScore = exam.questions.reduce((s, q) => s + q.score, 0);
+  const pickCount = exam.pick_count || exam.questions.length;
   const categories = {};
   for (const q of exam.questions) {
     if (!categories[q.category]) {
@@ -41,12 +42,14 @@ for (const file of files) {
 
   registry.set(exam.id, {
     ...exam,
-    total_questions: exam.questions.length,
-    total_score: totalScore,
+    pick_count: pickCount,
+    total_questions: pickCount,    // 实际考题数 = 抽取数
+    total_score: totalScore,       // 题库总分（参考值）
+    pool_size: exam.questions.length,
     categories,
   });
 
-  console.log(`  📝 加载试卷: ${exam.id} — ${exam.name} (${exam.questions.length} 题, ${totalScore} 分)`);
+  console.log(`  📝 加载题库: ${exam.id} — ${exam.name} (题库 ${exam.questions.length} 题, 每次抽 ${pickCount} 题)`);
 }
 
 function categoryLabel(cat) {
@@ -67,6 +70,8 @@ export function listExams() {
     version: e.version,
     total_questions: e.total_questions,
     total_score: e.total_score,
+    pool_size: e.questions.length,
+    pick_count: e.pick_count || e.questions.length,
     categories: e.categories,
     created_at: e.created_at,
   }));
@@ -90,11 +95,93 @@ export function getPublicQuestions(examId) {
   }));
 }
 
-/** 获取指定试卷的某题 */
+/** 获取指定试卷的某题（内部使用，含答案） */
 export function getQuestion(examId, questionId) {
   const exam = registry.get(examId);
   if (!exam) return null;
   return exam.questions.find(q => q.id === questionId) || null;
+}
+
+/** 获取某题的公开信息（不含答案），附带序号 */
+export function getPublicQuestion(examId, questionId) {
+  const q = getQuestion(examId, questionId);
+  if (!q) return null;
+  return {
+    id: q.id,
+    category: q.category,
+    question: q.question,
+    score: q.score,
+    hint: q.hint,
+  };
+}
+
+/**
+ * 从题库中随机抽取 N 道题（Fisher-Yates 洗牌）
+ * 如果试卷定义了 pick_count，使用该数量；否则取全部题目
+ * 尽量保证各分类均匀抽取
+ */
+export function pickRandomQuestions(examId) {
+  const exam = registry.get(examId);
+  if (!exam) return null;
+
+  const pickCount = exam.pick_count || exam.questions.length;
+  const allQuestions = [...exam.questions];
+
+  if (pickCount >= allQuestions.length) {
+    // 全部抽取，但打乱顺序
+    for (let i = allQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+    }
+    return allQuestions.map(q => q.id);
+  }
+
+  // 按分类分组
+  const byCategory = {};
+  for (const q of allQuestions) {
+    if (!byCategory[q.category]) byCategory[q.category] = [];
+    byCategory[q.category].push(q);
+  }
+
+  // 每个分类内部洗牌
+  for (const cat of Object.values(byCategory)) {
+    for (let i = cat.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cat[i], cat[j]] = [cat[j], cat[i]];
+    }
+  }
+
+  // 按比例从各分类抽取
+  const categories = Object.keys(byCategory);
+  const picked = [];
+  const perCat = Math.floor(pickCount / categories.length);
+  let remaining = pickCount - perCat * categories.length;
+
+  for (const cat of categories) {
+    const pool = byCategory[cat];
+    const take = Math.min(pool.length, perCat + (remaining > 0 ? 1 : 0));
+    if (take > perCat) remaining--;
+    picked.push(...pool.slice(0, take));
+  }
+
+  // 如果还不够（某些分类题不够），从剩余题中补
+  if (picked.length < pickCount) {
+    const pickedIds = new Set(picked.map(q => q.id));
+    const rest = allQuestions.filter(q => !pickedIds.has(q.id));
+    for (let i = rest.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [rest[i], rest[j]] = [rest[j], rest[i]];
+    }
+    picked.push(...rest.slice(0, pickCount - picked.length));
+  }
+
+  // 最终再打乱一次顺序
+  for (let i = picked.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [picked[i], picked[j]] = [picked[j], picked[i]];
+  }
+
+  return picked.map(q => q.id);
 }
 
 /** 自动判分 */
