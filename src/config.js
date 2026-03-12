@@ -35,6 +35,12 @@ const config = {
     idleTimeout: 60000,              // 空闲连接 60s 后自动释放，避免拿到被服务端关闭的死连接
     maxIdle: 5,                      // 最大空闲连接数，超出的空闲连接会被关闭
   },
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD || undefined,
+    db: parseInt(process.env.REDIS_DB || '0', 10),
+  },
   port: parseInt(process.env.PORT || '3210', 10),
 };
 

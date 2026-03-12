@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from './db.js';
+import cache from './redis.js';
 import {
   listExams, getExam, getPublicQuestion,
   getQuestion, gradeAnswer, examExists,
@@ -222,6 +223,12 @@ router.post('/submit', async (req, res) => {
       response.next_question = await getNextQuestion(exam_token, session.exam_id);
     }
 
+    // 主动失效排行榜缓存（该试卷 + 全部）
+    await Promise.all([
+      cache.del(`leaderboard:${session.exam_id}`),
+      cache.del('leaderboard:all'),
+    ]);
+
     res.json(response);
   } catch (err) {
     console.error('提交答案失败:', err);
@@ -303,10 +310,19 @@ router.get('/result/:exam_token', async (req, res) => {
   }
 });
 
-// GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选）
+// GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选，带 Redis 缓存）
 router.get('/leaderboard', async (req, res) => {
   try {
     const examId = req.query.exam_id;
+    const cacheKey = `leaderboard:${examId || 'all'}`;
+
+    // 1. 尝试命中缓存
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    // 2. 缓存未命中，查 DB
     let rows;
     if (examId) {
       rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 100', [examId]);
@@ -371,7 +387,12 @@ router.get('/leaderboard', async (req, res) => {
       });
     }
 
-    res.json({ ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard });
+    const result = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
+
+    // 3. 写入缓存，TTL 60s
+    await cache.set(cacheKey, result, 60);
+
+    res.json(result);
   } catch (err) {
     console.error('获取排行榜失败:', err);
     res.status(500).json({ ok: false, error: err.message });
