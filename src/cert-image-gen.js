@@ -140,34 +140,32 @@ async function getCertData(rawToken) {
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分
+  // 各维度得分：按 category 分组，受 pick_config 限制
   const categoryScores = {};
-  // 先从 answerRows 累加各维度实际得分
+  const catAnswers = {};
   for (const a of answerRows) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
-    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
-    categoryScores[q.category].score += a.score;
+    if (!catAnswers[q.category]) catAnswers[q.category] = [];
+    catAnswers[q.category].push(a.score);
   }
-  // 计算各维度满分：优先用 session_questions，其次用 pick_config，最后用 answerRows
-  const sessionQIds = new Set(
-    sessionQuestionIds.length > 0
-      ? sessionQuestionIds.map(r => r.question_id)
-      : answerRows.map(r => r.question_id)
-  );
   if (exam) {
-    const catInfo = {};
-    for (const q of exam.questions) {
-      if (!catInfo[q.category]) catInfo[q.category] = { perScore: q.score, count: 0 };
-      if (sessionQIds.has(q.id)) catInfo[q.category].count++;
-    }
-    for (const [cat, info] of Object.entries(catInfo)) {
-      let count = info.count;
+    for (const [cat, scores] of Object.entries(catAnswers)) {
+      let limit = scores.length;
       if (exam.pick_config && exam.pick_config[cat] != null) {
-        count = Math.min(count, exam.pick_config[cat]);
+        limit = Math.min(limit, exam.pick_config[cat]);
       }
-      if (!categoryScores[cat]) categoryScores[cat] = { score: 0, max: 0 };
-      categoryScores[cat].max = count * info.perScore;
+      scores.sort((a, b) => b - a);
+      const topScores = scores.slice(0, limit);
+      const perScore = exam.questions.find(q => q.category === cat)?.score || 0;
+      categoryScores[cat] = {
+        score: topScores.reduce((s, v) => s + v, 0),
+        max: limit * perScore,
+      };
+    }
+  } else {
+    for (const [cat, scores] of Object.entries(catAnswers)) {
+      categoryScores[cat] = { score: scores.reduce((s, v) => s + v, 0), max: 0 };
     }
   }
 
