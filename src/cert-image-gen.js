@@ -78,6 +78,13 @@ const gradeStyles = {
   'F':  { bg: '#999',        text: COLORS.white, label: '未通过 · 从头再来' },
 };
 
+// 不同试卷对应的 header 颜色
+const examHeaderColors = {
+  'v1': { bg: '#6EE7B7', text: '#1a1a1a', accent: '#1a1a1a' },  // 初级 — 浅绿色
+  'v2': { bg: '#FF6B35', text: '#FFFFFF', accent: '#FFD93D' },  // 中级 — 橙色
+};
+const defaultHeaderColor = { bg: COLORS.red, text: COLORS.white, accent: COLORS.yellow };
+
 const catConfig = {
   basic:    { name: '基本常识', color: COLORS.red },
   tool:     { name: '工具调用', color: COLORS.orange },
@@ -90,22 +97,39 @@ const catConfig = {
 /**
  * 获取证书数据
  */
-function getCertData(rawToken) {
+async function getCertData(rawToken) {
   const token = normalizeToken(rawToken);
   if (!token) return null;
 
-  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
+  const session = await db.get(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
     cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list, cp.claw_type
-    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
+    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`, [token]);
   if (!session) return null;
 
-  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
+  const answerRows = await db.all('SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?', [token]);
   if (answerRows.length === 0) return null;
 
   const exam = getExam(session.exam_id);
-  const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  // 总分分母使用试卷满分，未答题以 0 分计入
-  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+
+  // 按 question_id 去重（同一题多次提交只取最高分）
+  const bestByQid = {};
+  for (const a of answerRows) {
+    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
+      bestByQid[a.question_id] = a;
+    }
+  }
+  const dedupedAnswers = Object.values(bestByQid);
+
+  const totalScore = dedupedAnswers.reduce((s, a) => s + a.score, 0);
+
+  // 计算本 session 的满分（基于 session_questions）
+  const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
+  let sessionMax = 0;
+  for (const row of sessionQuestionIds) {
+    const q = getQuestion(session.exam_id, row.question_id);
+    if (q) sessionMax += q.score;
+  }
+  const totalMax = sessionMax || exam?.total_score || dedupedAnswers.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -113,30 +137,43 @@ function getCertData(rawToken) {
   const startMs = new Date(session.started_at).getTime();
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
-  const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`).get(
-    session.exam_id, totalScore, totalScore, session.started_at).rank;
+  const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, session.started_at]);
+  const rank = rankRow.rank;
 
-  const totalParticipants = db.prepare(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
-    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`).get(session.exam_id).cnt;
+  const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
+    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
+  const totalParticipants = participantRow.cnt;
 
   const beatPercent = totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：先从试卷定义初始化所有分类（确保未答题的分类也显示）
+  // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
-  if (exam) {
-    for (const q of exam.questions) {
-      if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
-      else categoryScores[q.category].max += q.score;
-    }
-  }
-  for (const a of answerRows) {
+  for (const a of dedupedAnswers) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
-    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: a.max_score };
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
     categoryScores[q.category].score += a.score;
+    categoryScores[q.category].max += q.score;
+  }
+  if (exam) {
+    for (const [cat, cs] of Object.entries(categoryScores)) {
+      const perScore = exam.questions.find(q => q.category === cat)?.score || 0;
+      let pickCount = null;
+      if (exam.pick_config && exam.pick_config[cat] != null) {
+        pickCount = exam.pick_config[cat];
+      } else if (exam.pick_per_category != null) {
+        pickCount = exam.pick_per_category;
+      }
+      if (pickCount != null) {
+        const standardMax = pickCount * perScore;
+        cs.max = Math.max(cs.max, standardMax);
+      }
+      if (cs.score > cs.max) cs.max = cs.score;
+    }
   }
 
   let grade = 'F';
@@ -149,6 +186,7 @@ function getCertData(rawToken) {
 
   return {
     exam_token: token,
+    exam_id: session.exam_id,
     exam_name: exam?.name || session.exam_id,
     profile: {
       claw_name: session.claw_name,
@@ -180,15 +218,14 @@ function neoRect(x, y, w, h, fill, shadowOffset = 4) {
 /**
  * 生成证书 SVG 图片 — Neobrutalism 风格
  */
-export function generateCertSvg(rawToken) {
-  const d = getCertData(rawToken);
+export async function generateCertSvg(rawToken) {
+  const d = await getCertData(rawToken);
   if (!d) return null;
 
   const W = 800;
   const BW = 3; // border width
   const gs = gradeStyles[d.grade] || gradeStyles['F'];
 
-  // ===== 计算各区域高度 =====
   const cats = Object.entries(d.category_scores || {});
   const skills = d.profile.skill_list || [];
 
@@ -196,19 +233,16 @@ export function generateCertSvg(rawToken) {
   const clawInfoH = 110;    // 虾名 + 元信息
   const gradeH = 180;       // 等级徽章
   const statsH = 100;       // 四格统计
-  const catTitleH = cats.length > 0 ? 50 : 0;
   const catRowH = 52;
-  const catSectionH = cats.length > 0 ? cats.length * catRowH + 20 : 0;
-  const skillSectionH = skills.length > 0 ? 70 : 0;
-  const footerH = 130;
-  const padding = 30;
+  const footerContentH = 220;
 
-  const totalH = headerH + clawInfoH + gradeH + statsH + catTitleH + catSectionH + skillSectionH + footerH + padding * 2;
+  // 用占位符，绘制完毕后替换为实际高度
+  const HEIGHT_PLACEHOLDER = '__TOTAL_HEIGHT__';
 
   let curY = 0;
 
-  // ===== 开始拼接 SVG =====
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${totalH}" viewBox="0 0 ${W} ${totalH}">
+  // ===== 开始拼接 SVG（高度先用占位符）=====
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${HEIGHT_PLACEHOLDER}" viewBox="0 0 ${W} ${HEIGHT_PLACEHOLDER}">
   <defs>
     <style>
       text { font-family: 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
@@ -219,25 +253,25 @@ export function generateCertSvg(rawToken) {
     </pattern>
   </defs>
 
-  <!-- 外框：硬阴影 -->
-  <rect x="8" y="8" width="${W - 8}" height="${totalH - 8}" fill="${COLORS.fg}"/>
-  <rect x="0" y="0" width="${W - 8}" height="${totalH - 8}" fill="${COLORS.bg}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
+  <!-- 外框：硬阴影（尺寸占位，绘制完成后替换） -->
+  <rect x="8" y="8" width="${W - 8}" height="${HEIGHT_PLACEHOLDER}_INNER" fill="${COLORS.fg}"/>
+  <rect x="0" y="0" width="${W - 8}" height="${HEIGHT_PLACEHOLDER}_INNER" fill="${COLORS.bg}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
 
   <!-- 点阵纹理覆盖 -->
-  <rect x="0" y="0" width="${W - 8}" height="${totalH - 8}" fill="url(#dots)"/>`;
+  <rect x="0" y="0" width="${W - 8}" height="${HEIGHT_PLACEHOLDER}_INNER" fill="url(#dots)"/>`;
 
   const contentW = W - 8;
-  const contentH = totalH - 8;
   const innerLeft = 40;
   const innerRight = contentW - 40;
   const innerW = innerRight - innerLeft;
 
-  // ===== 顶部红色标题栏 =====
+  // ===== 顶部标题栏（根据试卷级别变色）=====
+  const hc = examHeaderColors[d.exam_id] || defaultHeaderColor;
   svg += `
-  <rect x="0" y="0" width="${contentW}" height="${headerH}" fill="${COLORS.red}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
-  <text x="${contentW / 2}" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="${COLORS.yellow}" letter-spacing="6" text-transform="uppercase">CLAWEXAM CERTIFICATE</text>
-  <text x="${contentW / 2}" y="72" text-anchor="middle" font-size="32" font-weight="800" fill="${COLORS.white}">能力认证证书</text>
-  <text x="${contentW / 2}" y="92" text-anchor="middle" font-size="14" font-weight="600" fill="${COLORS.yellow}">${esc(d.exam_name)}</text>`;
+  <rect x="0" y="0" width="${contentW}" height="${headerH}" fill="${hc.bg}" stroke="${COLORS.fg}" stroke-width="${BW}"/>
+  <text x="${contentW / 2}" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="${hc.accent}" letter-spacing="6" text-transform="uppercase">CLAWEXAM CERTIFICATE</text>
+  <text x="${contentW / 2}" y="72" text-anchor="middle" font-size="32" font-weight="800" fill="${hc.text}">能力认证证书</text>
+  <text x="${contentW / 2}" y="92" text-anchor="middle" font-size="14" font-weight="600" fill="${hc.accent}">${esc(d.exam_name)}</text>`;
   curY = headerH;
 
   // ===== 虾名 + 元信息 =====
@@ -322,7 +356,8 @@ export function generateCertSvg(rawToken) {
   if (cats.length > 0) {
     curY += 20;
     svg += `<text x="${contentW / 2}" y="${curY + 20}" text-anchor="middle" font-size="12" font-weight="800" fill="${COLORS.fg}" letter-spacing="4">各维度得分</text>`;
-    curY += catTitleH;
+    svg += `<text x="${contentW / 2}" y="${curY + 38}" text-anchor="middle" font-size="9" fill="#999" font-style="italic">* 各维度题目由题库随机抽取，维度满分因抽题而异，与总分独立计算</text>`;
+    curY += 58;
 
     for (const [cat, s] of cats) {
       const pct = s.max > 0 ? Math.round(s.score * 100 / s.max) : 0;
@@ -377,51 +412,56 @@ export function generateCertSvg(rawToken) {
       svg += `<text x="${skillX + tw / 2}" y="${curY + 18}" text-anchor="middle" font-size="11" font-weight="800" fill="${COLORS.fg}">${esc(sk)}</text>`;
       skillX += tw + 10;
     }
-    curY += tagH + skillSectionH - tagH;
+    curY += tagH + 10;
   }
 
   // ===== 底部信息 + 二维码 =====
   svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
 
   const footerY = curY;
-  const qrSize = 100;
-  const footerContentH = 130;
+  const qrSize = 170;
   svg += `<rect x="0" y="${footerY}" width="${contentW}" height="${footerContentH}" fill="${COLORS.fg}"/>`;
 
   if (qrcodeBase64) {
-    // 左侧：文字信息
-    const textCenterX = (contentW - qrSize - 40) / 2;
+    // 左侧：二维码（大尺寸，无额外方框）
+    const qrX = 25;
+    const qrY = footerY + (footerContentH - qrSize) / 2;
+    svg += `<image xlink:href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
 
-    // 准考证号
-    svg += `<rect x="${textCenterX - 200 + 3}" y="${footerY + 14 + 3}" width="400" height="26" fill="#333"/>`;
-    svg += `<rect x="${textCenterX - 200}" y="${footerY + 14}" width="400" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
-    svg += `<text x="${textCenterX}" y="${footerY + 32}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    // 右侧：文字信息
+    const textLeft = qrX + qrSize + 30;
+    const textCenterX = textLeft + (contentW - textLeft - 20) / 2;
 
-    // 考试时间
-    svg += `<text x="${textCenterX}" y="${footerY + 60}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
-
-    // 品牌
-    svg += `<text x="${textCenterX}" y="${footerY + 84}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+    // 醒目提示语（更大更粗 + 白色描边效果）
+    svg += `<text x="${textCenterX}" y="${footerY + 45}" text-anchor="middle" font-size="28" font-weight="900" fill="${COLORS.yellow}" letter-spacing="2">快来测测你的龙虾</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 80}" text-anchor="middle" font-size="28" font-weight="900" fill="${COLORS.yellow}" letter-spacing="2">是什么等级！</text>`;
 
     // 扫码提示
-    svg += `<text x="${textCenterX}" y="${footerY + 106}" text-anchor="middle" font-size="11" fill="#666">扫描右侧二维码查看完整证书 →</text>`;
+    svg += `<text x="${textCenterX}" y="${footerY + 108}" text-anchor="middle" font-size="14" font-weight="700" fill="${COLORS.white}">← 扫描二维码立即挑战</text>`;
 
-    // 右侧：二维码（白色背景框 + 二维码图片）
-    const qrX = contentW - qrSize - 24;
-    const qrY = footerY + (footerContentH - qrSize) / 2;
-    svg += `<rect x="${qrX - 6 + 3}" y="${qrY - 6 + 3}" width="${qrSize + 12}" height="${qrSize + 12}" fill="#333"/>`;
-    svg += `<rect x="${qrX - 6}" y="${qrY - 6}" width="${qrSize + 12}" height="${qrSize + 12}" fill="${COLORS.white}" stroke="#444" stroke-width="2"/>`;
-    svg += `<image xlink:href="${qrcodeBase64}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>`;
+    // 准考证号
+    svg += `<text x="${textCenterX}" y="${footerY + 140}" text-anchor="middle" font-size="10" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+
+    // 考试时间
+    svg += `<text x="${textCenterX}" y="${footerY + 162}" text-anchor="middle" font-size="11" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+
+    // 品牌
+    svg += `<text x="${textCenterX}" y="${footerY + 190}" text-anchor="middle" font-size="13" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
   } else {
     // 无二维码时居中显示文字
-    svg += `<rect x="${contentW / 2 - 230 + 3}" y="${footerY + 18 + 3}" width="460" height="26" fill="#333"/>`;
-    svg += `<rect x="${contentW / 2 - 230}" y="${footerY + 18}" width="460" height="26" fill="#222" stroke="#444" stroke-width="2"/>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 36}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 66}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
-    svg += `<text x="${contentW / 2}" y="${footerY + 96}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 50}" text-anchor="middle" font-size="28" font-weight="900" fill="${COLORS.yellow}" letter-spacing="2">快来测测你的龙虾是什么等级！</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 90}" text-anchor="middle" font-size="11" font-family="'Courier New', monospace" fill="#888">准考证号: ${esc(d.exam_token)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 120}" text-anchor="middle" font-size="12" fill="#888">考试时间: ${esc(d.started_at)}</text>`;
+    svg += `<text x="${contentW / 2}" y="${footerY + 155}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.yellow}">ClawExam — OpenClaw AI 能力测试平台</text>`;
   }
 
   svg += '\n</svg>';
+
+  // ===== 计算实际总高度并替换占位符 =====
+  const totalH = curY + footerContentH + 8; // 8 为外框硬阴影偏移
+  const innerH = totalH - 8;
+  svg = svg.replaceAll(HEIGHT_PLACEHOLDER + '_INNER', String(innerH));
+  svg = svg.replaceAll(HEIGHT_PLACEHOLDER, String(totalH));
 
   return svg;
 }

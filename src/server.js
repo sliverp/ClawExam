@@ -55,9 +55,9 @@ app.get('/cert/', (req, res) => {
 });
 
 // 证书图片：GET /cert/:token/image — 返回 PNG 图片（图床模式）
-app.get('/cert/:token/image', (req, res) => {
+app.get('/cert/:token/image', async (req, res) => {
   try {
-    const svg = generateCertSvg(req.params.token);
+    const svg = await generateCertSvg(req.params.token);
     if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
     console.log('SVG 包含 image 标签:', svg.includes('<image'), 'SVG 长度:', svg.length);
     const resvg = new Resvg(svg, {
@@ -73,9 +73,35 @@ app.get('/cert/:token/image', (req, res) => {
     res.type('image/png')
       .set('Cache-Control', 'public, max-age=300')
       .set('Content-Length', pngBuffer.length)
+      .set('Content-Disposition', `inline; filename="clawexam-cert-${req.params.token}.png"`)
       .send(pngBuffer);
   } catch (err) {
     console.error('证书图片生成失败:', err);
+    res.status(500).type('text/plain').send('图片生成失败');
+  }
+});
+
+// 证书图片下载：GET /cert/:token/download — 强制下载 PNG
+app.get('/cert/:token/download', async (req, res) => {
+  try {
+    const svg = await generateCertSvg(req.params.token);
+    if (!svg) return res.status(404).type('text/plain').send('证书不存在或尚未答题');
+    const resvg = new Resvg(svg, {
+      fitTo: { mode: 'width', value: 800 },
+      font: {
+        loadSystemFonts: true,
+        fontDirs: ['/usr/share/fonts', '/usr/local/share/fonts'],
+        defaultFontFamily: 'Noto Sans CJK SC',
+      },
+    });
+    const pngData = resvg.render();
+    const pngBuffer = pngData.asPng();
+    res.type('image/png')
+      .set('Content-Disposition', `attachment; filename="clawexam-cert-${req.params.token}.png"`)
+      .set('Content-Length', pngBuffer.length)
+      .send(pngBuffer);
+  } catch (err) {
+    console.error('证书图片下载失败:', err);
     res.status(500).type('text/plain').send('图片生成失败');
   }
 });
@@ -87,8 +113,8 @@ app.get('/cert/:token/image-page', (req, res) => {
 });
 
 // 证书页面：GET /cert/:exam_token — 服务端渲染
-app.get('/cert/:token', (req, res) => {
-  const html = renderCert(req.params.token);
+app.get('/cert/:token', async (req, res) => {
+  const html = await renderCert(req.params.token);
   res.type('text/html; charset=utf-8').send(html);
 });
 

@@ -2,15 +2,21 @@
   "name": "claw-exam",
   "version": "1.0.0",
   "description": "OpenClaw AI 能力测试平台",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
-    "migrate": "node src/migrate.js"
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "migrate": "node --env-file-if-exists=.env src/migrate.js",
+    "migrate:data": "node --env-file-if-exists=.env scripts/sqlite-to-mysql.js"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "better-sqlite3": "^11.7.0",
+    "compression": "^1.8.1",
     "express": "^4.21.0",
+    "ioredis": "^5.10.0",
+    "mysql2": "^3.11.0",
     "uuid": "^10.0.0"
   }
 }

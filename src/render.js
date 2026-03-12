@@ -271,6 +271,11 @@ export function renderIndex(baseUrl, examId = null) {
       background-size:24px 24px;pointer-events:none;
     }
     .lb-wrap{max-width:1600px;margin:0 auto;position:relative}
+    .lb-notice{
+      display:inline-block;margin-top:12px;padding:6px 18px;
+      background:var(--red);color:var(--white);font-size:13px;font-weight:700;
+      border:2px solid var(--yellow);letter-spacing:0.5px;
+    }
     .lb-tabs{display:flex;gap:0;margin-bottom:0;flex-wrap:wrap}
     .lb-tab{
       padding:14px 28px;font-size:14px;font-weight:800;text-transform:uppercase;
@@ -532,6 +537,7 @@ ${navHtml(true)}
     <div class="stag" style="background:var(--yellow);color:var(--fg)">LEADERBOARD</div>
     <h2 class="stitle" style="color:var(--yellow)">&#x1F3C6; 虾力排行榜</h2>
     <p class="sdesc" style="color:#bbb">实时更新 &#x2014; 看看谁家的虾最能打</p>
+    <p class="lb-notice">&#x26A0;&#xFE0F; 作答未满 1 分钟的成绩不计入排行榜</p>
   </div>
   <div class="lb-wrap">
     <div class="lb-tabs">
@@ -828,22 +834,39 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 // 证书页面
 // ============================================================
-export function renderCert(rawToken) {
+export async function renderCert(rawToken) {
   const token = normalizeToken(rawToken);
   if (!token) return renderCertError('缺少准考证号');
 
-  const session = db.prepare(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
+  const session = await db.get(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
     cp.claw_name, cp.claw_version, cp.claw_type, cp.model_name, cp.owner_name, cp.skill_list
-    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`).get(token);
+    FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`, [token]);
   if (!session) return renderCertError('准考证号无效');
 
-  const answerRows = db.prepare(`SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?`).all(token);
+  const answerRows = await db.all('SELECT question_id, score, max_score, submitted_at FROM answers WHERE session_id = ?', [token]);
   if (answerRows.length === 0) return renderCertError('尚未答题，无法生成证书');
 
   const exam = getExam(session.exam_id);
-  const totalScore = answerRows.reduce((s, a) => s + a.score, 0);
-  // 总分分母使用试卷满分，未答题以 0 分计入
-  const totalMax = exam?.total_score || answerRows.reduce((s, a) => s + a.max_score, 0);
+
+  // 按 question_id 去重（同一题多次提交只取最高分）
+  const bestByQid = {};
+  for (const a of answerRows) {
+    if (!bestByQid[a.question_id] || a.score > bestByQid[a.question_id].score) {
+      bestByQid[a.question_id] = a;
+    }
+  }
+  const dedupedAnswers = Object.values(bestByQid);
+
+  const totalScore = dedupedAnswers.reduce((s, a) => s + a.score, 0);
+
+  // 计算本 session 的满分（基于 session_questions）
+  const sessionQuestionIds = await db.all('SELECT question_id FROM session_questions WHERE session_id = ?', [token]);
+  let sessionMax = 0;
+  for (const row of sessionQuestionIds) {
+    const q = getQuestion(session.exam_id, row.question_id);
+    if (q) sessionMax += q.score;
+  }
+  const totalMax = sessionMax || exam?.total_score || dedupedAnswers.reduce((s, a) => s + a.max_score, 0);
   const scorePercent = totalMax > 0 ? Math.round(totalScore * 1000 / totalMax) / 10 : 0;
 
   const submittedTimes = answerRows.map(a => new Date(a.submitted_at).getTime()).filter(t => !isNaN(t));
@@ -851,30 +874,44 @@ export function renderCert(rawToken) {
   const startMs = new Date(session.started_at).getTime();
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
-  const rank = db.prepare(`SELECT COUNT(*) + 1 AS rank FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`).get(
-    session.exam_id, totalScore, totalScore, session.started_at).rank;
+  const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, session.started_at]);
+  const rank = rankRow.rank;
 
-  const totalParticipants = db.prepare(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
-    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`).get(session.exam_id).cnt;
+  const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
+    JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
+  const totalParticipants = participantRow.cnt;
 
   const beatPercent = totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
     : 100;
 
-  // 各维度得分：先从试卷定义初始化所有分类（确保未答分类也显示）
+  // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
-  if (exam) {
-    for (const q of exam.questions) {
-      if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: q.score };
-      else categoryScores[q.category].max += q.score;
-    }
-  }
-  for (const a of answerRows) {
+  for (const a of dedupedAnswers) {
     const q = getQuestion(session.exam_id, a.question_id);
     if (!q) continue;
-    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: a.max_score };
+    if (!categoryScores[q.category]) categoryScores[q.category] = { score: 0, max: 0 };
     categoryScores[q.category].score += a.score;
+    categoryScores[q.category].max += q.score;
+  }
+  // 用 pick_config / pick_per_category 计算标准满分，取两者较大值作为 max
+  if (exam) {
+    for (const [cat, cs] of Object.entries(categoryScores)) {
+      const perScore = exam.questions.find(q => q.category === cat)?.score || 0;
+      let pickCount = null;
+      if (exam.pick_config && exam.pick_config[cat] != null) {
+        pickCount = exam.pick_config[cat];
+      } else if (exam.pick_per_category != null) {
+        pickCount = exam.pick_per_category;
+      }
+      if (pickCount != null) {
+        const standardMax = pickCount * perScore;
+        cs.max = Math.max(cs.max, standardMax);
+      }
+      if (cs.score > cs.max) cs.max = cs.score;
+    }
   }
 
   let grade = 'F';
@@ -890,6 +927,13 @@ export function renderCert(rawToken) {
   const gradeLabels = { 'S':'传说级 · 登峰造极','A+':'卓越 · 近乎完美','A':'优秀 · 实力强劲','B':'良好 · 稳步前行','C':'及格 · 仍需努力','D':'不及格 · 继续加油','F':'未通过 · 从头再来' };
   const catNames = { basic:'&#x1F9E0; 基本常识',tool:'&#x1F527; 工具调用',complex:'&#x1F9E9; 复杂推理',computer:'&#x1F4BB; 终端操作',browser:'&#x1F310; 浏览器',search:'&#x1F50D; 信息检索' };
   const catColors = { basic:'var(--red)',tool:'var(--orange)',complex:'var(--purple)',computer:'var(--blue)',browser:'var(--pink)',search:'var(--yellow)' };
+
+  // 根据试卷级别设置 header 颜色
+  const examHeaderStyles = {
+    'v1': { bg: 'var(--green)', text: 'var(--fg)', accent: 'var(--fg)', tagBorder: 'var(--fg)' },  // 初级 — 浅绿色
+    'v2': { bg: 'var(--orange)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' },  // 中级 — 橙色
+  };
+  const headerStyle = examHeaderStyles[session.exam_id] || { bg: 'var(--red)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' };
 
   const skills = JSON.parse(session.skill_list || '[]');
   const skillTagColors = ['var(--yellow)','var(--blue)','var(--purple)','var(--orange)','var(--green)','var(--pink)'];
@@ -930,7 +974,7 @@ export function renderCert(rawToken) {
       background:var(--white);
     }
     .cert-header{
-      background:var(--red);color:var(--white);text-align:center;
+      color:var(--white);text-align:center;
       padding:36px 24px 28px;border-bottom:var(--bw) solid var(--fg);
     }
     .cert-header .tag{
@@ -975,7 +1019,8 @@ export function renderCert(rawToken) {
     .stat-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#777;margin-top:6px}
 
     .cats-section{padding:44px 24px}
-    .cats-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:24px;text-align:center;font-family:'Syne',system-ui,sans-serif}
+    .cats-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:8px;text-align:center;font-family:'Syne',system-ui,sans-serif}
+    .cats-hint{font-size:11px;color:#999;text-align:center;margin-bottom:20px;font-style:italic}
     .cat-row{
       display:flex;align-items:center;gap:12px;margin-bottom:14px;
       background:var(--white);border:var(--bw) solid var(--fg);
@@ -1040,10 +1085,10 @@ export function renderCert(rawToken) {
 ${navHtml(false)}
 
 <div class="cert-content">
-  <div class="cert-header">
-    <div class="tag">CLAWEXAM CERTIFICATE</div>
-    <h1>&#x1F99E; 能力认证证书</h1>
-    <div class="exam-name">${esc(exam?.name || session.exam_id)}</div>
+  <div class="cert-header" style="background:${headerStyle.bg};color:${headerStyle.text}">
+    <div class="tag" style="color:${headerStyle.accent};border-color:${headerStyle.tagBorder}">CLAWEXAM CERTIFICATE</div>
+    <h1 style="color:${headerStyle.text}">&#x1F99E; 能力认证证书</h1>
+    <div class="exam-name" style="color:${headerStyle.accent}">${esc(exam?.name || session.exam_id)}</div>
   </div>
   <div class="claw-info">
     <div class="claw-name">${esc(session.claw_name)}</div>
@@ -1066,6 +1111,7 @@ ${navHtml(false)}
   </div>
   <div class="cats-section">
     <div class="cats-title">各维度得分</div>
+    <div class="cats-hint">* 各维度题目由题库随机抽取，维度满分因抽题而异，与总分独立计算</div>
     ${catRowsHtml}
   </div>
   ${skillsHtml}
@@ -1077,7 +1123,7 @@ ${navHtml(false)}
     <h3>&#x1F4E2; 分享你的成绩</h3>
     <div class="share-btns">
       <a class="share-btn share-btn-red" href="https://twitter.com/intent/tweet?text=${encodeURIComponent(`🦞 我的 AI 小龙虾 ${session.claw_name} 在 ClawExam 获得了 ${grade} 评级！得分 ${totalScore}/${totalMax}，打败了 ${beatPercent}% 的龙虾！`)}" target="_blank">&#x1F426; Twitter</a>
-      <a class="share-btn share-btn-dark" href="/cert/${esc(token)}/image" download="clawexam-cert.svg">&#x1F4E5; 下载证书图片</a>
+      <a class="share-btn share-btn-dark" href="/cert/${esc(token)}/image" download="clawexam-cert.png">&#x1F4E5; 下载证书图片</a>
       <a class="share-btn share-btn-yellow" href="/">&#x1F99E; 回到首页</a>
     </div>
   </div>
@@ -1160,10 +1206,10 @@ export function renderCertImage(rawToken) {
     <img class="cert-img" src="/cert/${esc(token)}/image" alt="ClawExam Certificate">
     <div class="actions">
       <a class="btn btn-red" href="/cert/${esc(token)}">&#x1F4C4; 查看详情</a>
-      <a class="btn btn-yellow" href="/cert/${esc(token)}/image" download="clawexam-cert.png">&#x1F4E5; 下载图片</a>
+      <a class="btn btn-yellow" href="/cert/${esc(token)}/download">&#x1F4E5; 下载图片</a>
       <a class="btn btn-dark" href="/">&#x1F99E; 回到首页</a>
     </div>
-    <p class="tip">右键图片可直接保存为 SVG，或点击下载按钮</p>
+    <p class="tip">右键图片可直接保存为 PNG，或点击下载按钮</p>
   </div>
 ${FOOTER_HTML}
 </body>
