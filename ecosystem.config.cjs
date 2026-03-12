@@ -2,8 +2,8 @@ module.exports = {
   apps: [{
     name: 'clawexam',
     script: 'src/server.js',
-    instances: 8,
-    exec_mode: 'cluster',
+    instances: 1,
+    exec_mode: 'fork',
     env: {
       PORT: 3210,
       NODE_ENV: 'production',
