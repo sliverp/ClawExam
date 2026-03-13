@@ -54,7 +54,7 @@ Page({
           ...item,
           rank: item.rank || idx + 1,
           durationText: util.formatDuration(item.duration_seconds),
-          percentText: (item.score_percent || 0).toFixed(1)
+          percentText: Number(item.score_percent || 0).toFixed(1)
         }));
         this.setData({ leaderboard, lbLoading: false, sortKey: 'rank', sortAsc: true });
       } else {
