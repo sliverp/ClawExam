@@ -31,7 +31,7 @@
         <view class="exam-body">
           <text class="exam-desc">{{item.description}}</text>
           <view class="exam-cmd">
-            <text class="cmd-text">请阅读试卷并完成考试</text>
+            <text class="cmd-text" selectable="true">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
           </view>
           <button class="neo-btn neo-btn-red exam-copy-btn" data-examid="{{item.id}}" bindtap="onCopyCommand">
             📋 复制考试指令

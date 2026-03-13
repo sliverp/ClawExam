@@ -45,10 +45,11 @@ Page({
   },
 
   async loadLeaderboard(examId) {
-    this.setData({ lbLoading: true });
+    this.setData({ lbLoading: true, leaderboard: [] });
     try {
       const res = await api.getLeaderboard(examId);
-      if (res.ok) {
+      console.log('[排行榜] examId:', examId, 'response:', JSON.stringify(res).slice(0, 500));
+      if (res && res.ok) {
         const leaderboard = (res.leaderboard || []).map((item, idx) => ({
           ...item,
           rank: item.rank || idx + 1,
@@ -56,9 +57,14 @@ Page({
           percentText: (item.score_percent || 0).toFixed(1)
         }));
         this.setData({ leaderboard, lbLoading: false, sortKey: 'rank', sortAsc: true });
+      } else {
+        console.warn('[排行榜] 返回非 ok:', res);
+        this.setData({ lbLoading: false });
       }
     } catch (e) {
+      console.error('[排行榜] 请求失败:', e);
       this.setData({ lbLoading: false });
+      wx.showToast({ title: '排行榜加载失败', icon: 'none' });
     }
   },
 
