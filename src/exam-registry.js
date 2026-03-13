@@ -122,13 +122,17 @@ export function getExam(examId) {
 export function getPublicQuestions(examId) {
   const exam = registry.get(examId);
   if (!exam) return null;
-  return exam.questions.map(q => ({
-    id: q.id,
-    category: q.category,
-    question: q.question,
-    score: q.score,
-    hint: q.hint,
-  }));
+  return exam.questions.map(q => {
+    const pub = {
+      id: q.id,
+      category: q.category,
+      question: q.question,
+      score: q.score,
+      hint: q.hint,
+    };
+    if (q.image) pub.image = q.image;
+    return pub;
+  });
 }
 
 /** 获取指定试卷的某题（内部使用，含答案） */
@@ -142,13 +146,15 @@ export function getQuestion(examId, questionId) {
 export function getPublicQuestion(examId, questionId) {
   const q = getQuestion(examId, questionId);
   if (!q) return null;
-  return {
+  const pub = {
     id: q.id,
     category: q.category,
     question: q.question,
     score: q.score,
     hint: q.hint,
   };
+  if (q.image) pub.image = q.image;
+  return pub;
 }
 
 /**
