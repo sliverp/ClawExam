@@ -213,8 +213,22 @@ router.post('/submit', async (req, res) => {
       const scoreRow = await db.get('SELECT SUM(score) AS s, SUM(max_score) AS m FROM answers WHERE session_id = ?', [exam_token]);
       const totalScore = scoreRow.s || 0;
       const sessionMax = scoreRow.m || 0;
+
+      // 计算作答用时
+      const lastAnswerRow = await db.get('SELECT MAX(submitted_at) AS last_at FROM answers WHERE session_id = ?', [exam_token]);
+      const submitDuration = lastAnswerRow?.last_at && session.started_at
+        ? Math.max(0, Math.round((new Date(lastAnswerRow.last_at) - new Date(session.started_at)) / 1000))
+        : 0;
+
       response.all_done = true;
       response.summary = `🎉 恭喜！你已完成全部 ${totalRow.cnt} 道题！总得分：${totalScore} / ${sessionMax}`;
+
+      // 作答时间不足60秒，提示 AI 不要刷题
+      if (submitDuration > 0 && submitDuration < 60) {
+        response.speedrun_warning = `⚠️ 你的作答时间仅 ${submitDuration} 秒（不足1分钟），本次成绩不计入排行榜。AI 小于1分钟就交卷了，不要刷题哦！请认真作答，每道题仔细思考后再提交。`;
+        response.summary += `\n⚠️ 用时 ${submitDuration} 秒，不足1分钟，成绩不计入排行榜。不要刷题哦！`;
+      }
+
       response.next_step = `📋 请继续执行【获取证书】步骤！`;
       response.cert_url = `${baseUrl}/cert/${exam_token}`;
       response.cert_image_url = `${baseUrl}/cert/${exam_token}/image`;
@@ -478,18 +492,20 @@ router.get('/certificate/:exam_token', async (req, res) => {
     const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
     const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
-      WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
-      [session.exam_id, totalScore, totalScore, session.started_at]);
+      WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND duration_seconds < ?) OR (total_score = ? AND duration_seconds = ? AND started_at < ?))`,
+      [session.exam_id, totalScore, totalScore, durationSeconds, totalScore, durationSeconds, session.started_at]);
 
     const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
       JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
 
-    const rank = rankRow.rank;
+    // 作答时间不足60秒不参与排名
+    const isSpeedrun = durationSeconds > 0 && durationSeconds < 60;
+    const rank = isSpeedrun ? null : rankRow.rank;
     const totalParticipants = participantRow.cnt;
 
-    const beatPercent = totalParticipants > 1
+    const beatPercent = isSpeedrun ? 0 : (totalParticipants > 1
       ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
-      : 100;
+      : 100);
 
     const examOrderRow = await db.get('SELECT COUNT(*) AS ord FROM exam_sessions WHERE exam_id = ? AND started_at <= ?',
       [session.exam_id, session.started_at]);
@@ -580,6 +596,8 @@ router.get('/certificate/:exam_token', async (req, res) => {
       badges: earnedBadges,
       started_at: session.started_at,
       duration_seconds: durationSeconds,
+      is_speedrun: isSpeedrun,
+      speedrun_warning: isSpeedrun ? '⚠️ 作答时间不足1分钟，成绩未计入排行榜。AI 不要刷题哦！' : null,
       cert_url: `/cert/${token}`,
     });
   } catch (err) {

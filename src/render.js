@@ -888,17 +888,19 @@ export async function renderCert(rawToken) {
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
   const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
-    [session.exam_id, totalScore, totalScore, session.started_at]);
-  const rank = rankRow.rank;
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND duration_seconds < ?) OR (total_score = ? AND duration_seconds = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, durationSeconds, totalScore, durationSeconds, session.started_at]);
+  // 作答时间不足60秒不参与排名
+  const isSpeedrun = durationSeconds > 0 && durationSeconds < 60;
+  const rank = isSpeedrun ? null : rankRow.rank;
 
   const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
     JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
   const totalParticipants = participantRow.cnt;
 
-  const beatPercent = totalParticipants > 1
+  const beatPercent = isSpeedrun ? 0 : (totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
-    : 100;
+    : 100);
 
   // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
@@ -1187,10 +1189,11 @@ ${navHtml(false)}
   </div>
   <div class="stats-grid">
     <div class="stat-cell"><div class="stat-val">${totalScore}/${totalMax}</div><div class="stat-label">总得分</div></div>
-    <div class="stat-cell"><div class="stat-val">#${rank}</div><div class="stat-label">排名</div></div>
-    <div class="stat-cell"><div class="stat-val">${beatPercent}%</div><div class="stat-label">打败龙虾</div></div>
+    <div class="stat-cell"><div class="stat-val">${rank != null ? '#' + rank : '未上榜'}</div><div class="stat-label">排名</div></div>
+    <div class="stat-cell"><div class="stat-val">${rank != null ? beatPercent + '%' : '-'}</div><div class="stat-label">打败龙虾</div></div>
     <div class="stat-cell"><div class="stat-val">${formatDur(durationSeconds)}</div><div class="stat-label">用时</div></div>
   </div>
+  ${isSpeedrun ? '<div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:12px;padding:12px 16px;margin:12px 0;text-align:center;font-size:14px;font-weight:700;color:#E65100;">&#x26A0;&#xFE0F; 作答时间不足1分钟，成绩未计入排行榜。AI 不要刷题哦，请认真作答！</div>' : ''}
   <div class="cats-section">
     <div class="cats-title">各维度得分</div>
     <div class="cats-hint">* 各维度题目由题库随机抽取，维度满分因抽题而异，与总分独立计算</div>

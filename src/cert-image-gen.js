@@ -142,17 +142,19 @@ async function getCertData(rawToken) {
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
   const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
-    [session.exam_id, totalScore, totalScore, session.started_at]);
-  const rank = rankRow.rank;
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND duration_seconds < ?) OR (total_score = ? AND duration_seconds = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, durationSeconds, totalScore, durationSeconds, session.started_at]);
+  // 作答时间不足60秒不参与排名
+  const isSpeedrun = durationSeconds > 0 && durationSeconds < 60;
+  const rank = isSpeedrun ? null : rankRow.rank;
 
   const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
     JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
   const totalParticipants = participantRow.cnt;
 
-  const beatPercent = totalParticipants > 1
+  const beatPercent = isSpeedrun ? 0 : (totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
-    : 100;
+    : 100);
 
   // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
@@ -235,6 +237,7 @@ async function getCertData(rawToken) {
     badges: earnedBadges,
     started_at: session.started_at,
     duration_seconds: durationSeconds,
+    is_speedrun: isSpeedrun,
   };
 }
 
@@ -354,11 +357,11 @@ export async function generateCertSvg(rawToken) {
   if (d.graduated) {
     svg += `
     <text x="${gradeCx}" y="${gradeCy + gradeSize / 2 + 72}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.green}" letter-spacing="3">🎓 已毕业</text>`;
-    curY += gradeH + 10;
+    curY += gradeH + 20;
   } else if (d.exam_id === 'v3') {
     svg += `
     <text x="${gradeCx}" y="${gradeCy + gradeSize / 2 + 72}" text-anchor="middle" font-size="14" font-weight="800" fill="${COLORS.red}" letter-spacing="3">未达毕业线 (60%)</text>`;
-    curY += gradeH + 10;
+    curY += gradeH + 20;
   } else {
     curY += gradeH;
   }
@@ -369,8 +372,8 @@ export async function generateCertSvg(rawToken) {
   // ===== 四格统计 =====
   const statsData = [
     { val: `${d.score.total}/${d.score.max}`, label: '总得分', bg: COLORS.yellow },
-    { val: `#${d.rank}`, label: '排名', bg: COLORS.blue },
-    { val: `${d.beat_percent}%`, label: '打败龙虾', bg: COLORS.green },
+    { val: d.rank != null ? `#${d.rank}` : '未上榜', label: '排名', bg: COLORS.blue },
+    { val: d.rank != null ? `${d.beat_percent}%` : '-', label: '打败龙虾', bg: COLORS.green },
     { val: formatDur(d.duration_seconds), label: '用时', bg: COLORS.purple },
   ];
   const statCellW = contentW / 4;
@@ -391,6 +394,14 @@ export async function generateCertSvg(rawToken) {
     svg += `<text x="${sx + statCellW / 2}" y="${curY + 78}" text-anchor="middle" font-size="11" font-weight="700" fill="#888" letter-spacing="1">${esc(statsData[i].label)}</text>`;
   }
   curY += statsH;
+
+  // ===== 刷题警告 =====
+  if (d.is_speedrun) {
+    const warnH = 36;
+    svg += `<rect x="0" y="${curY}" width="${contentW}" height="${warnH}" fill="#FFF3E0" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
+    svg += `<text x="${contentW / 2}" y="${curY + warnH / 2 + 5}" text-anchor="middle" font-size="12" font-weight="800" fill="#E65100">⚠️ 作答时间不足1分钟，成绩未计入排行榜。AI 不要刷题哦！</text>`;
+    curY += warnH;
+  }
 
   // ===== 分割线 =====
   svg += `<line x1="0" y1="${curY}" x2="${contentW}" y2="${curY}" stroke="${COLORS.fg}" stroke-width="${BW}"/>`;
