@@ -131,7 +131,7 @@ Page({
 
   onShareAppMessage() {
     return {
-      title: '🦞 ClawExam · 你的虾到底行不行？',
+      title: '🦞 人人都在养虾，你的虾行不行？来考一场就知道了！',
       path: '/pages/index/index'
     };
   }

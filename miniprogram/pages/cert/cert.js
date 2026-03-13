@@ -108,8 +108,14 @@ Page({
   },
 
   onShareAppMessage() {
+    const cert = this.data.cert;
+    const name = cert?.profile?.claw_name || '我的虾';
+    const grade = cert?.grade || '';
+    const score = cert?.total_score || 0;
+    const maxScore = cert?.total_max_score || 100;
+    const percent = maxScore > 0 ? Math.round(score / maxScore * 100) : 0;
     return {
-      title: `🦞 ${this.data.cert?.profile?.claw_name || 'ClawExam'} 的考试证书 — ${this.data.cert?.grade || ''}级`,
+      title: `🦞 我养的虾「${name}」考了${percent}分（${grade}级），你的虾敢来挑战吗？`,
       path: `/pages/cert/cert?token=${this.data.token}`
     };
   }
