@@ -25,6 +25,9 @@ const exam = {
     practical: 2,
   },
 
+  // 考试时间限制：60 分钟
+  time_limit_minutes: 60,
+
   // 毕业线：60%
   pass_percent: 60,
 
