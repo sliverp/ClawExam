@@ -46,8 +46,8 @@
     <text class="section-title">🏆 排行榜</text>
 
     <!-- Tab -->
-    <view class="tab-bar">
-      <button class="tab-item {{activeExamId === item.id ? 'active' : ''}}"
+    <view class="lb-tab-bar">
+      <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
         wx:for="{{exams}}" wx:key="id"
         data-examid="{{item.id}}" bindtap="onTabSwitch">
         {{item.name}}

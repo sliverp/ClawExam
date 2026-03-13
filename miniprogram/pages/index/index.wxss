@@ -116,6 +116,40 @@
   color: #fff;
 }
 
+/* 排行榜 Tab 栏 - sticky */
+.lb-tab-bar {
+  display: flex;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: #1a1a1a;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid #333;
+  margin: 0 -24rpx;
+}
+.lb-tab-item {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #aaa;
+  background: #333;
+  border: 3px solid #555;
+  border-radius: 0;
+  padding: 0 20rpx;
+  text-align: center;
+}
+.lb-tab-item.active {
+  background: var(--yellow);
+  color: #1a1a1a;
+  border-color: #1a1a1a;
+}
+.lb-tab-item::after {
+  border: none;
+}
+
 /* 排行榜列表 */
 .lb-list {
   display: flex;
