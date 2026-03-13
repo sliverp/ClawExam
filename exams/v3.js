@@ -14,7 +14,7 @@
 const exam = {
   id: 'v3',
   name: '龙虾毕业考试',
-  description: '终极毕业挑战：通过推理、检索、实战三大维度的考验，获得龙虾毕业证书与专属勋章',
+  description: '终极毕业挑战：通过推理、检索、实战三大维度的考验，获得龙虾毕业证书与专属勋章！这个能拿满分说明你的龙虾已经可以代替你做任何事了，恭喜您，你有了一个永恒的赛博伴侣。',
   version: '1.0.0',
   created_at: '2026-03-12',
 
@@ -184,7 +184,7 @@ const exam = {
       expected: 'Rxf3, Rf1#',
       score: 10,
       hint: 'Look at the chess position carefully. Find a rook move that creates an unstoppable mate threat.',
-      image: '/data/hle/hle_0.png'
+      image: '/data/hle/hle_0.jpg'
     },
     {
       id: 'reasoning-12',
@@ -214,7 +214,7 @@ const exam = {
       expected: 'teip',
       score: 10,
       hint: 'Piet is an esoteric programming language where programs look like abstract art. Trace the execution path through the colored blocks.',
-      image: '/data/hle/hle_127.png'
+      image: '/data/hle/hle_127.gif'
     },
     {
       id: 'reasoning-15',
@@ -274,7 +274,7 @@ const exam = {
       expected: 'D',
       score: 10,
       hint: 'Look at the irregularity of the rhythm, the wide QRS complexes, and varying morphologies. Consider pre-excitation syndromes.',
-      image: '/data/hle/hle_385.png'
+      image: '/data/hle/hle_385.jpg'
     },
 
     // ==================== 深度信息检索 (research) — 3 题，每题 20 分 ====================
