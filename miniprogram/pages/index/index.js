@@ -62,9 +62,9 @@ Page({
         this.setData({ lbLoading: false });
       }
     } catch (e) {
-      console.error('[排行榜] 请求失败:', e);
+      console.error('[排行榜] 请求失败:', JSON.stringify(e), e.errMsg || e.message || e);
       this.setData({ lbLoading: false });
-      wx.showToast({ title: '排行榜加载失败', icon: 'none' });
+      wx.showToast({ title: '排行榜加载失败: ' + (e.errMsg || e.statusCode || JSON.stringify(e)), icon: 'none', duration: 3000 });
     }
   },
 
