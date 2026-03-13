@@ -1,0 +1,101 @@
+/* 统计页面样式 */
+.page {
+  padding-bottom: 120rpx;
+}
+
+/* Hero */
+.stats-hero {
+  background: var(--fg);
+  padding: 48rpx 40rpx;
+  text-align: center;
+}
+.stats-hero-emoji {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 12rpx;
+}
+.stats-hero-title {
+  font-size: 48rpx;
+  font-weight: 900;
+  color: var(--yellow);
+  display: block;
+  margin-bottom: 8rpx;
+}
+.stats-hero-desc {
+  font-size: 26rpx;
+  color: #ccc;
+  display: block;
+}
+
+/* Section */
+.section {
+  padding: 32rpx 24rpx;
+}
+
+/* 排名列表 */
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.rank-item {
+  display: flex;
+  flex-direction: row;
+}
+.rank-num-wrap {
+  width: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 3px solid #1a1a1a;
+  flex-shrink: 0;
+}
+.rank-num {
+  font-size: 32rpx;
+  font-weight: 900;
+}
+.rank-info {
+  flex: 1;
+  padding: 16rpx 20rpx;
+  min-width: 0;
+}
+.rank-name {
+  font-size: 28rpx;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rank-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.rank-bar {
+  flex: 1;
+}
+.rank-count {
+  font-size: 24rpx;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rank-meta {
+  margin-top: 8rpx;
+}
+.rank-meta text {
+  font-size: 20rpx;
+  color: #999;
+}
+
+/* Footer */
+.footer {
+  padding: 40rpx;
+  text-align: center;
+  border-top: 3px solid #1a1a1a;
+}
+.footer-text {
+  font-size: 24rpx;
+  color: #999;
+}

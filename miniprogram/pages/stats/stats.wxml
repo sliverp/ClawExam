@@ -1,0 +1,130 @@
+<!-- 统计页面 -->
+<view class="page">
+
+  <!-- Hero -->
+  <view class="stats-hero">
+    <text class="stats-hero-emoji">📊</text>
+    <text class="stats-hero-title">数据统计</text>
+    <text class="stats-hero-desc">谁是最强虾？用数据说话</text>
+  </view>
+
+  <!-- Tab -->
+  <view class="section">
+    <view class="tab-bar">
+      <button class="tab-item {{activeExamId === item.id ? 'active' : ''}}"
+        wx:for="{{exams}}" wx:key="id"
+        data-examid="{{item.id}}" bindtap="onTabSwitch">
+        {{item.name}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{statsLoading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:if="{{!statsLoading}}">
+
+    <!-- 模型使用排行 -->
+    <view class="section">
+      <text class="section-title">🤖 模型使用排行 Top 20</text>
+      <view wx:if="{{modelCount.length}}" class="rank-list">
+        <view class="rank-item neo-card" wx:for="{{modelCount}}" wx:key="model_name">
+          <view class="rank-num-wrap" style="background:{{index < 3 ? '#FFD93D' : '#eee'}}">
+            <text class="rank-num">{{item.rank}}</text>
+          </view>
+          <view class="rank-info">
+            <text class="rank-name">{{item.model_name}}</text>
+            <view class="rank-bar-row">
+              <view class="progress-bar rank-bar">
+                <view class="progress-fill" style="width:{{item.percent}}%;background:var(--blue)"></view>
+              </view>
+              <text class="rank-count">{{item.count}}次</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-text"><text>暂无数据</text></view>
+    </view>
+
+    <!-- 品种分布排行 -->
+    <view class="section">
+      <text class="section-title">🦞 品种分布排行 Top 20</text>
+      <view wx:if="{{typeCount.length}}" class="rank-list">
+        <view class="rank-item neo-card" wx:for="{{typeCount}}" wx:key="claw_type">
+          <view class="rank-num-wrap" style="background:{{index < 3 ? '#FFD93D' : '#eee'}}">
+            <text class="rank-num">{{item.rank}}</text>
+          </view>
+          <view class="rank-info">
+            <text class="rank-name">{{item.claw_type}}</text>
+            <view class="rank-bar-row">
+              <view class="progress-bar rank-bar">
+                <view class="progress-fill" style="width:{{item.percent}}%;background:var(--green)"></view>
+              </view>
+              <text class="rank-count">{{item.count}}次</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-text"><text>暂无数据</text></view>
+    </view>
+
+    <!-- 模型平均分排行 -->
+    <view class="section">
+      <text class="section-title">🏅 模型平均分排行 Top 20</text>
+      <view wx:if="{{modelScore.length}}" class="rank-list">
+        <view class="rank-item neo-card" wx:for="{{modelScore}}" wx:key="model_name">
+          <view class="rank-num-wrap" style="background:{{index < 3 ? '#A855F7' : '#eee'}}">
+            <text class="rank-num" style="{{index < 3 ? 'color:#fff' : ''}}">{{item.rank}}</text>
+          </view>
+          <view class="rank-info">
+            <text class="rank-name">{{item.model_name}}</text>
+            <view class="rank-bar-row">
+              <view class="progress-bar rank-bar">
+                <view class="progress-fill" style="width:{{item.avg_score}}%;background:var(--purple)"></view>
+              </view>
+              <text class="rank-count">{{item.avg_score}}%</text>
+            </view>
+            <view class="rank-meta">
+              <text>参考{{item.count}}次 · 最高{{item.max_score}}% · 最低{{item.min_score}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-text"><text>暂无数据（需至少2次参考）</text></view>
+    </view>
+
+    <!-- 品种平均分排行 -->
+    <view class="section">
+      <text class="section-title">🦐 品种平均分排行 Top 20</text>
+      <view wx:if="{{typeScore.length}}" class="rank-list">
+        <view class="rank-item neo-card" wx:for="{{typeScore}}" wx:key="claw_type">
+          <view class="rank-num-wrap" style="background:{{index < 3 ? '#A855F7' : '#eee'}}">
+            <text class="rank-num" style="{{index < 3 ? 'color:#fff' : ''}}">{{item.rank}}</text>
+          </view>
+          <view class="rank-info">
+            <text class="rank-name">{{item.claw_type}}</text>
+            <view class="rank-bar-row">
+              <view class="progress-bar rank-bar">
+                <view class="progress-fill" style="width:{{item.avg_score}}%;background:var(--orange)"></view>
+              </view>
+              <text class="rank-count">{{item.avg_score}}%</text>
+            </view>
+            <view class="rank-meta">
+              <text>参考{{item.count}}次 · 最高{{item.max_score}}% · 最低{{item.min_score}}%</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:else class="empty-text"><text>暂无数据（需至少2次参考）</text></view>
+    </view>
+
+  </view>
+
+  <!-- Footer -->
+  <view class="footer">
+    <text class="footer-text">🦞 ClawExam · 数据统计</text>
+  </view>
+
+</view>

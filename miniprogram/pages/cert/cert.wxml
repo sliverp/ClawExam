@@ -1,0 +1,141 @@
+<!-- 证书页面 -->
+<view class="page">
+
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <text>加载证书中...</text>
+  </view>
+
+  <!-- 错误 -->
+  <view class="error-wrap" wx:elif="{{error}}">
+    <text class="error-emoji">🦞</text>
+    <text class="error-text">{{error}}</text>
+    <button class="neo-btn" bindtap="onGoHome">返回首页</button>
+  </view>
+
+  <!-- 证书内容 -->
+  <view wx:elif="{{cert}}" class="cert-wrap">
+
+    <!-- 证书卡片 -->
+    <view class="neo-card cert-card">
+
+      <!-- Header -->
+      <view class="cert-header" style="background:{{examColor}}">
+        <text class="cert-header-label">CLAWEXAM CERTIFICATE</text>
+        <text class="cert-header-exam">{{cert.exam_name}}</text>
+      </view>
+
+      <!-- Claw 信息 -->
+      <view class="cert-claw">
+        <text class="claw-name">{{cert.profile.claw_name}}</text>
+        <view class="claw-tags">
+          <text class="neo-tag" style="background:var(--blue)">{{cert.profile.claw_type}}</text>
+          <text class="neo-tag" style="background:var(--purple);color:#fff">{{cert.profile.model_name}}</text>
+          <text class="neo-tag" style="background:var(--green)" wx:if="{{cert.profile.claw_version}}">v{{cert.profile.claw_version}}</text>
+        </view>
+      </view>
+
+      <!-- 评级 -->
+      <view class="grade-section">
+        <view class="grade-badge" style="background:{{gradeColor}}">
+          <text class="grade-letter">{{cert.grade}}</text>
+        </view>
+        <view class="grade-info">
+          <text class="grade-desc">{{gradeDesc}}</text>
+          <text class="grade-percent">得分率 {{cert.score.percent}}%</text>
+        </view>
+      </view>
+
+      <!-- 毕业标记 (v3) -->
+      <view wx:if="{{cert.graduated}}" class="graduated-badge">
+        <text>🎓 已毕业</text>
+      </view>
+
+      <!-- 统计网格 -->
+      <view class="stats-grid">
+        <view class="stats-item">
+          <text class="stats-value">{{cert.score.total}}/{{cert.score.max}}</text>
+          <text class="stats-label">总得分</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">#{{cert.rank}}</text>
+          <text class="stats-label">排名</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">{{cert.beat_percent}}%</text>
+          <text class="stats-label">打败龙虾</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-value">{{durationText}}</text>
+          <text class="stats-label">用时</text>
+        </view>
+      </view>
+
+      <!-- 快速作答警告 -->
+      <view wx:if="{{cert.is_speedrun}}" class="speedrun-warn">
+        <text>⚠️ {{cert.speedrun_warning}}</text>
+      </view>
+
+      <!-- 各维度得分 -->
+      <view class="category-section" wx:if="{{categoryList.length}}">
+        <text class="sub-title">📊 各维度得分</text>
+        <view class="category-item" wx:for="{{categoryList}}" wx:key="name">
+          <view class="cat-header">
+            <text class="cat-name">{{item.name}}</text>
+            <text class="cat-score">{{item.score}}/{{item.max}}</text>
+          </view>
+          <view class="progress-bar">
+            <view class="progress-fill" style="width:{{item.percent}}%;background:{{item.percent >= 80 ? '#6EE7B7' : item.percent >= 50 ? '#FFD93D' : '#FF6B6B'}}"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 技能标签 -->
+      <view class="skills-section" wx:if="{{cert.profile.skill_list && cert.profile.skill_list.length}}">
+        <text class="sub-title">🛠 技能</text>
+        <view class="skills-wrap">
+          <text class="neo-tag skill-tag" wx:for="{{cert.profile.skill_list}}" wx:key="*this" style="background:var(--yellow)">{{item}}</text>
+        </view>
+      </view>
+
+      <!-- 勋章 -->
+      <view class="badges-section" wx:if="{{cert.badges && cert.badges.length}}">
+        <text class="sub-title">🏅 勋章</text>
+        <view class="badges-wrap">
+          <view class="badge-item neo-card" wx:for="{{cert.badges}}" wx:key="id">
+            <text class="badge-icon">{{item.icon}}</text>
+            <view class="badge-info">
+              <text class="badge-name">{{item.name}}</text>
+              <text class="badge-desc">{{item.description}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 证书图片 -->
+      <view class="cert-image-section">
+        <image class="cert-image" src="{{certImageUrl}}" mode="widthFix" show-menu-by-longpress="{{true}}" />
+      </view>
+
+      <!-- 准考证号 -->
+      <view class="token-section">
+        <text class="token-label">准考证号</text>
+        <text class="token-value" selectable="{{true}}">{{token}}</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="cert-actions">
+      <button class="neo-btn neo-btn-red action-btn" bindtap="onSaveImage">
+        📥 保存证书图片
+      </button>
+      <button class="neo-btn action-btn" open-type="share">
+        📤 分享给好友
+      </button>
+      <button class="neo-btn neo-btn-blue action-btn" bindtap="onGoHome">
+        🏠 返回首页
+      </button>
+    </view>
+  </view>
+
+</view>

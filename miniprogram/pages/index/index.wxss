@@ -1,0 +1,227 @@
+/* 首页样式 */
+.page {
+  padding-bottom: 120rpx;
+}
+
+/* Hero */
+.hero {
+  background: var(--fg);
+  padding: 60rpx 40rpx;
+  text-align: center;
+}
+.hero-emoji {
+  font-size: 100rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+.hero-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.hero-line1 {
+  font-size: 32rpx;
+  color: #fff;
+  font-weight: 600;
+}
+.hero-line2 {
+  font-size: 52rpx;
+  color: #fff;
+  font-weight: 900;
+  margin-top: 8rpx;
+}
+.hero-highlight {
+  background: var(--red);
+  color: #fff;
+  padding: 4rpx 12rpx;
+}
+.hero-desc {
+  color: #ccc;
+  font-size: 26rpx;
+  display: block;
+  margin-top: 12rpx;
+}
+
+/* 标语条 */
+.banner-strip {
+  background: var(--red);
+  padding: 16rpx 0;
+  text-align: center;
+  border-top: 3px solid #1a1a1a;
+  border-bottom: 3px solid #1a1a1a;
+}
+.banner-strip text {
+  color: #fff;
+  font-weight: 900;
+  font-size: 28rpx;
+  letter-spacing: 4rpx;
+}
+
+/* Section */
+.section {
+  padding: 40rpx 24rpx;
+}
+
+/* 考试卡片 */
+.exam-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.exam-header {
+  padding: 24rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.exam-name {
+  font-size: 34rpx;
+  font-weight: 900;
+  display: block;
+  margin-bottom: 12rpx;
+}
+.exam-tags {
+  display: flex;
+  gap: 12rpx;
+}
+.exam-body {
+  padding: 24rpx;
+}
+.exam-desc {
+  font-size: 26rpx;
+  color: #555;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.exam-cmd {
+  background: #1a1a1a;
+  padding: 16rpx 20rpx;
+  margin-bottom: 20rpx;
+  border: 2px solid #333;
+}
+.cmd-text {
+  color: #6EE7B7;
+  font-size: 24rpx;
+  font-family: monospace;
+}
+.exam-copy-btn {
+  width: 100%;
+}
+
+/* 排行榜 */
+.lb-section {
+  background: #1a1a1a;
+  padding: 40rpx 24rpx;
+}
+.lb-section .section-title {
+  color: #fff;
+}
+
+/* 排行榜列表 */
+.lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.lb-item {
+  display: flex;
+  flex-direction: row;
+  background: #fff;
+}
+.lb-rank {
+  width: 80rpx;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 3px solid #1a1a1a;
+  flex-shrink: 0;
+}
+.lb-rank-num {
+  font-size: 36rpx;
+  font-weight: 900;
+}
+.lb-info {
+  flex: 1;
+  padding: 20rpx;
+  min-width: 0;
+}
+.lb-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-bottom: 8rpx;
+}
+.lb-name {
+  font-size: 32rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300rpx;
+}
+.lb-meta {
+  font-size: 22rpx;
+  color: #888;
+  margin-bottom: 12rpx;
+}
+.lb-score-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+.lb-score-bar {
+  flex: 1;
+}
+.lb-score-text {
+  font-size: 24rpx;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.lb-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8rpx;
+}
+.lb-duration {
+  font-size: 22rpx;
+  color: #888;
+}
+.lb-cert-link {
+  font-size: 24rpx;
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* 查证书 */
+.cert-search-section {
+  background: var(--yellow);
+  border-top: 3px solid #1a1a1a;
+}
+.cert-search-body {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx;
+  align-items: center;
+}
+.cert-input {
+  flex: 1;
+  height: 72rpx;
+  border: 3px solid #1a1a1a;
+  padding: 0 20rpx;
+  background: #fff;
+  font-size: 26rpx;
+}
+
+/* Footer */
+.footer {
+  padding: 40rpx;
+  text-align: center;
+  border-top: 3px solid #1a1a1a;
+}
+.footer-text {
+  font-size: 24rpx;
+  color: #999;
+}

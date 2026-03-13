@@ -1,0 +1,266 @@
+/* 证书页面样式 */
+.page {
+  padding: 24rpx;
+  padding-bottom: 80rpx;
+}
+
+/* 错误页 */
+.error-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 40rpx;
+}
+.error-emoji {
+  font-size: 120rpx;
+  transform: rotate(180deg);
+  margin-bottom: 32rpx;
+}
+.error-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  margin-bottom: 40rpx;
+  text-align: center;
+}
+
+/* 证书卡片 */
+.cert-card {
+  margin-bottom: 32rpx;
+}
+
+/* Header */
+.cert-header {
+  padding: 32rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.cert-header-label {
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 4rpx;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 8rpx;
+}
+.cert-header-exam {
+  font-size: 36rpx;
+  font-weight: 900;
+  display: block;
+}
+
+/* Claw 信息 */
+.cert-claw {
+  padding: 32rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.claw-name {
+  font-size: 48rpx;
+  font-weight: 900;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.claw-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+/* 评级 */
+.grade-section {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+  gap: 32rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.grade-badge {
+  width: 120rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;
+  flex-shrink: 0;
+}
+.grade-letter {
+  font-size: 64rpx;
+  font-weight: 900;
+}
+.grade-info {
+  display: flex;
+  flex-direction: column;
+}
+.grade-desc {
+  font-size: 30rpx;
+  font-weight: 700;
+  margin-bottom: 8rpx;
+}
+.grade-percent {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 毕业标记 */
+.graduated-badge {
+  padding: 16rpx 32rpx;
+  background: var(--green);
+  border-bottom: 3px solid #1a1a1a;
+  font-weight: 800;
+  font-size: 30rpx;
+  text-align: center;
+}
+
+/* 统计网格 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 3px solid #1a1a1a;
+}
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 16rpx;
+  border-right: 3px solid #1a1a1a;
+  border-bottom: 3px solid #1a1a1a;
+}
+.stats-item:nth-child(2n) {
+  border-right: none;
+}
+.stats-item:nth-child(n+3) {
+  border-bottom: none;
+}
+.stats-value {
+  font-size: 36rpx;
+  font-weight: 900;
+}
+.stats-label {
+  font-size: 22rpx;
+  color: #888;
+  margin-top: 4rpx;
+}
+
+/* 快速作答警告 */
+.speedrun-warn {
+  padding: 20rpx 32rpx;
+  background: #FFF3CD;
+  border-bottom: 3px solid #1a1a1a;
+  font-size: 24rpx;
+  color: #856404;
+}
+
+/* 维度得分 */
+.sub-title {
+  font-size: 32rpx;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 20rpx;
+}
+.category-section {
+  padding: 32rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.category-item {
+  margin-bottom: 16rpx;
+}
+.cat-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+.cat-name {
+  font-weight: 700;
+  font-size: 26rpx;
+}
+.cat-score {
+  font-weight: 700;
+  font-size: 26rpx;
+}
+
+/* 技能 */
+.skills-section {
+  padding: 32rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.skills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+.skill-tag {
+  font-size: 24rpx;
+}
+
+/* 勋章 */
+.badges-section {
+  padding: 32rpx;
+  border-bottom: 3px solid #1a1a1a;
+}
+.badges-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.badge-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  gap: 20rpx;
+}
+.badge-icon {
+  font-size: 48rpx;
+  flex-shrink: 0;
+}
+.badge-info {
+  display: flex;
+  flex-direction: column;
+}
+.badge-name {
+  font-weight: 800;
+  font-size: 28rpx;
+}
+.badge-desc {
+  font-size: 22rpx;
+  color: #666;
+  margin-top: 4rpx;
+}
+
+/* 证书图片 */
+.cert-image-section {
+  padding: 32rpx;
+}
+.cert-image {
+  width: 100%;
+  border: 3px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;
+}
+
+/* 准考证号 */
+.token-section {
+  padding: 24rpx 32rpx;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.token-label {
+  font-size: 22rpx;
+  color: #888;
+  margin-bottom: 8rpx;
+}
+.token-value {
+  font-size: 24rpx;
+  font-family: monospace;
+  word-break: break-all;
+  text-align: center;
+}
+
+/* 操作按钮 */
+.cert-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+.action-btn {
+  width: 100%;
+}
