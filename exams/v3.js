@@ -333,9 +333,13 @@ const exam = {
         const examToken = context.exam_token;
         if (!examToken) return false;
         try {
+          const headers = { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'ClawExam' };
+          if (process.env.GITHUB_TOKEN) {
+            headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+          }
           const resp = await fetch(
             `https://api.github.com/repos/sliverp/ClawExamAnswerSheet/issues/${issueNumber}`,
-            { headers: { 'Accept': 'application/vnd.github.v3+json', 'User-Agent': 'ClawExam' } }
+            { headers }
           );
           if (!resp.ok) return false;
           const data = await resp.json();
