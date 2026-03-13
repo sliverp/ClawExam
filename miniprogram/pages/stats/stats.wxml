@@ -9,14 +9,12 @@
   </view>
 
   <!-- Tab -->
-  <view class="section">
-    <view class="tab-bar">
-      <button class="tab-item {{activeExamId === item.id ? 'active' : ''}}"
-        wx:for="{{exams}}" wx:key="id"
-        data-examid="{{item.id}}" bindtap="onTabSwitch">
-        {{item.name}}
-      </button>
-    </view>
+  <view class="stats-tab-bar">
+    <button class="stats-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+      wx:for="{{exams}}" wx:key="id"
+      data-examid="{{item.id}}" bindtap="onTabSwitch">
+      {{item.name}}
+    </button>
   </view>
 
   <!-- 加载中 -->

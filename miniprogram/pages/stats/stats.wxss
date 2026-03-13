@@ -32,6 +32,38 @@
   padding: 32rpx 24rpx;
 }
 
+/* 统计页 Tab 栏 - sticky */
+.stats-tab-bar {
+  display: flex;
+  gap: 12rpx;
+  padding: 16rpx 24rpx;
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid #1a1a1a;
+}
+.stats-tab-item {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #888;
+  background: #fff;
+  border: 3px solid #1a1a1a;
+  border-radius: 0;
+  padding: 0 20rpx;
+  text-align: center;
+}
+.stats-tab-item.active {
+  background: var(--yellow);
+  color: #1a1a1a;
+}
+.stats-tab-item::after {
+  border: none;
+}
+
 /* 排名列表 */
 .rank-list {
   display: flex;
