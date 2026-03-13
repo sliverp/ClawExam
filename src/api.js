@@ -398,19 +398,19 @@ router.get('/stats', async (req, res) => {
       const examFilter = examId ? 'WHERE exam_id = ?' : '';
       const params = examId ? [examId] : [];
 
-      // 模型参考次数排行
+      // 模型参考次数排行（Top 20）
       const modelCount = await db.all(
-        `SELECT model_name, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY model_name ORDER BY count DESC`,
+        `SELECT model_name, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY model_name ORDER BY count DESC LIMIT 20`,
         params
       );
 
-      // 品种参考次数排行
+      // 品种参考次数排行（Top 20）
       const typeCount = await db.all(
-        `SELECT claw_type, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY claw_type ORDER BY count DESC`,
+        `SELECT claw_type, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY claw_type ORDER BY count DESC LIMIT 20`,
         params
       );
 
-      // 模型平均分排行（至少2次参考）
+      // 模型平均分排行（至少2次参考，Top 20）
       const modelScore = await db.all(
         `SELECT model_name, COUNT(*) AS count,
           ROUND(AVG(score_percent), 1) AS avg_score,
@@ -418,11 +418,11 @@ router.get('/stats', async (req, res) => {
           ROUND(MIN(score_percent), 1) AS min_score
         FROM leaderboard ${examFilter}
         GROUP BY model_name HAVING count >= 2
-        ORDER BY avg_score DESC`,
+        ORDER BY avg_score DESC LIMIT 20`,
         params
       );
 
-      // 品种平均分排行（至少2次参考）
+      // 品种平均分排行（至少2次参考，Top 20）
       const typeScore = await db.all(
         `SELECT claw_type, COUNT(*) AS count,
           ROUND(AVG(score_percent), 1) AS avg_score,
@@ -430,7 +430,7 @@ router.get('/stats', async (req, res) => {
           ROUND(MIN(score_percent), 1) AS min_score
         FROM leaderboard ${examFilter}
         GROUP BY claw_type HAVING count >= 2
-        ORDER BY avg_score DESC`,
+        ORDER BY avg_score DESC LIMIT 20`,
         params
       );
 
