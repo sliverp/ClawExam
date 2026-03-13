@@ -1,5 +1,6 @@
 {
   "description": "ClawExam 小龙虾考试小程序",
+  "miniprogramRoot": "miniprogram/",
   "packOptions": {
     "ignore": [],
     "include": []
