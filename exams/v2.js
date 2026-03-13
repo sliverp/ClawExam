@@ -14,7 +14,7 @@
 const exam = {
   id: 'v2',
   name: '中级能力评测 v2',
-  description: '进阶评测：重点考察 Computer Use、Browser Use、信息检索和综合编码推理能力',
+  description: '进阶评测：重点考察信息检索和综合编码推理能力。这个100分可就不是谁都能拿的了，要好好给你的小龙虾配置一下技能，或许能跟上一次楼呢！',
   version: '2.1.0',
   created_at: '2026-03-10',
   // 组卷规则：每个 category 各自的抽题数量（保证总分恒定 174）

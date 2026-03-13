@@ -87,7 +87,7 @@ for (const file of files) {
 }
 
 function categoryLabel(cat) {
-  const map = { basic: '基本常识', tool: '工具调用', complex: '复杂推理', computer: 'Computer Use', browser: 'Browser Use', search: '信息检索' };
+  const map = { basic: '基本常识', tool: '工具调用', complex: '复杂推理', computer: 'Computer Use', browser: 'Browser Use', search: '信息检索', reasoning: '复杂推理', research: '深度检索' };
   return map[cat] || cat;
 }
 
@@ -122,13 +122,17 @@ export function getExam(examId) {
 export function getPublicQuestions(examId) {
   const exam = registry.get(examId);
   if (!exam) return null;
-  return exam.questions.map(q => ({
-    id: q.id,
-    category: q.category,
-    question: q.question,
-    score: q.score,
-    hint: q.hint,
-  }));
+  return exam.questions.map(q => {
+    const pub = {
+      id: q.id,
+      category: q.category,
+      question: q.question,
+      score: q.score,
+      hint: q.hint,
+    };
+    if (q.image) pub.image = q.image;
+    return pub;
+  });
 }
 
 /** 获取指定试卷的某题（内部使用，含答案） */
@@ -142,13 +146,15 @@ export function getQuestion(examId, questionId) {
 export function getPublicQuestion(examId, questionId) {
   const q = getQuestion(examId, questionId);
   if (!q) return null;
-  return {
+  const pub = {
     id: q.id,
     category: q.category,
     question: q.question,
     score: q.score,
     hint: q.hint,
   };
+  if (q.image) pub.image = q.image;
+  return pub;
 }
 
 /**
@@ -234,8 +240,8 @@ export function pickRandomQuestions(examId) {
   return picked.map(q => q.id);
 }
 
-/** 自动判分 */
-export function gradeAnswer(examId, questionId, userAnswer) {
+/** 自动判分（支持异步 custom validator） */
+export async function gradeAnswer(examId, questionId, userAnswer, context = {}) {
   const q = getQuestion(examId, questionId);
   if (!q) return { score: 0, max_score: 0, error: 'question_not_found' };
 
@@ -261,6 +267,17 @@ export function gradeAnswer(examId, questionId, userAnswer) {
         const userObj = JSON.parse(answer);
         const expectedObj = JSON.parse(q.expected);
         correct = JSON.stringify(userObj) === JSON.stringify(expectedObj);
+      } catch {
+        correct = false;
+      }
+      break;
+    case 'custom':
+      try {
+        if (typeof q.validator === 'function') {
+          correct = await q.validator(answer, context);
+        } else {
+          correct = false;
+        }
       } catch {
         correct = false;
       }

@@ -6,38 +6,94 @@ const DEFAULT_TTL = 60; // 秒
 
 let redis = null;
 let available = false;
+let reconnectTimer = null;
+const RECONNECT_INTERVAL = 10_000; // 10 秒重连间隔
 
-try {
-  redis = new Redis({
-    host: config.redis.host,
-    port: config.redis.port,
-    password: config.redis.password,
-    db: config.redis.db,
-    lazyConnect: true,
-    maxRetriesPerRequest: 1,
-    retryStrategy(times) {
-      if (times > 3) return null; // 超过 3 次停止重试
-      return Math.min(times * 500, 3000);
-    },
-  });
+/**
+ * 尝试连接 Redis（非阻塞）
+ * 启动时和运行中 Redis 挂掉后都会调用
+ */
+function tryConnect() {
+  // 如果已经可用或正在连接，跳过
+  if (available) return;
+  if (redis) {
+    // 销毁旧实例，避免残留连接
+    try { redis.disconnect(false); } catch {}
+    redis = null;
+  }
 
-  redis.on('connect', () => {
-    available = true;
-    console.log('[Redis] 已连接');
-  });
-  redis.on('error', (err) => {
+  try {
+    redis = new Redis({
+      host: config.redis.host,
+      port: config.redis.port,
+      password: config.redis.password,
+      db: config.redis.db,
+      lazyConnect: true,
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false, // 不可用时直接失败，不排队
+      retryStrategy(times) {
+        if (times > 3) return null; // 单次连接最多重试 3 次
+        return Math.min(times * 500, 3000);
+      },
+    });
+
+    redis.on('connect', () => {
+      available = true;
+      stopReconnect();
+      console.log('[Redis] 已连接');
+    });
+
+    redis.on('error', (err) => {
+      if (available) {
+        console.warn('[Redis] 连接异常:', err.message);
+      }
+      available = false;
+      scheduleReconnect();
+    });
+
+    redis.on('close', () => {
+      if (available) {
+        console.warn('[Redis] 连接已断开，将自动重连');
+      }
+      available = false;
+      scheduleReconnect();
+    });
+
+    // 非阻塞连接：不 await，失败了也没关系
+    redis.connect().catch((err) => {
+      console.warn('[Redis] 连接失败，将降级为直连数据库:', err.message);
+      available = false;
+      scheduleReconnect();
+    });
+  } catch (err) {
+    console.warn('[Redis] 初始化失败，将降级为直连数据库:', err.message);
     available = false;
-    console.warn('[Redis] 连接异常:', err.message);
-  });
-  redis.on('close', () => {
-    available = false;
-  });
-
-  await redis.connect();
-} catch (err) {
-  console.warn('[Redis] 初始化失败，将跳过缓存:', err.message);
-  available = false;
+    scheduleReconnect();
+  }
 }
+
+/** 调度自动重连（去重，避免多个 timer） */
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    if (!available) {
+      console.log('[Redis] 尝试重新连接...');
+      tryConnect();
+    }
+  }, RECONNECT_INTERVAL);
+}
+
+/** 停止重连调度（已连上时） */
+function stopReconnect() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+}
+
+// 启动时非阻塞连接
+tryConnect();
 
 // singleflight: 进程内去重（同进程的并发请求共享一个 Promise）
 const inflightMap = new Map();

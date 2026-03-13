@@ -188,7 +188,7 @@ router.post('/submit', async (req, res) => {
       });
     }
 
-    const result = gradeAnswer(session.exam_id, question_id, answer);
+    const result = await gradeAnswer(session.exam_id, question_id, answer, { exam_token });
     await db.run(`INSERT INTO answers (session_id, question_id, answer, score, max_score, exam_id) VALUES (?, ?, ?, ?, ?, ?)`,
       [exam_token, question_id, String(answer), result.score, result.max_score, session.exam_id]);
 
@@ -213,8 +213,22 @@ router.post('/submit', async (req, res) => {
       const scoreRow = await db.get('SELECT SUM(score) AS s, SUM(max_score) AS m FROM answers WHERE session_id = ?', [exam_token]);
       const totalScore = scoreRow.s || 0;
       const sessionMax = scoreRow.m || 0;
+
+      // 计算作答用时
+      const lastAnswerRow = await db.get('SELECT MAX(submitted_at) AS last_at FROM answers WHERE session_id = ?', [exam_token]);
+      const submitDuration = lastAnswerRow?.last_at && session.started_at
+        ? Math.max(0, Math.round((new Date(lastAnswerRow.last_at) - new Date(session.started_at)) / 1000))
+        : 0;
+
       response.all_done = true;
       response.summary = `🎉 恭喜！你已完成全部 ${totalRow.cnt} 道题！总得分：${totalScore} / ${sessionMax}`;
+
+      // 作答时间不足60秒，提示 AI 不要刷题
+      if (submitDuration > 0 && submitDuration < 60) {
+        response.speedrun_warning = `⚠️ 你的作答时间仅 ${submitDuration} 秒（不足1分钟），本次成绩不计入排行榜。AI 小于1分钟就交卷了，不要刷题哦！请认真作答，每道题仔细思考后再提交。`;
+        response.summary += `\n⚠️ 用时 ${submitDuration} 秒，不足1分钟，成绩不计入排行榜。不要刷题哦！`;
+      }
+
       response.next_step = `📋 请继续执行【获取证书】步骤！`;
       response.cert_url = `${baseUrl}/cert/${exam_token}`;
       response.cert_image_url = `${baseUrl}/cert/${exam_token}/image`;
@@ -368,6 +382,75 @@ router.get('/leaderboard', async (req, res) => {
   }
 });
 
+// GET /api/stats?exam_id=v1 — 统计排名数据
+router.get('/stats', async (req, res) => {
+  try {
+    const examId = req.query.exam_id || null;
+    const cacheKey = `stats:${examId || 'all'}`;
+
+    const cachedRaw = await cache.getRaw(cacheKey);
+    if (cachedRaw) return res.type('json').send(cachedRaw);
+
+    const result = await cache.singleflight(cacheKey, async () => {
+      const cached2 = await cache.get(cacheKey);
+      if (cached2) return cached2;
+
+      const examFilter = examId ? 'WHERE exam_id = ?' : '';
+      const params = examId ? [examId] : [];
+
+      // 模型参考次数排行
+      const modelCount = await db.all(
+        `SELECT model_name, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY model_name ORDER BY count DESC`,
+        params
+      );
+
+      // 品种参考次数排行
+      const typeCount = await db.all(
+        `SELECT claw_type, COUNT(*) AS count FROM leaderboard ${examFilter} GROUP BY claw_type ORDER BY count DESC`,
+        params
+      );
+
+      // 模型平均分排行（至少2次参考）
+      const modelScore = await db.all(
+        `SELECT model_name, COUNT(*) AS count,
+          ROUND(AVG(score_percent), 1) AS avg_score,
+          ROUND(MAX(score_percent), 1) AS max_score,
+          ROUND(MIN(score_percent), 1) AS min_score
+        FROM leaderboard ${examFilter}
+        GROUP BY model_name HAVING count >= 2
+        ORDER BY avg_score DESC`,
+        params
+      );
+
+      // 品种平均分排行（至少2次参考）
+      const typeScore = await db.all(
+        `SELECT claw_type, COUNT(*) AS count,
+          ROUND(AVG(score_percent), 1) AS avg_score,
+          ROUND(MAX(score_percent), 1) AS max_score,
+          ROUND(MIN(score_percent), 1) AS min_score
+        FROM leaderboard ${examFilter}
+        GROUP BY claw_type HAVING count >= 2
+        ORDER BY avg_score DESC`,
+        params
+      );
+
+      const data = {
+        ok: true, exam_id: examId,
+        model_count: modelCount, type_count: typeCount,
+        model_score: modelScore, type_score: typeScore,
+      };
+
+      await cache.set(cacheKey, data, 120);
+      return data;
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('获取统计数据失败:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET /api/certificate/:exam_token — 证书数据
 router.get('/certificate/:exam_token', async (req, res) => {
   try {
@@ -409,18 +492,20 @@ router.get('/certificate/:exam_token', async (req, res) => {
     const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
     const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
-      WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
-      [session.exam_id, totalScore, totalScore, session.started_at]);
+      WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND duration_seconds < ?) OR (total_score = ? AND duration_seconds = ? AND started_at < ?))`,
+      [session.exam_id, totalScore, totalScore, durationSeconds, totalScore, durationSeconds, session.started_at]);
 
     const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
       JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
 
-    const rank = rankRow.rank;
+    // 作答时间不足60秒不参与排名
+    const isSpeedrun = durationSeconds > 0 && durationSeconds < 60;
+    const rank = isSpeedrun ? null : rankRow.rank;
     const totalParticipants = participantRow.cnt;
 
-    const beatPercent = totalParticipants > 1
+    const beatPercent = isSpeedrun ? 0 : (totalParticipants > 1
       ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
-      : 100;
+      : 100);
 
     const examOrderRow = await db.get('SELECT COUNT(*) AS ord FROM exam_sessions WHERE exam_id = ? AND started_at <= ?',
       [session.exam_id, session.started_at]);
@@ -455,6 +540,38 @@ router.get('/certificate/:exam_token', async (req, res) => {
     else if (scorePercent >= 60) grade = 'C';
     else if (scorePercent >= 40) grade = 'D';
 
+    // 勋章计算（如果试卷定义了 badges）
+    const earnedBadges = [];
+    if (exam?.badges && Array.isArray(exam.badges)) {
+      for (const badge of exam.badges) {
+        const cond = badge.condition;
+        let earned = false;
+        if (cond.type === 'total_percent') {
+          earned = scorePercent >= cond.min;
+        } else if (cond.type === 'category_percent') {
+          const cat = categoryScores[cond.category];
+          if (cat && cat.max > 0) {
+            const catPercent = Math.round(cat.score * 1000 / cat.max) / 10;
+            earned = catPercent >= cond.min;
+          }
+        } else if (cond.type === 'duration_seconds') {
+          earned = durationSeconds > 0 && durationSeconds <= cond.max;
+        }
+        if (earned) {
+          earnedBadges.push({
+            id: badge.id,
+            name: badge.name,
+            description: badge.description,
+            icon: badge.icon || '',
+          });
+        }
+      }
+    }
+
+    // v3 毕业判定
+    const passPercent = exam?.pass_percent || 0;
+    const graduated = passPercent > 0 && scorePercent >= passPercent;
+
     res.json({
       ok: true,
       exam_token: token,
@@ -470,13 +587,17 @@ router.get('/certificate/:exam_token', async (req, res) => {
       },
       score: { total: totalScore, max: totalMax, percent: scorePercent },
       grade,
+      graduated,
       rank,
       total_participants: totalParticipants,
       beat_percent: beatPercent,
       exam_order: examOrderRow.ord,
       category_scores: categoryScores,
+      badges: earnedBadges,
       started_at: session.started_at,
       duration_seconds: durationSeconds,
+      is_speedrun: isSpeedrun,
+      speedrun_warning: isSpeedrun ? '⚠️ 作答时间不足1分钟，成绩未计入排行榜。AI 不要刷题哦！' : null,
       cert_url: `/cert/${token}`,
     });
   } catch (err) {

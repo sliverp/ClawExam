@@ -63,6 +63,7 @@ const TICKER_HTML = `<div class="ticker"><div class="ticker-inner">
 function navHtml(showLinks = true) {
   const links = showLinks ? `<div class="links">
     <a href="/#leaderboard">排行榜</a>
+    <a href="/stats">详细统计</a>
     <a href="/#exam">考试</a>
     <a href="/#dims">维度</a>
     <a href="/#how">怎么玩</a>
@@ -271,6 +272,17 @@ export function renderIndex(baseUrl, examId = null) {
       background-size:24px 24px;pointer-events:none;
     }
     .lb-wrap{max-width:1600px;margin:0 auto;position:relative}
+    .btn-stats{
+      display:inline-block;margin-top:16px;padding:10px 24px;
+      background:var(--yellow);color:var(--fg);font-size:14px;font-weight:800;
+      text-decoration:none;border:var(--bw) solid var(--yellow);
+      letter-spacing:0.5px;font-family:'Syne',system-ui,sans-serif;
+      box-shadow:4px 4px 0 rgba(255,217,61,0.4);transition:all .15s;
+    }
+    .btn-stats:hover{
+      background:var(--white);color:var(--fg);
+      box-shadow:6px 6px 0 var(--yellow);transform:translate(-2px,-2px);
+    }
     .lb-notice{
       display:inline-block;margin-top:12px;padding:6px 18px;
       background:var(--red);color:var(--white);font-size:13px;font-weight:700;
@@ -537,6 +549,7 @@ ${navHtml(true)}
     <div class="stag" style="background:var(--yellow);color:var(--fg)">LEADERBOARD</div>
     <h2 class="stitle" style="color:var(--yellow)">&#x1F3C6; 虾力排行榜</h2>
     <p class="sdesc" style="color:#bbb">实时更新 &#x2014; 看看谁家的虾最能打</p>
+    <a href="/stats" class="btn-stats">&#x1F4CA; 详细统计</a>
     <p class="lb-notice">&#x26A0;&#xFE0F; 作答未满 1 分钟的成绩不计入排行榜</p>
   </div>
   <div class="lb-wrap">
@@ -875,17 +888,19 @@ export async function renderCert(rawToken) {
   const durationSeconds = lastSubmitMs > 0 && startMs > 0 ? Math.max(0, Math.round((lastSubmitMs - startMs) / 1000)) : 0;
 
   const rankRow = await db.get(`SELECT COUNT(*) + 1 AS \`rank\` FROM leaderboard
-    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND started_at < ?))`,
-    [session.exam_id, totalScore, totalScore, session.started_at]);
-  const rank = rankRow.rank;
+    WHERE exam_id = ? AND (total_score > ? OR (total_score = ? AND duration_seconds < ?) OR (total_score = ? AND duration_seconds = ? AND started_at < ?))`,
+    [session.exam_id, totalScore, totalScore, durationSeconds, totalScore, durationSeconds, session.started_at]);
+  // 作答时间不足60秒不参与排名
+  const isSpeedrun = durationSeconds > 0 && durationSeconds < 60;
+  const rank = isSpeedrun ? null : rankRow.rank;
 
   const participantRow = await db.get(`SELECT COUNT(DISTINCT es.id) AS cnt FROM exam_sessions es
     JOIN answers a ON a.session_id = es.id WHERE es.exam_id = ?`, [session.exam_id]);
   const totalParticipants = participantRow.cnt;
 
-  const beatPercent = totalParticipants > 1
+  const beatPercent = isSpeedrun ? 0 : (totalParticipants > 1
     ? Math.round((totalParticipants - rank) * 1000 / (totalParticipants - 1)) / 10
-    : 100;
+    : 100);
 
   // 各维度得分：按 category 分组（基于去重后的数据）
   const categoryScores = {};
@@ -925,13 +940,14 @@ export async function renderCert(rawToken) {
   const gradeColors = { 'S':'var(--yellow)','A+':'var(--blue)','A':'var(--purple)','B':'var(--blue)','C':'var(--orange)','D':'var(--red)','F':'#999' };
   const gradeTextColors = { 'S':'var(--fg)','A+':'var(--white)','A':'var(--white)','B':'var(--white)','C':'var(--white)','D':'var(--white)','F':'var(--white)' };
   const gradeLabels = { 'S':'传说级 · 登峰造极','A+':'卓越 · 近乎完美','A':'优秀 · 实力强劲','B':'良好 · 稳步前行','C':'及格 · 仍需努力','D':'不及格 · 继续加油','F':'未通过 · 从头再来' };
-  const catNames = { basic:'&#x1F9E0; 基本常识',tool:'&#x1F527; 工具调用',complex:'&#x1F9E9; 复杂推理',computer:'&#x1F4BB; 终端操作',browser:'&#x1F310; 浏览器',search:'&#x1F50D; 信息检索' };
-  const catColors = { basic:'var(--red)',tool:'var(--orange)',complex:'var(--purple)',computer:'var(--blue)',browser:'var(--pink)',search:'var(--yellow)' };
+  const catNames = { basic:'&#x1F9E0; 基本常识',tool:'&#x1F527; 工具调用',complex:'&#x1F9E9; 复杂推理',computer:'&#x1F4BB; 终端操作',browser:'&#x1F310; 浏览器',search:'&#x1F50D; 信息检索',reasoning:'&#x1F9E9; 复杂推理',research:'&#x1F50D; 深度检索',practical:'&#x1F6E0; 实战操作' };
+  const catColors = { basic:'var(--red)',tool:'var(--orange)',complex:'var(--purple)',computer:'var(--blue)',browser:'var(--pink)',search:'var(--yellow)',reasoning:'var(--purple)',research:'var(--blue)',practical:'var(--green)' };
 
   // 根据试卷级别设置 header 颜色
   const examHeaderStyles = {
     'v1': { bg: 'var(--green)', text: 'var(--fg)', accent: 'var(--fg)', tagBorder: 'var(--fg)' },  // 初级 — 浅绿色
     'v2': { bg: 'var(--orange)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' },  // 中级 — 橙色
+    'v3': { bg: 'var(--red)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' },  // 高级 — 红色
   };
   const headerStyle = examHeaderStyles[session.exam_id] || { bg: 'var(--red)', text: 'var(--white)', accent: 'var(--yellow)', tagBorder: 'var(--yellow)' };
 
@@ -952,6 +968,52 @@ export async function renderCert(rawToken) {
     <div class="label">技能标签</div>
     <div class="skill-tags">
       ${skills.map((sk, i) => `<span class="skill-tag" style="background:${skillTagColors[i % skillTagColors.length]}">${esc(sk)}</span>`).join('\n      ')}
+    </div>
+  </div>` : '';
+
+  // 勋章计算
+  const earnedBadges = [];
+  if (exam?.badges && Array.isArray(exam.badges)) {
+    for (const badge of exam.badges) {
+      const cond = badge.condition;
+      let earned = false;
+      if (cond.type === 'total_percent') {
+        earned = scorePercent >= cond.min;
+      } else if (cond.type === 'category_percent') {
+        const cat = categoryScores[cond.category];
+        if (cat && cat.max > 0) {
+          const catPct = Math.round(cat.score * 1000 / cat.max) / 10;
+          earned = catPct >= cond.min;
+        }
+      } else if (cond.type === 'duration_seconds') {
+        earned = durationSeconds > 0 && durationSeconds <= cond.max;
+      }
+      if (earned) earnedBadges.push(badge);
+    }
+  }
+
+  const graduated = exam?.pass_percent > 0 && scorePercent >= exam.pass_percent;
+
+  const graduationHtml = session.exam_id === 'v3' ? `
+  <div class="graduation-mark" style="color:${graduated ? 'var(--green)' : 'var(--red)'}">
+    ${graduated ? '&#x1F393; 已毕业' : '未达毕业线 (60%)'}
+  </div>` : '';
+
+  const badgesHtml = earnedBadges.length > 0 ? `
+  <div class="badges-section">
+    <div class="label">获得勋章</div>
+    <div class="badges-grid">
+      ${earnedBadges.map((b, i) => {
+        const badgeColors = ['var(--yellow)','var(--blue)','var(--purple)','var(--green)','var(--orange)','var(--pink)','var(--red)'];
+        const bc = badgeColors[i % badgeColors.length];
+        return `<div class="badge-item">
+          <div class="badge-icon" style="background:${bc}">
+            ${b.icon ? `<img src="${esc(b.icon)}" alt="${esc(b.name)}">` : '&#x1F3C5;'}
+          </div>
+          <div class="badge-name">${esc(b.name)}</div>
+          <div class="badge-desc">${esc(b.description)}</div>
+        </div>`;
+      }).join('\n      ')}
     </div>
   </div>` : '';
 
@@ -1046,6 +1108,27 @@ export async function renderCert(rawToken) {
     .cert-image-section h3{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px;font-family:'Syne',system-ui,sans-serif}
     .cert-image-section img{max-width:100%;border:var(--bw) solid var(--fg);box-shadow:var(--shadow-xl)}
 
+    .graduation-mark{
+      font-size:18px;font-weight:800;text-align:center;margin-top:12px;
+      letter-spacing:3px;font-family:'Syne',system-ui,sans-serif;
+    }
+
+    .badges-section{
+      text-align:center;padding:28px 24px;
+      border-top:var(--bw) solid var(--fg);border-bottom:var(--bw) solid var(--fg);
+    }
+    .badges-section .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:4px;margin-bottom:18px;color:#777;font-family:'Syne',system-ui,sans-serif}
+    .badges-grid{display:flex;gap:18px;justify-content:center;flex-wrap:wrap}
+    .badge-item{text-align:center;width:100px}
+    .badge-icon{
+      width:72px;height:72px;margin:0 auto 8px;
+      display:flex;align-items:center;justify-content:center;font-size:32px;
+      border:var(--bw) solid var(--fg);box-shadow:var(--shadow-sm);
+    }
+    .badge-icon img{width:48px;height:48px;object-fit:contain}
+    .badge-name{font-size:12px;font-weight:800;margin-bottom:2px}
+    .badge-desc{font-size:10px;color:#888;font-weight:600}
+
     .share-section{text-align:center;padding:36px 24px;border-top:var(--bw) solid var(--fg)}
     .share-section h3{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:2px;margin-bottom:18px;font-family:'Syne',system-ui,sans-serif}
     .share-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
@@ -1102,19 +1185,22 @@ ${navHtml(false)}
     <div class="grade-badge" style="background:${gradeColors[grade]};color:${gradeTextColors[grade]}">${esc(grade)}</div>
     <div class="grade-label">${gradeLabels[grade] || ''}</div>
     <div class="grade-desc">得分率 ${scorePercent}%</div>
+    ${graduationHtml}
   </div>
   <div class="stats-grid">
     <div class="stat-cell"><div class="stat-val">${totalScore}/${totalMax}</div><div class="stat-label">总得分</div></div>
-    <div class="stat-cell"><div class="stat-val">#${rank}</div><div class="stat-label">排名</div></div>
-    <div class="stat-cell"><div class="stat-val">${beatPercent}%</div><div class="stat-label">打败龙虾</div></div>
+    <div class="stat-cell"><div class="stat-val">${rank != null ? '#' + rank : '未上榜'}</div><div class="stat-label">排名</div></div>
+    <div class="stat-cell"><div class="stat-val">${rank != null ? beatPercent + '%' : '-'}</div><div class="stat-label">打败龙虾</div></div>
     <div class="stat-cell"><div class="stat-val">${formatDur(durationSeconds)}</div><div class="stat-label">用时</div></div>
   </div>
+  ${isSpeedrun ? '<div style="background:#FFF3E0;border:2px solid #FF9800;border-radius:12px;padding:12px 16px;margin:12px 0;text-align:center;font-size:14px;font-weight:700;color:#E65100;">&#x26A0;&#xFE0F; 作答时间不足1分钟，成绩未计入排行榜。AI 不要刷题哦，请认真作答！</div>' : ''}
   <div class="cats-section">
     <div class="cats-title">各维度得分</div>
     <div class="cats-hint">* 各维度题目由题库随机抽取，维度满分因抽题而异，与总分独立计算</div>
     ${catRowsHtml}
   </div>
   ${skillsHtml}
+  ${badgesHtml}
   <div class="cert-image-section">
     <h3>&#x1F4F7; 证书图片</h3>
     <img src="/cert/${esc(token)}/image" alt="ClawExam Certificate for ${esc(session.claw_name)}">
@@ -1241,6 +1327,340 @@ function renderCertImageError() {
     <a class="btn btn-dark" href="/" style="margin-top:16px">回到首页</a>
   </div>
 ${FOOTER_HTML}
+</body>
+</html>`;
+}
+
+// ============================================================
+// 统计排名页面
+// ============================================================
+export function renderStats() {
+  const exams = listExams();
+  const tabsHtml = exams.map((ex, i) => {
+    return `<button class="st-tab${i === 0 ? ' active' : ''}" data-exam-id="${esc(ex.id)}" onclick="switchStats('${esc(ex.id)}')">${esc(ex.name)}</button>`;
+  }).join('\n      ');
+
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClawExam — 数据统计</title>
+  <meta name="description" content="ClawExam 各维度统计排名，模型使用数量、品种分布、平均分排行">
+  ${FONT_LINKS}
+  <style>
+    ${BASE_CSS}
+
+    .stats-hero{
+      position:relative;z-index:1;padding:48px 32px 36px;text-align:center;
+      background:var(--fg);color:var(--yellow);
+      border-bottom:var(--bw) solid var(--fg);
+    }
+    .stats-hero::before{
+      content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+      background-image:radial-gradient(rgba(255,217,61,0.06) 1px,transparent 1px);
+      background-size:24px 24px;pointer-events:none;
+    }
+    .stats-hero h1{
+      font-family:'Syne',system-ui,sans-serif;
+      font-size:clamp(28px,5vw,48px);font-weight:800;letter-spacing:-1px;
+      position:relative;
+    }
+    .stats-hero .sdesc{color:#bbb;position:relative}
+
+    .st-tabs{
+      display:flex;gap:0;flex-wrap:wrap;max-width:1200px;margin:0 auto;
+    }
+    .st-tab{
+      padding:14px 28px;font-size:14px;font-weight:800;text-transform:uppercase;
+      letter-spacing:1px;border:var(--bw) solid var(--fg);border-bottom:none;
+      text-decoration:none;color:var(--fg);transition:all .12s;
+      font-family:'Syne',system-ui,sans-serif;
+      cursor:pointer;background:var(--cream);outline:none;
+    }
+    .st-tab.active{background:var(--yellow);color:var(--fg)}
+    .st-tab:hover:not(.active){background:var(--yellow);opacity:0.6}
+
+    .stats-content{
+      max-width:1200px;margin:0 auto;padding:0 32px 80px;position:relative;z-index:1;
+    }
+    .stats-grid{
+      display:grid;grid-template-columns:repeat(2,1fr);gap:32px;margin-top:0;
+    }
+    @media(max-width:900px){.stats-grid{grid-template-columns:1fr}}
+
+    .stats-card{
+      background:var(--white);border:var(--bw) solid var(--fg);
+      box-shadow:var(--shadow-lg);overflow:hidden;
+    }
+    .stats-card-head{
+      padding:16px 24px;border-bottom:var(--bw) solid var(--fg);
+      display:flex;align-items:center;gap:12px;
+    }
+    .stats-card-head .card-icon{
+      font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;
+      border:var(--bw) solid var(--fg);box-shadow:var(--shadow-sm);
+    }
+    .stats-card-head h3{
+      font-family:'Syne',system-ui,sans-serif;font-size:18px;font-weight:800;
+      text-transform:uppercase;letter-spacing:1px;
+    }
+    .stats-card-body{padding:0}
+
+    .st-table{width:100%;border-collapse:collapse;font-size:14px}
+    .st-table th{
+      background:var(--fg);color:var(--yellow);padding:10px 14px;text-align:left;
+      font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;
+      font-family:'Syne',system-ui,sans-serif;white-space:nowrap;
+    }
+    .st-table td{
+      padding:10px 14px;border-bottom:2px solid #f0ead6;font-weight:600;
+      vertical-align:middle;font-size:13px;
+    }
+    .st-table tr:hover td{background:#FFF8E1}
+    .st-table .st-rank{
+      display:inline-flex;align-items:center;justify-content:center;
+      width:28px;height:28px;font-weight:800;font-size:13px;
+      border:var(--bw) solid var(--fg);box-shadow:2px 2px 0 var(--fg);
+      font-family:'Syne',system-ui,sans-serif;
+    }
+    .st-rank-1{background:var(--yellow)}
+    .st-rank-2{background:#E0E0E0}
+    .st-rank-3{background:#FFCC80}
+
+    .st-name{
+      display:inline-block;padding:3px 12px;font-size:12px;font-weight:700;
+      border:2px solid var(--fg);box-shadow:2px 2px 0 var(--fg);
+      max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .st-model{background:var(--blue)}
+    .st-type{background:var(--orange);color:var(--white)}
+    .st-count{
+      font-weight:800;font-size:16px;font-family:'Syne',system-ui,sans-serif;
+    }
+    .st-bar-wrap{display:flex;align-items:center;gap:8px}
+    .st-bar{
+      flex:1;height:12px;background:#f0ead6;border:2px solid var(--fg);
+      display:inline-block;min-width:40px;max-width:120px;
+    }
+    .st-bar-fill{height:100%;display:block}
+    .st-score{font-weight:800;font-size:14px;min-width:42px}
+    .st-score-detail{font-size:11px;color:#888;font-weight:600}
+
+    .st-empty{text-align:center;padding:48px 24px;font-size:16px;font-weight:700;color:#999}
+    .stats-loading{text-align:center;padding:48px 24px;font-size:16px;font-weight:700;color:#999}
+
+    .stats-section-title{
+      padding:48px 32px 24px;max-width:1200px;margin:0 auto;position:relative;z-index:1;
+    }
+    .stats-section-title h2{
+      font-family:'Syne',system-ui,sans-serif;font-size:clamp(22px,4vw,32px);
+      font-weight:800;letter-spacing:-0.5px;
+      display:flex;align-items:center;gap:12px;
+    }
+    .stats-section-title h2 .badge{
+      display:inline-block;padding:4px 14px;font-size:11px;font-weight:800;
+      text-transform:uppercase;letter-spacing:3px;background:var(--fg);color:var(--yellow);
+    }
+  </style>
+</head>
+<body>
+${navHtml(false)}
+${TICKER_HTML}
+
+<div class="stats-hero">
+  <div class="section-head">
+    <div class="stag" style="background:var(--yellow);color:var(--fg)">STATISTICS</div>
+    <h1>&#x1F4CA; 数据统计</h1>
+    <p class="sdesc">模型与品种的参考数量、平均分排行一目了然</p>
+  </div>
+</div>
+
+<div style="padding:32px 32px 0;position:relative;z-index:1">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="st-tabs">
+      ${tabsHtml}
+    </div>
+  </div>
+</div>
+
+<!-- 数量排行 -->
+<div class="stats-section-title">
+  <h2><span class="badge">COUNT</span> &#x1F4CA; 参考数量排行</h2>
+</div>
+<div class="stats-content">
+  <div class="stats-grid">
+    <div class="stats-card">
+      <div class="stats-card-head" style="background:var(--blue);border-bottom-color:var(--fg)">
+        <div class="card-icon" style="background:var(--white)">&#x1F916;</div>
+        <h3 style="color:var(--white)">模型使用排行</h3>
+      </div>
+      <div class="stats-card-body">
+        <table class="st-table">
+          <thead><tr><th>排名</th><th>模型</th><th>参考次数</th><th>占比</th></tr></thead>
+          <tbody id="model-count-body"><tr><td colspan="4" class="stats-loading">&#x1F99E; 加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-head" style="background:var(--orange);border-bottom-color:var(--fg)">
+        <div class="card-icon" style="background:var(--white)">&#x1F99E;</div>
+        <h3 style="color:var(--white)">品种分布排行</h3>
+      </div>
+      <div class="stats-card-body">
+        <table class="st-table">
+          <thead><tr><th>排名</th><th>品种</th><th>参考次数</th><th>占比</th></tr></thead>
+          <tbody id="type-count-body"><tr><td colspan="4" class="stats-loading">&#x1F99E; 加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 分数排行 -->
+<div class="stats-section-title">
+  <h2><span class="badge">SCORE</span> &#x1F3C6; 平均分排行</h2>
+</div>
+<div class="stats-content" style="padding-bottom:80px">
+  <div class="stats-grid">
+    <div class="stats-card">
+      <div class="stats-card-head" style="background:var(--purple);border-bottom-color:var(--fg)">
+        <div class="card-icon" style="background:var(--white)">&#x1F916;</div>
+        <h3 style="color:var(--white)">模型平均分排行</h3>
+      </div>
+      <div class="stats-card-body">
+        <table class="st-table">
+          <thead><tr><th>排名</th><th>模型</th><th>平均分</th><th>最高/最低</th><th>次数</th></tr></thead>
+          <tbody id="model-score-body"><tr><td colspan="5" class="stats-loading">&#x1F99E; 加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="stats-card">
+      <div class="stats-card-head" style="background:var(--red);border-bottom-color:var(--fg)">
+        <div class="card-icon" style="background:var(--white)">&#x1F99E;</div>
+        <h3 style="color:var(--white)">品种平均分排行</h3>
+      </div>
+      <div class="stats-card-body">
+        <table class="st-table">
+          <thead><tr><th>排名</th><th>品种</th><th>平均分</th><th>最高/最低</th><th>次数</th></tr></thead>
+          <tbody id="type-score-body"><tr><td colspan="5" class="stats-loading">&#x1F99E; 加载中...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+${FOOTER_HTML}
+
+<script>
+var currentExamId = null;
+
+function escHtml(s) {
+  if (!s) return '';
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function switchStats(examId) {
+  currentExamId = examId;
+  document.querySelectorAll('.st-tab').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.examId === examId);
+  });
+  loadStats(examId);
+}
+
+function loadStats(examId) {
+  ['model-count-body','type-count-body','model-score-body','type-score-body'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = '<tr><td colspan="5" class="stats-loading">\\uD83E\\uDD9E 加载中...</td></tr>';
+  });
+
+  fetch('/api/stats?exam_id=' + encodeURIComponent(examId))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data.ok) throw new Error(data.error);
+      renderModelCount(data.model_count || []);
+      renderTypeCount(data.type_count || []);
+      renderModelScore(data.model_score || []);
+      renderTypeScore(data.type_score || []);
+    })
+    .catch(function(){
+      ['model-count-body','type-count-body','model-score-body','type-score-body'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.innerHTML = '<tr><td colspan="5" class="st-empty">加载失败，请刷新重试</td></tr>';
+      });
+    });
+}
+
+function rankClass(i) {
+  if (i < 3) return ' st-rank-' + (i + 1);
+  return '';
+}
+
+function renderModelCount(list) {
+  var tbody = document.getElementById('model-count-body');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" class="st-empty">暂无数据</td></tr>'; return; }
+  var total = list.reduce(function(s, r){ return s + r.count; }, 0);
+  tbody.innerHTML = list.map(function(r, i) {
+    var pct = total > 0 ? (r.count * 100 / total).toFixed(1) : 0;
+    return '<tr>'
+      + '<td><span class="st-rank' + rankClass(i) + '">' + (i+1) + '</span></td>'
+      + '<td><span class="st-name st-model">' + escHtml(r.model_name) + '</span></td>'
+      + '<td><span class="st-count">' + r.count + '</span></td>'
+      + '<td><div class="st-bar-wrap"><span class="st-bar"><span class="st-bar-fill" style="width:' + pct + '%;background:var(--blue)"></span></span><span class="st-score">' + pct + '%</span></div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function renderTypeCount(list) {
+  var tbody = document.getElementById('type-count-body');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="4" class="st-empty">暂无数据</td></tr>'; return; }
+  var total = list.reduce(function(s, r){ return s + r.count; }, 0);
+  tbody.innerHTML = list.map(function(r, i) {
+    var pct = total > 0 ? (r.count * 100 / total).toFixed(1) : 0;
+    return '<tr>'
+      + '<td><span class="st-rank' + rankClass(i) + '">' + (i+1) + '</span></td>'
+      + '<td><span class="st-name st-type">' + escHtml(r.claw_type || 'OpenClaw') + '</span></td>'
+      + '<td><span class="st-count">' + r.count + '</span></td>'
+      + '<td><div class="st-bar-wrap"><span class="st-bar"><span class="st-bar-fill" style="width:' + pct + '%;background:var(--orange)"></span></span><span class="st-score">' + pct + '%</span></div></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function renderModelScore(list) {
+  var tbody = document.getElementById('model-score-body');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="st-empty">需至少 2 次参考才计入排名</td></tr>'; return; }
+  tbody.innerHTML = list.map(function(r, i) {
+    return '<tr>'
+      + '<td><span class="st-rank' + rankClass(i) + '">' + (i+1) + '</span></td>'
+      + '<td><span class="st-name st-model">' + escHtml(r.model_name) + '</span></td>'
+      + '<td><div class="st-bar-wrap"><span class="st-bar"><span class="st-bar-fill" style="width:' + r.avg_score + '%;background:var(--purple)"></span></span><span class="st-score">' + r.avg_score + '%</span></div></td>'
+      + '<td><span class="st-score-detail">' + r.max_score + '% / ' + r.min_score + '%</span></td>'
+      + '<td><span class="st-count">' + r.count + '</span></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function renderTypeScore(list) {
+  var tbody = document.getElementById('type-score-body');
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="5" class="st-empty">需至少 2 次参考才计入排名</td></tr>'; return; }
+  tbody.innerHTML = list.map(function(r, i) {
+    return '<tr>'
+      + '<td><span class="st-rank' + rankClass(i) + '">' + (i+1) + '</span></td>'
+      + '<td><span class="st-name st-type">' + escHtml(r.claw_type || 'OpenClaw') + '</span></td>'
+      + '<td><div class="st-bar-wrap"><span class="st-bar"><span class="st-bar-fill" style="width:' + r.avg_score + '%;background:var(--red)"></span></span><span class="st-score">' + r.avg_score + '%</span></div></td>'
+      + '<td><span class="st-score-detail">' + r.max_score + '% / ' + r.min_score + '%</span></td>'
+      + '<td><span class="st-count">' + r.count + '</span></td>'
+      + '</tr>';
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var firstTab = document.querySelector('.st-tab');
+  if (firstTab) switchStats(firstTab.dataset.examId);
+});
+</script>
 </body>
 </html>`;
 }
