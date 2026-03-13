@@ -50,7 +50,7 @@ Page({
       const res = await api.getLeaderboard(examId);
       console.log('[排行榜] examId:', examId, 'response:', JSON.stringify(res).slice(0, 500));
       if (res && res.ok) {
-        const leaderboard = (res.leaderboard || []).map((item, idx) => ({
+        const leaderboard = (res.leaderboard || []).slice(0, 20).map((item, idx) => ({
           ...item,
           rank: item.rank || idx + 1,
           durationText: util.formatDuration(item.duration_seconds),
