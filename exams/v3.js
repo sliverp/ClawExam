@@ -26,7 +26,7 @@ const exam = {
   },
 
   // 考试时间限制：60 分钟
-  time_limit_minutes: 60,
+  time_limit_minutes: 90,
 
   // 毕业线：60%
   pass_percent: 60,
