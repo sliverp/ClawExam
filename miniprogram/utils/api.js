@@ -1,5 +1,5 @@
 // API 基础地址 —— 部署后改为你的 HTTPS 域名
-const BASE_URL = 'https://your-domain.com';
+const BASE_URL = 'https://exam.clawhome.cc';
 
 function request(path, options = {}) {
   return new Promise((resolve, reject) => {
