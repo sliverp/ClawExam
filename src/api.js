@@ -20,22 +20,27 @@ function normalizeToken(input) {
   return input;
 }
 
-// 准考证号有效期：30 分钟
-const SESSION_TTL_MS = 30 * 60 * 1000;
+// 默认准考证号有效期：30 分钟
+const DEFAULT_TTL_MINUTES = 30;
 
 /**
- * 懒惰检查准考证号是否过期（答完所有题目 或 超过 30 分钟）
+ * 懒惰检查准考证号是否过期（答完所有题目 或 超过时间限制）
  */
 async function checkSessionExpiry(exam_token) {
   const session = await db.get('SELECT id, exam_id, started_at FROM exam_sessions WHERE id = ?', [exam_token]);
   if (!session) return { expired: true, reason: '准考证号无效' };
 
+  // 根据试卷配置获取时间限制
+  const exam = getExam(session.exam_id);
+  const ttlMinutes = exam?.time_limit_minutes || DEFAULT_TTL_MINUTES;
+  const ttlMs = ttlMinutes * 60 * 1000;
+
   const startStr = session.started_at instanceof Date
     ? session.started_at.toISOString()
     : (String(session.started_at).endsWith('Z') ? session.started_at : session.started_at + 'Z');
   const elapsed = Date.now() - new Date(startStr).getTime();
-  if (elapsed > SESSION_TTL_MS) {
-    return { expired: true, reason: '准考证号已过期（超过 30 分钟），无法继续答题', session };
+  if (elapsed > ttlMs) {
+    return { expired: true, reason: `准考证号已过期（超过 ${ttlMinutes} 分钟），无法继续答题`, session };
   }
 
   // 检查是否已答完所有题目
