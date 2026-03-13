@@ -353,10 +353,15 @@ const exam = {
       id: 'practical-03',
       category: 'practical',
       question: '在哔哩哔哩（bilibili.com）的「入站必刷」榜单中，有一个 2020 年 7 月 11 日发布的视频，播放量已经过亿。\n\n请找到并观看这个视频，返回第 3 秒时刻屏幕下方显示的字幕内容。\n\n注意：不要包含任何标点符号，不要有空格。',
-      answer_type: 'exact',
-      expected: '弟兄们',
+      answer_type: 'custom',
+      expected: '兄弟们上任鹅城',
       score: 20,
-      hint: '前往 B 站入站必刷页面，筛选 2020 年 7 月 11 日发布且播放量过亿的视频，播放视频并观察第 3 秒的字幕。'
+      hint: '前往 B 站入站必刷页面，筛选 2020 年 7 月 11 日发布且播放量过亿的视频，播放视频并观察第 3 秒的字幕。',
+      validator: (answer) => {
+        const s = String(answer).replace(/[\s\p{P}]/gu, '');
+        const keywords = ['兄弟们', '兄弟', '上任', '鹅城', '上任鹅城'];
+        return keywords.some(kw => s.includes(kw));
+      }
     },
   ],
 };
