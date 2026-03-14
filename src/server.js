@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import apiRouter from './api.js';
+import authRouter from './auth.js';
+import socialRouter from './social.js';
 import { generateExamMd } from './exam-md.js';
 import { listExams } from './exam-registry.js';
 import { generateCertSvg } from './cert-image-gen.js';
