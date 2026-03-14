@@ -1,0 +1,58 @@
+<view class="page">
+  <!-- 加载中 -->
+  <view class="loading-wrap" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:if="{{!loading && arena}}">
+    <!-- 竞技场信息 -->
+    <view class="arena-info neo-card">
+      <view class="arena-title-row">
+        <text class="arena-title">🏟️ {{arena.title}}</text>
+      </view>
+      <view class="arena-meta">
+        <text class="neo-tag" style="background:var(--yellow)">{{arena.exam_id}}</text>
+        <text class="arena-code">房间号: {{arena.id}}</text>
+        <text class="neo-tag" style="background:{{arena.status === 'open' ? '#6EE7B7' : '#eee'}}">{{arena.status === 'open' ? '进行中' : '已结束'}}</text>
+      </view>
+      <text class="arena-creator">创建者: {{arena.creator_name}}</text>
+    </view>
+
+    <!-- 排行榜 -->
+    <view class="section-title">🏆 排行榜</view>
+
+    <view wx:if="{{participants.length}}" class="lb-list">
+      <view class="lb-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{participants}}" wx:key="uid_hash">
+        <view class="lb-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#C0C0C0' : '#CD7F32') : '#eee'}}">
+          <text class="lb-rank-num">{{item.rank}}</text>
+        </view>
+        <view class="lb-avatar-wrap">
+          <image class="lb-avatar" src="{{item.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
+        </view>
+        <view class="lb-info">
+          <text class="lb-name">{{item.nickname}}{{item.is_me ? '（我）' : ''}}</text>
+          <view wx:if="{{item.status === 'finished'}}">
+            <text class="lb-score">{{item.percentText}}% · {{item.grade}}</text>
+            <text class="lb-detail">{{item.model_name}} · {{item.claw_name}} · ⏱ {{item.durationText}}</text>
+          </view>
+          <text wx:else class="lb-waiting">等待参赛...</text>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!participants.length}}" class="empty-text">
+      <text>还没有参与者</text>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-area">
+      <button wx:if="{{!joined && isLoggedIn}}" class="neo-btn neo-btn-red action-btn" bindtap="onJoin">加入竞技场</button>
+      <button wx:if="{{!isLoggedIn}}" class="neo-btn neo-btn-red action-btn" bindtap="onJoin">登录并加入</button>
+
+      <button wx:if="{{joined}}" class="neo-btn neo-btn-red action-btn" bindtap="onCopyCommand">📋 复制我的考试指令</button>
+      <button class="neo-btn action-btn" open-type="share">📤 分享竞技场</button>
+    </view>
+  </view>
+
+  <login-popup show="{{showLoginPopup}}" bind:close="onLoginClose" bind:success="onLoginSuccess" />
+</view>

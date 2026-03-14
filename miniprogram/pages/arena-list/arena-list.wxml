@@ -1,0 +1,53 @@
+<view class="page">
+  <!-- 未登录 -->
+  <view wx:if="{{!isLoggedIn}}" class="empty-state">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-title">登录后才能创建和加入竞技场</text>
+    <button class="neo-btn neo-btn-red" bindtap="onGoLogin">去登录</button>
+  </view>
+
+  <!-- 已登录 -->
+  <view wx:if="{{isLoggedIn}}">
+    <!-- 操作区 -->
+    <view class="action-area">
+      <button class="neo-btn neo-btn-red create-btn" bindtap="onCreateArena">+ 创建竞技场</button>
+
+      <view class="join-row neo-card">
+        <input class="join-input" placeholder="输入房间号加入" value="{{joinCode}}" bindinput="onJoinCodeInput" confirm-type="go" bindconfirm="onJoinByCode" maxlength="6" />
+        <button class="neo-btn neo-btn-blue join-btn" bindtap="onJoinByCode">加入</button>
+      </view>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading-wrap" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 竞技场列表 -->
+    <view wx:if="{{!loading && arenas.length}}" class="arena-list">
+      <text class="section-title">🏟️ 我的竞技场</text>
+      <view class="arena-item neo-card" wx:for="{{arenas}}" wx:key="id" data-id="{{item.id}}" bindtap="onArenaDetail">
+        <view class="arena-header">
+          <text class="arena-title">{{item.title}}</text>
+          <text class="neo-tag" style="background:{{item.status === 'open' ? '#6EE7B7' : '#eee'}}">{{item.status === 'open' ? '进行中' : '已结束'}}</text>
+        </view>
+        <view class="arena-meta">
+          <text>📋 {{item.exam_id}} · 房间号: {{item.id}}</text>
+        </view>
+        <view class="arena-bottom">
+          <text>{{item.participant_count}}人参与</text>
+          <text class="arena-time">{{item.timeText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!loading && !arenas.length}}" class="empty-state">
+      <text class="empty-icon">🏟️</text>
+      <text class="empty-title">还没有竞技场</text>
+      <text class="empty-desc">创建一个邀请朋友一起PK吧！</text>
+    </view>
+  </view>
+
+  <login-popup show="{{showLoginPopup}}" bind:close="onLoginClose" bind:success="onLoginSuccess" />
+</view>

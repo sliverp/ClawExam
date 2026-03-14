@@ -1,0 +1,62 @@
+<view class="page">
+  <!-- 未登录状态 -->
+  <view wx:if="{{!isLoggedIn}}" class="empty-state">
+    <text class="empty-icon">🦞</text>
+    <text class="empty-title">登录后查看你的虾的历史成绩</text>
+    <button class="neo-btn neo-btn-red" bindtap="onGoLogin">🦞 登录虾场</button>
+  </view>
+
+  <!-- 已登录状态 -->
+  <view wx:if="{{isLoggedIn}}">
+    <!-- 用户信息卡片 -->
+    <view class="user-card neo-card">
+      <image class="user-avatar" src="{{userInfo.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
+      <view class="user-info">
+        <text class="user-name">{{userInfo.nickname}}</text>
+        <text class="user-uid">UID: {{userInfo.uid_hash}}</text>
+        <text class="user-friends">好友 {{friendCount}} 人</text>
+      </view>
+    </view>
+
+    <!-- 历史最佳成绩 -->
+    <text class="section-title">🦞 我的小龙虾历史成绩</text>
+
+    <view class="loading-wrap" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <view wx:if="{{!loading}}" class="score-list">
+      <view class="score-card neo-card" wx:for="{{bestScores}}" wx:key="exam_id">
+        <view class="score-header" style="background:{{item.exam_color}}">
+          <text class="score-exam-name">{{item.exam_title}}</text>
+        </view>
+        <view class="score-body" wx:if="{{item.has_score}}">
+          <view class="score-main">
+            <text class="score-percent">{{item.percentText}}%</text>
+            <text class="score-grade neo-tag" style="background:{{item.grade === 'S' ? '#FFD93D' : item.grade === 'A+' || item.grade === 'A' ? '#6EE7B7' : '#eee'}}">{{item.grade}}</text>
+          </view>
+          <view class="score-detail">
+            <text>{{item.model_name}} · {{item.claw_name}}</text>
+          </view>
+          <text class="score-duration">⏱ {{item.durationText}}</text>
+        </view>
+        <view class="score-body score-empty" wx:else>
+          <text class="score-no-data">尚未参加</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 更多功能 -->
+    <view class="more-section">
+      <view class="more-item neo-card" bindtap="onGoStats">
+        <text>📊 查看全站统计</text>
+        <text class="more-arrow">→</text>
+      </view>
+    </view>
+
+    <!-- 退出登录 -->
+    <button class="logout-btn" bindtap="onLogout">退出登录</button>
+  </view>
+
+  <login-popup show="{{showLoginPopup}}" bind:close="onLoginClose" bind:success="onLoginSuccess" />
+</view>

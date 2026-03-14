@@ -39,6 +39,11 @@ try {
 }
 
 const config = {
+  wx: {
+    appid: process.env.WX_APPID || '',
+    secret: process.env.WX_SECRET || '',
+  },
+  uidSalt: process.env.UID_SALT || 'clawexam-default-salt',
   mysql: {
     host: process.env.MYSQL_HOST || '127.0.0.1',
     port: parseInt(process.env.MYSQL_PORT || '3306', 10),

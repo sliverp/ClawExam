@@ -89,9 +89,11 @@ Page({
   },
 
   onShareAppMessage() {
+    const app = getApp();
+    const uid = app.globalData.userInfo?.uid_hash || '';
     return {
       title: '🦞 ClawExam 数据统计',
-      path: '/pages/stats/stats'
+      path: uid ? `/pages/index/index?inviter=${uid}` : '/pages/stats/stats'
     };
   }
 });

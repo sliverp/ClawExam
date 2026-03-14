@@ -100,7 +100,7 @@ router.get('/exams/:exam_id', (req, res) => {
 // POST /api/register — 注册 Claw 并创建考试会话，返回第一道题
 router.post('/register', async (req, res) => {
   try {
-    const { exam_id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info } = req.body;
+    const { exam_id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info, owner_uid, arena_id } = req.body;
     if (!exam_id) return res.status(400).json({ ok: false, error: '缺少必填字段: exam_id' });
     if (!examExists(exam_id)) return res.status(404).json({ ok: false, error: `试卷 ${exam_id} 不存在` });
     if (!claw_name || !claw_version || !model_name) {
@@ -121,8 +121,8 @@ router.post('/register', async (req, res) => {
          JSON.stringify(Array.isArray(skill_list) ? skill_list : []),
          model_name, owner_name || '', JSON.stringify(extra_info || {})]);
 
-      await conn.run('INSERT INTO exam_sessions (id, profile_id, exam_id) VALUES (?, ?, ?)',
-        [sessionId, profileId, exam_id]);
+      await conn.run('INSERT INTO exam_sessions (id, profile_id, exam_id, owner_uid, arena_id) VALUES (?, ?, ?, ?, ?)',
+        [sessionId, profileId, exam_id, owner_uid || null, arena_id || null]);
 
       // 批量插入组卷记录，一条 SQL 搞定，不再逐条 INSERT
       const placeholders = questionIds.map(() => '(?, ?, ?)').join(', ');
@@ -225,11 +225,14 @@ router.post('/submit', async (req, res) => {
         ? Math.max(0, Math.round((new Date(lastAnswerRow.last_at) - new Date(session.started_at)) / 1000))
         : 0;
 
+      // 作答时间不足60秒不参与排名
+      const isSpeedrun = submitDuration > 0 && submitDuration < 60;
+
       response.all_done = true;
       response.summary = `🎉 恭喜！你已完成全部 ${totalRow.cnt} 道题！总得分：${totalScore} / ${sessionMax}`;
 
       // 作答时间不足60秒，提示 AI 不要刷题
-      if (submitDuration > 0 && submitDuration < 60) {
+      if (isSpeedrun) {
         response.speedrun_warning = `⚠️ 你的作答时间仅 ${submitDuration} 秒（不足1分钟），本次成绩不计入排行榜。AI 小于1分钟就交卷了，不要刷题哦！请认真作答，每道题仔细思考后再提交。`;
         response.summary += `\n⚠️ 用时 ${submitDuration} 秒，不足1分钟，成绩不计入排行榜。不要刷题哦！`;
       }
@@ -238,6 +241,62 @@ router.post('/submit', async (req, res) => {
       response.cert_url = `${baseUrl}/cert/${exam_token}`;
       response.cert_image_url = `${baseUrl}/cert/${exam_token}/image`;
       response.share_message = `🐾 快把你的证书分享给朋友，邀请更多人来挑战 ClawExam！\n📄 证书页面: ${baseUrl}/cert/${exam_token}\n🖼️ 证书图片（可直接保存分享）: ${baseUrl}/cert/${exam_token}/image`;
+
+      // ===== 更新用户最佳成绩和竞技场 =====
+      const fullSession = await db.get('SELECT owner_uid, arena_id FROM exam_sessions WHERE id = ?', [exam_token]);
+
+      if (fullSession?.owner_uid && !isSpeedrun) {
+        const scorePercent = sessionMax > 0 ? Math.round(totalScore * 1000 / sessionMax) / 10 : 0;
+
+        // 计算等级
+        let grade = 'F';
+        if (scorePercent >= 95) grade = 'S';
+        else if (scorePercent >= 90) grade = 'A+';
+        else if (scorePercent >= 80) grade = 'A';
+        else if (scorePercent >= 70) grade = 'B';
+        else if (scorePercent >= 60) grade = 'C';
+        else if (scorePercent >= 40) grade = 'D';
+
+        // 获取虾名和模型
+        const profile = await db.get(
+          'SELECT claw_name, model_name FROM claw_profiles WHERE id = (SELECT profile_id FROM exam_sessions WHERE id = ?)',
+          [exam_token]
+        );
+
+        // 查现有最佳成绩
+        const existing = await db.get(
+          'SELECT best_percent FROM user_best_scores WHERE uid_hash = ? AND exam_id = ?',
+          [fullSession.owner_uid, session.exam_id]
+        );
+
+        if (!existing || scorePercent > existing.best_percent) {
+          await db.run(
+            `INSERT INTO user_best_scores (uid_hash, exam_id, best_session_id, best_score, best_max_score, best_percent, best_duration, claw_name, model_name, grade)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+               best_session_id = VALUES(best_session_id), best_score = VALUES(best_score),
+               best_max_score = VALUES(best_max_score), best_percent = VALUES(best_percent),
+               best_duration = VALUES(best_duration), claw_name = VALUES(claw_name),
+               model_name = VALUES(model_name), grade = VALUES(grade)`,
+            [fullSession.owner_uid, session.exam_id, exam_token, totalScore, sessionMax, scorePercent,
+             submitDuration, profile?.claw_name || '', profile?.model_name || '', grade]
+          );
+        }
+
+        // 更新竞技场成绩
+        if (fullSession.arena_id) {
+          await db.run(
+            `UPDATE arena_participants SET
+              session_id = ?, score = ?, max_score = ?, score_percent = ?,
+              duration_seconds = ?, claw_name = ?, model_name = ?, grade = ?,
+              status = 'finished', finished_at = NOW()
+              WHERE arena_id = ? AND uid_hash = ?`,
+            [exam_token, totalScore, sessionMax, scorePercent, submitDuration,
+             profile?.claw_name || '', profile?.model_name || '', grade,
+             fullSession.arena_id, fullSession.owner_uid]
+          );
+        }
+      }
     } else {
       response.next_question = await getNextQuestion(exam_token, session.exam_id);
     }

@@ -47,6 +47,10 @@ app.get('/exam.md', (req, res) => {
 // API（完全不动）
 app.use('/api', apiRouter);
 
+// 社交功能路由
+app.use('/api', authRouter);
+app.use('/api', socialRouter);
+
 // 证书查询跳转：GET /cert/?token=xxx → /cert/:token
 app.get('/cert/', (req, res) => {
   const token = req.query.token;

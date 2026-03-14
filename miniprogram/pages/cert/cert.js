@@ -16,6 +16,16 @@ Page({
   },
 
   onLoad(options) {
+    // 处理邀请者
+    if (options.inviter) {
+      const app = getApp();
+      if (app.globalData.isLoggedIn) {
+        api.addFriend(options.inviter).catch(() => {});
+      } else {
+        app.globalData.pendingInviter = options.inviter;
+      }
+    }
+
     const token = options.token || '';
     if (!token) {
       this.setData({ loading: false, error: '缺少准考证号' });
@@ -114,9 +124,12 @@ Page({
     const score = cert?.total_score || 0;
     const maxScore = cert?.total_max_score || 100;
     const percent = maxScore > 0 ? Math.round(score / maxScore * 100) : 0;
+    const app = getApp();
+    const uid = app.globalData.userInfo?.uid_hash || '';
+    const inviterParam = uid ? `&inviter=${uid}` : '';
     return {
       title: `🦞 我养的虾「${name}」考了${percent}分（${grade}级），你的虾敢来挑战吗？`,
-      path: `/pages/cert/cert?token=${this.data.token}`
+      path: `/pages/cert/cert?token=${this.data.token}${inviterParam}`
     };
   }
 });

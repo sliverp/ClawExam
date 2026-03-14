@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "竞技场",
+  "usingComponents": {
+    "login-popup": "../../components/login-popup/login-popup"
+  },
+  "enablePullDownRefresh": true
+}

@@ -25,45 +25,140 @@ function request(path, options = {}) {
   });
 }
 
-// 获取所有试卷列表
+// 带鉴权的请求
+function authRequest(path, options = {}) {
+  const token = wx.getStorageSync('app_token');
+  return request(path, {
+    ...options,
+    header: {
+      ...(options.header || {}),
+      'X-App-Token': token || ''
+    }
+  });
+}
+
+// ===== 现有接口 =====
+
 function getExams() {
   return request('/api/exams');
 }
 
-// 获取单个试卷信息
 function getExam(examId) {
   return request(`/api/exams/${examId}`);
 }
 
-// 获取排行榜
 function getLeaderboard(examId) {
   const query = examId ? `?exam_id=${examId}` : '';
   return request(`/api/leaderboard${query}`);
 }
 
-// 获取统计数据
 function getStats(examId) {
   const query = examId ? `?exam_id=${examId}` : '';
   return request(`/api/stats${query}`);
 }
 
-// 获取证书数据
 function getCertificate(token) {
   return request(`/api/certificate/${token}`);
 }
 
-// 获取证书图片 URL
 function getCertImageUrl(token) {
   return `${BASE_URL}/cert/${token}/image`;
+}
+
+// ===== 新增接口 =====
+
+function wxLogin(data) {
+  return request('/api/wx-login', { method: 'POST', data });
+}
+
+function getUserInfo() {
+  return authRequest('/api/user/me');
+}
+
+function updateUserInfo(data) {
+  return authRequest('/api/user/me', { method: 'PUT', data });
+}
+
+function addFriend(targetUid) {
+  return authRequest('/api/friends/add', { method: 'POST', data: { target_uid: targetUid } });
+}
+
+function getFriendsList() {
+  return authRequest('/api/friends/list');
+}
+
+function getFriendsLeaderboard(examId) {
+  return authRequest(`/api/friends/leaderboard?exam_id=${examId}`);
+}
+
+function createArena(data) {
+  return authRequest('/api/arena/create', { method: 'POST', data });
+}
+
+function getArena(arenaId) {
+  return request(`/api/arena/${arenaId}`);
+}
+
+function joinArena(arenaId) {
+  return authRequest(`/api/arena/${arenaId}/join`, { method: 'POST' });
+}
+
+function getMyArenas() {
+  return authRequest('/api/arena/my');
+}
+
+function getMyBestScores() {
+  return authRequest('/api/user/scores');
+}
+
+function getMyExamHistory() {
+  return authRequest('/api/user/history');
+}
+
+// 上传头像
+function uploadAvatar(filePath) {
+  return new Promise((resolve, reject) => {
+    const token = wx.getStorageSync('app_token');
+    wx.uploadFile({
+      url: `${BASE_URL}/api/upload/avatar`,
+      filePath,
+      name: 'file',
+      header: {
+        'X-App-Token': token || ''
+      },
+      success(res) {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(res.data));
+        } else {
+          reject({ statusCode: res.statusCode });
+        }
+      },
+      fail: reject
+    });
+  });
 }
 
 module.exports = {
   BASE_URL,
   request,
+  authRequest,
   getExams,
   getExam,
   getLeaderboard,
   getStats,
   getCertificate,
-  getCertImageUrl
+  getCertImageUrl,
+  wxLogin,
+  getUserInfo,
+  updateUserInfo,
+  addFriend,
+  getFriendsList,
+  getFriendsLeaderboard,
+  createArena,
+  getArena,
+  joinArena,
+  getMyArenas,
+  getMyBestScores,
+  getMyExamHistory,
+  uploadAvatar
 };

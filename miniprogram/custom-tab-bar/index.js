@@ -11,6 +11,21 @@ Component({
         pagePath: "/pages/stats/stats",
         text: "统计",
         icon: "📊",
+      },
+      {
+        pagePath: "/pages/friends/friends",
+        text: "好友榜",
+        icon: "🏆",
+      },
+      {
+        pagePath: "/pages/arena-list/arena-list",
+        text: "竞技场",
+        icon: "🏟️",
+      },
+      {
+        pagePath: "/pages/profile/profile",
+        text: "我的",
+        icon: "👤",
       }
     ]
   },

@@ -1,8 +1,12 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/cert/cert",
-    "pages/stats/stats"
+    "pages/stats/stats",
+    "pages/friends/friends",
+    "pages/arena-list/arena-list",
+    "pages/profile/profile",
+    "pages/arena/arena",
+    "pages/cert/cert"
   ],
   "window": {
     "navigationBarBackgroundColor": "#1a1a1a",
@@ -25,6 +29,18 @@
       {
         "pagePath": "pages/stats/stats",
         "text": "统计"
+      },
+      {
+        "pagePath": "pages/friends/friends",
+        "text": "好友榜"
+      },
+      {
+        "pagePath": "pages/arena-list/arena-list",
+        "text": "竞技场"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
       }
     ]
   },

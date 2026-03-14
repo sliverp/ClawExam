@@ -1,0 +1,66 @@
+<view class="page">
+  <!-- 未登录状态 -->
+  <view wx:if="{{!isLoggedIn}}" class="empty-state">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-title">登录后可以查看好友的虾排名</text>
+    <button class="neo-btn neo-btn-red" bindtap="onGoLogin">去登录</button>
+  </view>
+
+  <!-- 已登录状态 -->
+  <view wx:if="{{isLoggedIn}}">
+    <!-- 试卷 Tab -->
+    <view class="lb-tab-bar" wx:if="{{exams.length}}">
+      <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+        wx:for="{{exams}}" wx:key="id"
+        data-examid="{{item.id}}" bindtap="onTabSwitch">
+        {{item.name}}
+      </button>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading-wrap" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 排行榜列表 -->
+    <view wx:if="{{!loading && leaderboard.length}}" class="lb-list">
+      <view class="lb-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{leaderboard}}" wx:key="uid_hash">
+        <view class="lb-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#C0C0C0' : '#CD7F32') : '#eee'}}">
+          <text class="lb-rank-num">{{item.rank}}</text>
+        </view>
+        <view class="lb-avatar-wrap">
+          <image class="lb-avatar" src="{{item.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
+        </view>
+        <view class="lb-info">
+          <view class="lb-name-row">
+            <text class="lb-name">{{item.nickname}}{{item.is_me ? '（我）' : ''}}</text>
+          </view>
+          <view class="lb-meta">
+            <text class="neo-tag" style="background:var(--blue);font-size:20rpx">{{item.model_name}}</text>
+            <text class="lb-claw">{{item.claw_name}}</text>
+          </view>
+          <view class="lb-score-row">
+            <view class="lb-score-bar">
+              <view class="progress-bar">
+                <view class="progress-fill" style="width:{{item.best_percent}}%;background:{{item.best_percent >= 90 ? '#6EE7B7' : item.best_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
+              </view>
+            </view>
+            <text class="lb-score-text">{{item.percentText}}% · {{item.grade}}</text>
+          </view>
+          <text class="lb-duration">⏱ {{item.durationText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!loading && !leaderboard.length}}" class="empty-state">
+      <text class="empty-icon">🦞</text>
+      <text class="empty-title">还没有好友排行数据</text>
+      <text class="empty-desc">分享给朋友一起来考虾吧！</text>
+      <button class="neo-btn neo-btn-red" open-type="share">📨 邀请好友</button>
+    </view>
+  </view>
+
+  <!-- 登录弹窗 -->
+  <login-popup show="{{showLoginPopup}}" bind:close="onLoginClose" bind:success="onLoginSuccess" />
+</view>

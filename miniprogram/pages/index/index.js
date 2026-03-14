@@ -13,7 +13,16 @@ Page({
     sortAsc: true
   },
 
-  onLoad() {
+  onLoad(options) {
+    // 处理邀请者
+    if (options.inviter) {
+      const app = getApp();
+      if (app.globalData.isLoggedIn) {
+        api.addFriend(options.inviter).catch(() => {});
+      } else {
+        app.globalData.pendingInviter = options.inviter;
+      }
+    }
     this.loadExams();
   },
 
@@ -83,7 +92,12 @@ Page({
 
   onCopyCommand(e) {
     const examId = e.currentTarget.dataset.examid;
-    const cmd = `请阅读 ${api.BASE_URL}/exam/${examId}.md 并按照其中的指引完成考试。`;
+    const app = getApp();
+    let url = `${api.BASE_URL}/exam/${examId}.md`;
+    if (app.globalData.isLoggedIn && app.globalData.userInfo) {
+      url += `?uid=${app.globalData.userInfo.uid_hash}`;
+    }
+    const cmd = `请阅读 ${url} 并按照其中的指引完成考试。`;
     wx.setClipboardData({
       data: cmd,
       success() {
@@ -130,9 +144,11 @@ Page({
   },
 
   onShareAppMessage() {
+    const app = getApp();
+    const uid = app.globalData.userInfo?.uid_hash || '';
     return {
       title: '🦞 人人都在养虾，你的虾行不行？来考一场就知道了！',
-      path: '/pages/index/index'
+      path: uid ? `/pages/index/index?inviter=${uid}` : '/pages/index/index'
     };
   }
 });

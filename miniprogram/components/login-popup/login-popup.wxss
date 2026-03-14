@@ -1,0 +1,114 @@
+.login-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.popup-content {
+  position: relative;
+  width: 100%;
+  background: #FFFBEB;
+  border-top: 4rpx solid #1a1a1a;
+  padding: 60rpx 48rpx;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.popup-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  margin-bottom: 48rpx;
+  color: #1a1a1a;
+}
+
+.avatar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: 32rpx;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-img {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 50%;
+  border: 4rpx solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  background: #fff;
+}
+
+.avatar-tip {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 12rpx;
+}
+
+.nickname-wrap {
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.nickname-input {
+  width: 100%;
+  height: 88rpx;
+  border: 3px solid #1a1a1a;
+  padding: 0 24rpx;
+  font-size: 32rpx;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.confirm-btn {
+  width: 100%;
+  height: 96rpx;
+  background: #E63B2E;
+  color: #fff;
+  border: 3px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;
+  font-size: 34rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+  border-radius: 0;
+}
+
+.confirm-btn::after {
+  border: none;
+}
+
+.confirm-btn:active {
+  box-shadow: 1px 1px 0 #1a1a1a;
+  transform: translate(2px, 2px);
+}
+
+.skip-btn {
+  font-size: 28rpx;
+  color: #888;
+  padding: 16rpx;
+}
