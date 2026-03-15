@@ -120,11 +120,13 @@
         </view>
         <text class="more-arrow">→</text>
       </view>
-    </view>
-
-    <!-- 退出登录 -->
-    <view class="section logout-section">
-      <button class="logout-btn" bindtap="onLogout">退出登录</button>
+      <view class="more-item neo-card logout-item" bindtap="onLogout">
+        <view class="more-item-left">
+          <text class="more-item-icon">👋</text>
+          <text class="more-item-text logout-text">退出登录</text>
+        </view>
+        <text class="more-arrow">→</text>
+      </view>
     </view>
   </view>
 
