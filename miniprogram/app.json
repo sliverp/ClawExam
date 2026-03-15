@@ -1,9 +1,9 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/stats/stats",
-    "pages/friends/friends",
     "pages/arena-list/arena-list",
+    "pages/friends/friends",
+    "pages/stats/stats",
     "pages/profile/profile",
     "pages/arena/arena",
     "pages/cert/cert"
@@ -27,16 +27,16 @@
         "text": "首页"
       },
       {
-        "pagePath": "pages/stats/stats",
-        "text": "统计"
+        "pagePath": "pages/arena-list/arena-list",
+        "text": "竞技场"
       },
       {
         "pagePath": "pages/friends/friends",
         "text": "好友榜"
       },
       {
-        "pagePath": "pages/arena-list/arena-list",
-        "text": "竞技场"
+        "pagePath": "pages/stats/stats",
+        "text": "统计"
       },
       {
         "pagePath": "pages/profile/profile",

@@ -8,9 +8,9 @@ Component({
         icon: '🦞'
       },
       {
-        pagePath: '/pages/stats/stats',
-        text: '统计',
-        icon: '📊'
+        pagePath: '/pages/arena-list/arena-list',
+        text: '竞技',
+        icon: '⚔️'
       },
       {
         pagePath: '/pages/friends/friends',
@@ -18,9 +18,9 @@ Component({
         icon: '👥'
       },
       {
-        pagePath: '/pages/arena-list/arena-list',
-        text: '竞技',
-        icon: '⚔️'
+        pagePath: '/pages/stats/stats',
+        text: '统计',
+        icon: '📊'
       },
       {
         pagePath: '/pages/profile/profile',
