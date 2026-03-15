@@ -48,8 +48,6 @@
       <text class="proof-label">虾品种</text>
     </view>
   </view>
-    </view>
-  </view>
 
   <!-- 考试区域 -->
   <view class="section exam-section" wx:if="{{exams.length}}">
