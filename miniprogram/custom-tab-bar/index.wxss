@@ -35,6 +35,18 @@
   transition: all 0.15s ease;
 }
 
+.tab-item + .tab-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rpx;
+  height: 48rpx;
+  background: rgba(26, 26, 26, 0.15);
+  border-radius: 2rpx;
+}
+
 .tab-icon {
   font-size: 44rpx;
   margin-bottom: 4rpx;
