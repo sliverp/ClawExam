@@ -165,16 +165,17 @@
 }
 
 .friends-tab-bar {
-  display: inline-flex;
+  display: flex;
   gap: 12rpx;
   padding: 4rpx;
 }
 
 .friends-tab-item {
-  display: inline-flex;
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14rpx 28rpx;
+  padding: 14rpx 0;
   border: var(--border);
   font-weight: 700;
   font-size: 26rpx;

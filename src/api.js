@@ -530,9 +530,9 @@ router.get('/overview-stats', async (req, res) => {
       const shrimpCount = await db.get(
         'SELECT COUNT(DISTINCT profile_id) AS count FROM exam_sessions'
       );
-      // 总答题次数（leaderboard 视图每行 = 一次完整考试）
+      // 总答题次数（每答一道题算一次）
       const examCount = await db.get(
-        'SELECT COUNT(*) AS count FROM exam_sessions es WHERE EXISTS (SELECT 1 FROM answers a WHERE a.session_id = es.id)'
+        'SELECT COUNT(*) AS count FROM answers'
       );
       // 模型数
       const modelCount = await db.get(

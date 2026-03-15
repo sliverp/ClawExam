@@ -59,15 +59,13 @@
 
     <!-- Tab 切换 -->
     <view class="section tab-section" wx:if="{{exams.length}}">
-      <scroll-view scroll-x enhanced show-scrollbar="{{false}}">
-        <view class="friends-tab-bar">
-          <button class="friends-tab-item {{activeExamId === item.id ? 'active' : ''}}"
-            wx:for="{{exams}}" wx:key="id"
-            data-examid="{{item.id}}" bindtap="onTabSwitch">
-            {{item.name}}
-          </button>
-        </view>
-      </scroll-view>
+      <view class="friends-tab-bar">
+        <button class="friends-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+          wx:for="{{exams}}" wx:key="id"
+          data-examid="{{item.id}}" bindtap="onTabSwitch">
+          {{item.name}}
+        </button>
+      </view>
     </view>
 
     <!-- 加载中 -->

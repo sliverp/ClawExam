@@ -13,15 +13,13 @@
   </view>
 
   <!-- Tab 切换 -->
-  <scroll-view scroll-x class="stats-tab-scroll" enhanced show-scrollbar="{{false}}">
-    <view class="stats-tab-bar">
-      <button class="stats-tab-item {{activeExamId === item.id ? 'active' : ''}}"
-        wx:for="{{exams}}" wx:key="id"
-        data-examid="{{item.id}}" bindtap="onTabSwitch">
-        {{item.name}}
-      </button>
-    </view>
-  </scroll-view>
+  <view class="stats-tab-bar">
+    <button class="stats-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+      wx:for="{{exams}}" wx:key="id"
+      data-examid="{{item.id}}" bindtap="onTabSwitch">
+      {{item.name}}
+    </button>
+  </view>
 
   <!-- 加载中 -->
   <view class="loading-wrap" wx:if="{{statsLoading}}">
