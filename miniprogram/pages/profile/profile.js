@@ -8,7 +8,8 @@ Page({
     userInfo: null,
     bestScores: [],
     friendCount: 0,
-    loading: false
+    loading: false,
+    topScore: null
   },
 
   onShow() {
@@ -47,19 +48,31 @@ Page({
       const exams = app.globalData.exams;
 
       if (scoresRes.ok) {
+        let topScore = null;
         const bestScores = exams.map(exam => {
           const score = (scoresRes.scores || []).find(s => s.exam_id === exam.id);
-          return {
+          const pct = score ? Number(score.best_percent || 0) : 0;
+          const grade = score ? (util.getGrade ? util.getGrade(pct) : (pct >= 95 ? 'S' : pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : 'D')) : '';
+          const item = {
             exam_id: exam.id,
             exam_title: exam.name || exam.id,
             exam_color: util.examColor(exam.id),
             has_score: !!score,
             ...(score || {}),
-            percentText: score ? Number(score.best_percent || 0).toFixed(1) : '0',
-            durationText: score ? util.formatDuration(score.best_duration) : ''
+            percentText: score ? pct.toFixed(1) : '0',
+            grade: grade,
+            durationText: score ? util.formatDuration(score.best_duration) : '',
+            session_id: score ? score.session_id : ''
           };
+          if (score && (!topScore || pct > Number(topScore.percentText))) {
+            topScore = {
+              ...item,
+              beatPercent: Math.min(99, Math.floor(pct * 1.02))
+            };
+          }
+          return item;
         });
-        this.setData({ bestScores });
+        this.setData({ bestScores, topScore });
       }
 
       if (friendsRes.ok) {
@@ -70,6 +83,13 @@ Page({
     }
 
     this.setData({ loading: false });
+  },
+
+  onViewCert(e) {
+    const token = e.currentTarget.dataset.token;
+    if (token) {
+      wx.navigateTo({ url: `/pages/cert/cert?token=${token}` });
+    }
   },
 
   onGoLogin() {
@@ -104,7 +124,8 @@ Page({
             isLoggedIn: false,
             userInfo: null,
             bestScores: [],
-            friendCount: 0
+            friendCount: 0,
+            topScore: null
           });
         }
       }
@@ -114,7 +135,7 @@ Page({
   onShareAppMessage() {
     const uid = this.data.userInfo?.uid_hash || '';
     return {
-      title: '🦞 人人都在养虾，来考一场就知道你的虾行不行！',
+      title: '🦞 我的虾考了高分！你的虾行不行？',
       path: uid ? `/pages/index/index?inviter=${uid}` : '/pages/index/index'
     };
   }

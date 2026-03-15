@@ -1,14 +1,24 @@
-.tab-bar {
-  display: flex;
+/* Neobrutalism TabBar · 爆款版 */
+.tab-bar-wrap {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 110rpx;
-  background: #FFFBEB;
-  border-top: 4rpx solid #1a1a1a;
-  padding-bottom: env(safe-area-inset-bottom);
   z-index: 999;
+  padding: 0 20rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #FFFBEB;
+}
+
+.tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 120rpx;
+  background: #1a1a1a;
+  border: 3px solid #1a1a1a;
+  border-radius: 28rpx 28rpx 0 0;
+  overflow: hidden;
 }
 
 .tab-item {
@@ -17,27 +27,33 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8rpx 0;
-  transition: all 0.2s;
-}
-
-.tab-item.active {
-  background: rgba(230, 59, 46, 0.08);
+  height: 100%;
+  position: relative;
+  transition: all 0.15s ease;
 }
 
 .tab-icon {
-  font-size: 38rpx;
-  line-height: 44rpx;
+  font-size: 44rpx;
+  margin-bottom: 4rpx;
+  line-height: 1.2;
 }
 
 .tab-text {
   font-size: 20rpx;
-  font-weight: 700;
+  font-weight: 800;
   color: #888;
-  margin-top: 2rpx;
-  font-family: 'Noto Sans SC', sans-serif;
+  letter-spacing: 1rpx;
 }
 
 .tab-item.active .tab-text {
-  color: #E63B2E;
+  color: #FFD93D;
+}
+
+.tab-dot {
+  position: absolute;
+  bottom: 14rpx;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #FFD93D;
 }

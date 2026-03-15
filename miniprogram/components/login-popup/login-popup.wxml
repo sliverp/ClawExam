@@ -1,31 +1,38 @@
 <view class="login-popup" wx:if="{{show}}">
   <view class="mask" bindtap="onClose"></view>
   <view class="popup-content">
-    <view class="popup-title">🦞 登录虾场</view>
-
-    <button open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" class="avatar-btn">
-      <image
-        src="{{avatarUrl || '/images/default-avatar.png'}}"
-        class="avatar-img"
-        mode="aspectFill"
-      />
-      <text class="avatar-tip">{{avatarUrl ? '点击更换头像' : '点击获取微信头像'}}</text>
-    </button>
-
-    <view class="nickname-wrap">
-      <input
-        type="nickname"
-        class="nickname-input"
-        placeholder="微信昵称"
-        value="{{nickname}}"
-        bindinput="onNicknameInput"
-      />
+    <!-- 顶部装饰条 -->
+    <view class="popup-strip">
+      <text>🦞 · 🦞 · 🦞 · 🦞 · 🦞</text>
     </view>
+    <view class="popup-body">
+      <text class="popup-title">登录虾场</text>
+      <text class="popup-desc">获取微信头像和昵称即可登录</text>
 
-    <button class="confirm-btn" bindtap="onConfirm" loading="{{loading}}" disabled="{{loading}}">
-      确认登录
-    </button>
+      <button open-type="chooseAvatar" bindchooseavatar="onChooseAvatar" class="avatar-btn">
+        <image
+          src="{{avatarUrl || '/images/default-avatar.png'}}"
+          class="avatar-img"
+          mode="aspectFill"
+        />
+        <text class="avatar-tip">{{avatarUrl ? '点击更换头像' : '点击获取头像'}}</text>
+      </button>
 
-    <text class="skip-btn" bindtap="onClose">暂不登录</text>
+      <view class="nickname-wrap">
+        <text class="nickname-label">昵称</text>
+        <input
+          type="nickname"
+          class="nickname-input"
+          placeholder="输入你的昵称"
+          value="{{nickname}}"
+          bindinput="onNicknameInput"
+        />
+      </view>
+
+      <button class="confirm-btn neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onConfirm" loading="{{loading}}" disabled="{{loading}}">
+        确认登录
+      </button>
+      <text class="skip-btn" bindtap="onClose">暂不登录</text>
+    </view>
   </view>
 </view>

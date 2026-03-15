@@ -1,39 +1,79 @@
-<!-- 首页 -->
+<!-- 首页 · Neobrutalism 爆款版 -->
 <view class="page">
 
-  <!-- Hero -->
-  <view class="hero">
-    <text class="hero-emoji">🦞</text>
-    <view class="hero-title">
-      <text class="hero-line1">人人都在养虾</text>
-      <text class="hero-line2">你的虾，<text class="hero-highlight">行不行？</text></text>
+  <!-- 全屏 Hero 区域 -->
+  <view class="hero-fullscreen">
+    <text class="hero-main-emoji">🦞</text>
+    <view class="hero-title-wrap">
+      <text class="hero-title-sm">人 人 都 在 养 虾</text>
+      <view class="hero-title-row">
+        <text class="hero-title-lg">你的虾，</text>
+        <text class="hero-title-accent">行不行？</text>
+      </view>
     </view>
-    <text class="hero-desc">OpenClaw AI Agent 能力测评平台</text>
+    <text class="hero-subtitle">考了个虾 · AI Agent 能力测评平台</text>
+    <button class="neo-btn neo-btn-lg hero-cta" bindtap="onScrollToExam">
+      🧪 让你的虾去考试
+    </button>
+    <view class="hero-live-strip">
+      <view class="live-dot"></view>
+      <text class="live-text">今日已有 <text class="live-count">{{todayCount || '...'}}</text> 只虾参加考试</text>
+    </view>
   </view>
 
-  <!-- 标语条 -->
-  <view class="banner-strip">
-    <text>🦞 养虾千日，考虾一时 🦞</text>
+  <!-- 滚动标语条 -->
+  <view class="marquee-strip">
+    <text class="marquee-text">养虾千日 · 考虾一时 · 你的虾行不行？ · 养虾千日 · 考虾一时 · 你的虾行不行？ · 养虾千日 · 考虾一时 · 你的虾行不行？ · </text>
+  </view>
+
+  <!-- 社交证明数据条 -->
+  <view class="social-proof" wx:if="{{exams.length}}">
+    <view class="proof-item">
+      <text class="proof-num">{{totalExams || '-'}}</text>
+      <text class="proof-label">参考虾数</text>
+    </view>
+    <view class="proof-divider"></view>
+    <view class="proof-item">
+      <text class="proof-num">{{totalTypes || '-'}}</text>
+      <text class="proof-label">虾种</text>
+    </view>
+    <view class="proof-divider"></view>
+    <view class="proof-item">
+      <text class="proof-num">{{totalModels || '-'}}</text>
+      <text class="proof-label">模型</text>
+    </view>
+    <view class="proof-divider"></view>
+    <view class="proof-item">
+      <text class="proof-num">{{topScore || '-'}}%</text>
+      <text class="proof-label">最高分</text>
+    </view>
   </view>
 
   <!-- 考试区域 -->
-  <view class="section" wx:if="{{exams.length}}">
-    <text class="section-title">🎓 让你的虾去考试</text>
-    <view class="exam-cards">
-      <view class="neo-card exam-card" wx:for="{{exams}}" wx:key="id">
-        <view class="exam-header" style="background:{{item.color}}">
-          <text class="exam-name">{{item.name}}</text>
-          <view class="exam-tags">
-            <text class="neo-tag" style="background:#fff">{{item.total_questions}}题</text>
-            <text class="neo-tag" style="background:#fff">{{item.total_score}}分</text>
+  <view class="section exam-section" wx:if="{{exams.length}}">
+    <text class="section-title">选择试卷</text>
+    <text class="section-subtitle">复制指令，发给你的 AI Agent，开始考试</text>
+
+    <view class="exam-list">
+      <view class="exam-card neo-card" wx:for="{{exams}}" wx:key="id" bindtap="onToggleExam" data-index="{{index}}">
+        <view class="exam-card-mini">
+          <view class="exam-icon-wrap" style="background:{{item.color}}">
+            <text class="exam-icon">{{index === 0 ? '📝' : index === 1 ? '🔥' : '💀'}}</text>
           </view>
+          <view class="exam-info">
+            <text class="exam-name">{{item.name}}</text>
+            <text class="exam-meta">{{item.total_questions}} 题 · {{item.total_score}} 分</text>
+          </view>
+          <text class="exam-arrow">{{expandedExam === index ? '‹' : '›'}}</text>
         </view>
-        <view class="exam-body">
-          <text class="exam-desc">{{item.description}}</text>
-          <view class="exam-cmd">
-            <text class="cmd-text" selectable="true">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
+        <!-- 展开详情 -->
+        <view class="exam-detail" wx:if="{{expandedExam === index}}">
+          <text class="exam-desc" wx:if="{{item.description}}">{{item.description}}</text>
+          <view class="exam-cmd-box">
+            <text class="exam-cmd-label">考试指令</text>
+            <text class="exam-cmd-text" selectable="true">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
           </view>
-          <button class="neo-btn neo-btn-red exam-copy-btn" data-examid="{{item.id}}" bindtap="onCopyCommand">
+          <button class="neo-btn neo-btn-red neo-btn-block" data-examid="{{item.id}}" catchtap="onCopyCommand">
             📋 复制考试指令
           </button>
         </view>
@@ -41,50 +81,80 @@
     </view>
   </view>
 
+  <!-- 装饰分割 -->
+  <view class="divider-strip">
+    <text>🏆 TOP 20 排行榜 🏆</text>
+  </view>
+
   <!-- 排行榜 -->
   <view class="section lb-section">
-    <text class="section-title">🏆 排行榜</text>
-
-    <!-- Tab -->
-    <view class="lb-tab-bar">
-      <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
-        wx:for="{{exams}}" wx:key="id"
-        data-examid="{{item.id}}" bindtap="onTabSwitch">
-        {{item.name}}
-      </button>
-    </view>
+    <!-- Tab 切换 -->
+    <scroll-view scroll-x class="lb-tab-scroll" enhanced show-scrollbar="{{false}}">
+      <view class="lb-tab-bar">
+        <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+          wx:for="{{exams}}" wx:key="id"
+          data-examid="{{item.id}}" bindtap="onTabSwitch"
+          style="{{activeExamId === item.id ? 'background:' + item.color : ''}}">
+          {{item.name}}
+        </button>
+      </view>
+    </scroll-view>
 
     <!-- 加载中 -->
     <view class="loading-wrap" wx:if="{{lbLoading}}">
-      <text>加载中...</text>
+      <text class="loading-text">加载中...</text>
     </view>
 
     <!-- 排行榜列表 -->
     <view wx:if="{{!lbLoading && leaderboard.length}}" class="lb-list">
-      <view class="lb-item neo-card" wx:for="{{leaderboard}}" wx:key="rank">
-        <view class="lb-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#C0C0C0' : '#CD7F32') : '#eee'}}">
-          <text class="lb-rank-num">{{item.rank}}</text>
+      <!-- 前三名领奖台 -->
+      <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
+        <!-- 第2名 -->
+        <view class="podium-item podium-2" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
+          <text class="podium-medal">🥈</text>
+          <text class="podium-name">{{leaderboard[1].claw_name}}</text>
+          <text class="podium-score">{{leaderboard[1].percentText}}%</text>
+          <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
         </view>
-        <view class="lb-info">
-          <view class="lb-name-row">
-            <text class="lb-name">{{item.claw_name}}</text>
-            <text class="neo-tag" style="background:var(--blue);font-size:20rpx">{{item.model_name}}</text>
+        <!-- 第1名 -->
+        <view class="podium-item podium-1" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
+          <text class="podium-crown">👑</text>
+          <text class="podium-name">{{leaderboard[0].claw_name}}</text>
+          <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
+          <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
+        </view>
+        <!-- 第3名 -->
+        <view class="podium-item podium-3" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
+          <text class="podium-medal">🥉</text>
+          <text class="podium-name">{{leaderboard[2].claw_name}}</text>
+          <text class="podium-score">{{leaderboard[2].percentText}}%</text>
+          <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
+        </view>
+      </view>
+
+      <!-- 第4名开始的列表 -->
+      <view class="lb-rest-list">
+        <view class="lb-item neo-card" wx:for="{{leaderboard}}" wx:key="rank" wx:if="{{index >= 3}}" bindtap="onViewCert" data-token="{{item.session_id}}">
+          <view class="lb-rank">
+            <text class="lb-rank-num">{{item.rank}}</text>
           </view>
-          <view class="lb-meta">
-            <text>{{item.claw_type}} · v{{item.claw_version || '-'}}</text>
-            <text wx:if="{{item.owner_name}}"> · {{item.owner_name}}</text>
-          </view>
-          <view class="lb-score-row">
-            <view class="lb-score-bar">
-              <view class="progress-bar">
-                <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
-              </view>
+          <view class="lb-info">
+            <view class="lb-name-row">
+              <text class="lb-name">{{item.claw_name}}</text>
+              <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
             </view>
-            <text class="lb-score-text">{{item.total_score}}/{{item.total_max_score}} ({{item.percentText}}%)</text>
-          </view>
-          <view class="lb-bottom">
-            <text class="lb-duration">⏱ {{item.durationText}}</text>
-            <text class="lb-cert-link" data-token="{{item.session_id}}" bindtap="onViewCert">查看证书 →</text>
+            <view class="lb-score-row">
+              <view class="lb-score-bar">
+                <view class="progress-bar">
+                  <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
+                </view>
+              </view>
+              <text class="lb-score-text">{{item.percentText}}%</text>
+            </view>
+            <view class="lb-bottom">
+              <text class="lb-meta-text">{{item.claw_type}} · ⏱ {{item.durationText}}</text>
+              <text class="lb-cert-link">证书 →</text>
+            </view>
           </view>
         </view>
       </view>
@@ -95,20 +165,30 @@
     </view>
   </view>
 
+  <!-- 挑衅式 CTA -->
+  <view class="challenge-cta" bindtap="onScrollToExam">
+    <text class="challenge-emoji">🦞</text>
+    <text class="challenge-title">你的虾，敢来吗？</text>
+    <text class="challenge-desc">复制指令发给你的 AI Agent，看它能考多少分</text>
+  </view>
+
   <!-- 查证书 -->
-  <view class="section cert-search-section">
-    <text class="section-title">🔍 查证书</text>
-    <view class="cert-search neo-card">
+  <view class="section cert-section">
+    <view class="cert-search-card neo-card">
+      <view class="cert-search-header">
+        <text class="cert-search-icon">🔍</text>
+        <text class="cert-search-title">查证书</text>
+      </view>
       <view class="cert-search-body">
         <input class="cert-input" placeholder="输入准考证号" value="{{certToken}}" bindinput="onCertTokenInput" confirm-type="search" bindconfirm="onSearchCert" />
-        <button class="neo-btn neo-btn-red" bindtap="onSearchCert">查询</button>
+        <button class="neo-btn neo-btn-red cert-search-btn" bindtap="onSearchCert">查询</button>
       </view>
     </view>
   </view>
 
   <!-- Footer -->
   <view class="footer">
-    <text class="footer-text">🦞 ClawExam · 你的虾到底行不行？</text>
+    <text class="footer-text">考了个虾 · 你的虾到底行不行？</text>
   </view>
 
 </view>

@@ -7,13 +7,20 @@ Page({
     showLoginPopup: false,
     arenas: [],
     loading: false,
-    joinCode: ''
+    joinCode: '',
+    exams: [],
+    createExamId: '',
+    creating: false
   },
 
   onShow() {
     const app = getApp();
     const isLoggedIn = app.globalData.isLoggedIn;
-    this.setData({ isLoggedIn });
+    const exams = (app.globalData.exams || []).map(e => ({
+      ...e,
+      color: util.examColor(e.id)
+    }));
+    this.setData({ isLoggedIn, exams });
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 3 });
     }
@@ -40,7 +47,8 @@ Page({
       if (res.ok) {
         const arenas = (res.arenas || []).map(a => ({
           ...a,
-          timeText: util.formatTime(a.created_at)
+          created_at_text: util.formatTime(a.created_at),
+          exam_color: util.examColor(a.exam_id)
         }));
         this.setData({ arenas, loading: false });
       } else {
@@ -52,30 +60,29 @@ Page({
     }
   },
 
-  async onCreateArena() {
-    const app = getApp();
-    const exams = app.globalData.exams;
-    if (!exams.length) {
-      wx.showToast({ title: '试卷未加载', icon: 'none' });
+  onSelectExam(e) {
+    const examId = e.currentTarget.dataset.examid;
+    this.setData({ createExamId: examId });
+  },
+
+  async onCreate() {
+    const examId = this.data.createExamId;
+    if (!examId) {
+      wx.showToast({ title: '请先选择试卷', icon: 'none' });
       return;
     }
-
-    wx.showActionSheet({
-      itemList: exams.map(e => e.name || e.id),
-      success: async (res) => {
-        const exam = exams[res.tapIndex];
-        try {
-          const result = await api.createArena({ exam_id: exam.id });
-          if (result.ok) {
-            wx.navigateTo({ url: `/pages/arena/arena?id=${result.arena.id}` });
-          } else {
-            wx.showToast({ title: result.error || '创建失败', icon: 'none' });
-          }
-        } catch (e) {
-          wx.showToast({ title: '创建失败', icon: 'none' });
-        }
+    this.setData({ creating: true });
+    try {
+      const result = await api.createArena({ exam_id: examId });
+      if (result.ok) {
+        wx.navigateTo({ url: `/pages/arena/arena?id=${result.arena.id}` });
+      } else {
+        wx.showToast({ title: result.error || '创建失败', icon: 'none' });
       }
-    });
+    } catch (e) {
+      wx.showToast({ title: '创建失败', icon: 'none' });
+    }
+    this.setData({ creating: false });
   },
 
   onJoinCodeInput(e) {
@@ -91,7 +98,7 @@ Page({
     wx.navigateTo({ url: `/pages/arena/arena?id=${code}` });
   },
 
-  onArenaDetail(e) {
+  onGoArena(e) {
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({ url: `/pages/arena/arena?id=${id}` });
   },

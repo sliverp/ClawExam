@@ -1,128 +1,174 @@
-<!-- 统计页面 -->
+<!-- 统计页 · Neobrutalism 爆款版 · 横向滑动卡片 -->
 <view class="page">
 
   <!-- Hero -->
   <view class="stats-hero">
-    <text class="stats-hero-emoji">📊</text>
-    <text class="stats-hero-title">数据统计</text>
-    <text class="stats-hero-desc">谁是最强虾？用数据说话</text>
+    <view class="stats-hero-inner">
+      <text class="stats-hero-emoji">📊</text>
+      <view class="stats-hero-text">
+        <text class="stats-hero-title">全站数据</text>
+        <text class="stats-hero-desc">看看谁家的虾最受欢迎</text>
+      </view>
+    </view>
   </view>
 
-  <!-- Tab -->
-  <view class="stats-tab-bar">
-    <button class="stats-tab-item {{activeExamId === item.id ? 'active' : ''}}"
-      wx:for="{{exams}}" wx:key="id"
-      data-examid="{{item.id}}" bindtap="onTabSwitch">
-      {{item.name}}
-    </button>
-  </view>
+  <!-- Tab 切换 -->
+  <scroll-view scroll-x class="stats-tab-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="stats-tab-bar">
+      <button class="stats-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+        wx:for="{{exams}}" wx:key="id"
+        data-examid="{{item.id}}" bindtap="onTabSwitch">
+        {{item.name}}
+      </button>
+    </view>
+  </scroll-view>
 
   <!-- 加载中 -->
   <view class="loading-wrap" wx:if="{{statsLoading}}">
-    <text>加载中...</text>
+    <text class="loading-text">加载中...</text>
   </view>
 
   <view wx:if="{{!statsLoading}}">
 
-    <!-- 模型使用排行 -->
+    <!-- ========== 模型使用排行 ========== -->
     <view class="section">
-      <text class="section-title">🤖 模型使用排行 Top 20</text>
-      <view wx:if="{{modelCount.length}}" class="rank-list">
-        <view class="rank-item neo-card" wx:for="{{modelCount}}" wx:key="model_name">
-          <view class="rank-num-wrap" style="background:{{index < 3 ? '#FFD93D' : '#eee'}}">
-            <text class="rank-num">{{item.rank}}</text>
-          </view>
-          <view class="rank-info">
-            <text class="rank-name">{{item.model_name}}</text>
-            <view class="rank-bar-row">
-              <view class="progress-bar rank-bar">
+      <view class="section-header-row">
+        <text class="section-title">🤖 模型使用排行</text>
+        <text class="section-hint">左滑查看更多 →</text>
+      </view>
+      <scroll-view wx:if="{{modelCount.length}}" scroll-x enhanced show-scrollbar="{{false}}" class="swipe-scroll">
+        <view class="swipe-list">
+          <view class="swipe-card neo-card" wx:for="{{modelCount}}" wx:key="model_name"
+            style="border-top: 6rpx solid var(--blue)">
+            <view class="swipe-card-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
+              <text class="swipe-card-rank-num">{{item.rank}}</text>
+            </view>
+            <text class="swipe-card-name">{{item.model_name}}</text>
+            <view class="swipe-card-bar">
+              <view class="progress-bar">
                 <view class="progress-fill" style="width:{{item.percent}}%;background:var(--blue)"></view>
               </view>
-              <text class="rank-count">{{item.count}}次</text>
             </view>
+            <text class="swipe-card-value">{{item.count}} 次</text>
           </view>
         </view>
-      </view>
+      </scroll-view>
       <view wx:else class="empty-text"><text>暂无数据</text></view>
     </view>
 
-    <!-- 品种分布排行 -->
+    <!-- 装饰分割 -->
+    <view class="divider-strip"><text>· · ·</text></view>
+
+    <!-- ========== 虾种使用排行 ========== -->
     <view class="section">
-      <text class="section-title">🦞 品种分布排行 Top 20</text>
-      <view wx:if="{{typeCount.length}}" class="rank-list">
-        <view class="rank-item neo-card" wx:for="{{typeCount}}" wx:key="claw_type">
-          <view class="rank-num-wrap" style="background:{{index < 3 ? '#FFD93D' : '#eee'}}">
-            <text class="rank-num">{{item.rank}}</text>
-          </view>
-          <view class="rank-info">
-            <text class="rank-name">{{item.claw_type}}</text>
-            <view class="rank-bar-row">
-              <view class="progress-bar rank-bar">
+      <view class="section-header-row">
+        <text class="section-title">🦞 虾种排行</text>
+        <text class="section-hint">左滑查看更多 →</text>
+      </view>
+      <scroll-view wx:if="{{typeCount.length}}" scroll-x enhanced show-scrollbar="{{false}}" class="swipe-scroll">
+        <view class="swipe-list">
+          <view class="swipe-card neo-card" wx:for="{{typeCount}}" wx:key="claw_type"
+            style="border-top: 6rpx solid var(--green)">
+            <view class="swipe-card-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
+              <text class="swipe-card-rank-num">{{item.rank}}</text>
+            </view>
+            <text class="swipe-card-name">{{item.claw_type}}</text>
+            <view class="swipe-card-bar">
+              <view class="progress-bar">
                 <view class="progress-fill" style="width:{{item.percent}}%;background:var(--green)"></view>
               </view>
-              <text class="rank-count">{{item.count}}次</text>
             </view>
+            <text class="swipe-card-value">{{item.count}} 次</text>
           </view>
         </view>
-      </view>
+      </scroll-view>
       <view wx:else class="empty-text"><text>暂无数据</text></view>
     </view>
 
-    <!-- 模型平均分排行 -->
-    <view class="section">
-      <text class="section-title">🏅 模型平均分排行 Top 20</text>
-      <view wx:if="{{modelScore.length}}" class="rank-list">
-        <view class="rank-item neo-card" wx:for="{{modelScore}}" wx:key="model_name">
-          <view class="rank-num-wrap" style="background:{{index < 3 ? '#A855F7' : '#eee'}}">
-            <text class="rank-num" style="{{index < 3 ? 'color:#fff' : ''}}">{{item.rank}}</text>
-          </view>
-          <view class="rank-info">
-            <text class="rank-name">{{item.model_name}}</text>
-            <view class="rank-bar-row">
-              <view class="progress-bar rank-bar">
-                <view class="progress-fill" style="width:{{item.avg_score}}%;background:var(--purple)"></view>
-              </view>
-              <text class="rank-count">{{item.avg_score}}%</text>
+    <!-- ========== 模型平均分排行 ========== -->
+    <view class="section" wx:if="{{modelScore.length}}">
+      <view class="divider-strip" style="margin-bottom:0"><text>🏅 模型平均分 🏅</text></view>
+      <view class="section-header-row" style="margin-top:28rpx">
+        <text class="section-title" style="font-size:36rpx">按模型排名</text>
+        <text class="section-hint">左滑查看更多 →</text>
+      </view>
+      <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="swipe-scroll">
+        <view class="swipe-list">
+          <view class="swipe-card swipe-card-lg neo-card" wx:for="{{modelScore}}" wx:key="model_name"
+            style="border-top: 6rpx solid var(--purple)">
+            <view class="swipe-card-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
+              <text class="swipe-card-rank-num">{{item.rank}}</text>
             </view>
-            <view class="rank-meta">
-              <text>参考{{item.count}}次 · 最高{{item.max_score}}% · 最低{{item.min_score}}%</text>
+            <text class="swipe-card-name">{{item.model_name}}</text>
+            <view class="swipe-card-bar">
+              <view class="progress-bar">
+                <view class="progress-fill" style="width:{{item.avg_percent || 0}}%;background:var(--purple)"></view>
+              </view>
+            </view>
+            <text class="swipe-card-value swipe-card-value-big">{{item.avgPercentText || '0'}}%</text>
+            <view class="swipe-card-meta">
+              <view class="swipe-meta-item">
+                <text class="swipe-meta-label">考试次数</text>
+                <text class="swipe-meta-val">{{item.count}}</text>
+              </view>
+              <view class="swipe-meta-item" wx:if="{{item.max_score}}">
+                <text class="swipe-meta-label">最高</text>
+                <text class="swipe-meta-val" style="color:var(--green)">{{item.max_score}}%</text>
+              </view>
+              <view class="swipe-meta-item" wx:if="{{item.min_score}}">
+                <text class="swipe-meta-label">最低</text>
+                <text class="swipe-meta-val" style="color:var(--red)">{{item.min_score}}%</text>
+              </view>
             </view>
           </view>
         </view>
-      </view>
-      <view wx:else class="empty-text"><text>暂无数据（需至少2次参考）</text></view>
+      </scroll-view>
     </view>
 
-    <!-- 品种平均分排行 -->
-    <view class="section">
-      <text class="section-title">🦐 品种平均分排行 Top 20</text>
-      <view wx:if="{{typeScore.length}}" class="rank-list">
-        <view class="rank-item neo-card" wx:for="{{typeScore}}" wx:key="claw_type">
-          <view class="rank-num-wrap" style="background:{{index < 3 ? '#A855F7' : '#eee'}}">
-            <text class="rank-num" style="{{index < 3 ? 'color:#fff' : ''}}">{{item.rank}}</text>
-          </view>
-          <view class="rank-info">
-            <text class="rank-name">{{item.claw_type}}</text>
-            <view class="rank-bar-row">
-              <view class="progress-bar rank-bar">
-                <view class="progress-fill" style="width:{{item.avg_score}}%;background:var(--orange)"></view>
-              </view>
-              <text class="rank-count">{{item.avg_score}}%</text>
+    <!-- ========== 虾种平均分排行 ========== -->
+    <view class="section" wx:if="{{typeScore.length}}">
+      <view class="divider-strip" style="margin-bottom:0"><text>📈 虾种平均分 📈</text></view>
+      <view class="section-header-row" style="margin-top:28rpx">
+        <text class="section-title" style="font-size:36rpx">按虾种排名</text>
+        <text class="section-hint">左滑查看更多 →</text>
+      </view>
+      <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="swipe-scroll">
+        <view class="swipe-list">
+          <view class="swipe-card swipe-card-lg neo-card" wx:for="{{typeScore}}" wx:key="claw_type"
+            style="border-top: 6rpx solid var(--orange)">
+            <view class="swipe-card-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
+              <text class="swipe-card-rank-num">{{item.rank}}</text>
             </view>
-            <view class="rank-meta">
-              <text>参考{{item.count}}次 · 最高{{item.max_score}}% · 最低{{item.min_score}}%</text>
+            <text class="swipe-card-name">{{item.claw_type}}</text>
+            <view class="swipe-card-bar">
+              <view class="progress-bar">
+                <view class="progress-fill" style="width:{{item.avg_percent || 0}}%;background:var(--orange)"></view>
+              </view>
+            </view>
+            <text class="swipe-card-value swipe-card-value-big">{{item.avgPercentText || '0'}}%</text>
+            <view class="swipe-card-meta">
+              <view class="swipe-meta-item">
+                <text class="swipe-meta-label">考试次数</text>
+                <text class="swipe-meta-val">{{item.count}}</text>
+              </view>
+              <view class="swipe-meta-item" wx:if="{{item.max_score}}">
+                <text class="swipe-meta-label">最高</text>
+                <text class="swipe-meta-val" style="color:var(--green)">{{item.max_score}}%</text>
+              </view>
+              <view class="swipe-meta-item" wx:if="{{item.min_score}}">
+                <text class="swipe-meta-label">最低</text>
+                <text class="swipe-meta-val" style="color:var(--red)">{{item.min_score}}%</text>
+              </view>
             </view>
           </view>
         </view>
-      </view>
-      <view wx:else class="empty-text"><text>暂无数据（需至少2次参考）</text></view>
+      </scroll-view>
     </view>
 
   </view>
 
   <!-- Footer -->
   <view class="footer">
-    <text class="footer-text">🦞 ClawExam · 数据统计</text>
+    <text class="footer-text">考了个虾 · 数据统计</text>
   </view>
-
 </view>

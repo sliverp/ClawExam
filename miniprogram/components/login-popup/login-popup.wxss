@@ -1,3 +1,6 @@
+/* ============================================
+   登录弹窗 · Neobrutalism 爆款版
+   ============================================ */
 .login-popup {
   position: fixed;
   top: 0;
@@ -16,26 +19,47 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 .popup-content {
   position: relative;
   width: 100%;
   background: #FFFBEB;
-  border-top: 4rpx solid #1a1a1a;
-  padding: 60rpx 48rpx;
-  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  border-top: 4px solid #1a1a1a;
+  border-radius: 32rpx 32rpx 0 0;
+  overflow: hidden;
+}
+
+/* 顶部装饰条 */
+.popup-strip {
+  background: #1a1a1a;
+  padding: 16rpx 0;
+  text-align: center;
+  color: #FFD93D;
+  font-size: 22rpx;
+  letter-spacing: 10rpx;
+}
+
+.popup-body {
+  padding: 56rpx 48rpx;
+  padding-bottom: calc(56rpx + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .popup-title {
-  font-size: 44rpx;
+  font-size: 52rpx;
   font-weight: 900;
-  margin-bottom: 48rpx;
+  margin-bottom: 12rpx;
   color: #1a1a1a;
+}
+
+.popup-desc {
+  font-size: 26rpx;
+  color: #888;
+  margin-bottom: 48rpx;
 }
 
 .avatar-btn {
@@ -45,7 +69,7 @@
   background: transparent;
   border: none;
   padding: 0;
-  margin-bottom: 32rpx;
+  margin-bottom: 40rpx;
 }
 
 .avatar-btn::after {
@@ -53,18 +77,19 @@
 }
 
 .avatar-img {
-  width: 128rpx;
-  height: 128rpx;
+  width: 160rpx;
+  height: 160rpx;
   border-radius: 50%;
-  border: 4rpx solid #1a1a1a;
-  box-shadow: 3px 3px 0 #1a1a1a;
+  border: 4px solid #1a1a1a;
+  box-shadow: 5px 5px 0 #1a1a1a;
   background: #fff;
 }
 
 .avatar-tip {
   font-size: 24rpx;
   color: #888;
-  margin-top: 12rpx;
+  margin-top: 16rpx;
+  font-weight: 600;
 }
 
 .nickname-wrap {
@@ -72,43 +97,32 @@
   margin-bottom: 40rpx;
 }
 
+.nickname-label {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
 .nickname-input {
   width: 100%;
-  height: 88rpx;
+  height: 100rpx;
   border: 3px solid #1a1a1a;
-  padding: 0 24rpx;
+  padding: 0 28rpx;
   font-size: 32rpx;
   background: #fff;
   box-sizing: border-box;
+  border-radius: 16rpx;
 }
 
 .confirm-btn {
-  width: 100%;
-  height: 96rpx;
-  background: #E63B2E;
-  color: #fff;
-  border: 3px solid #1a1a1a;
-  box-shadow: 4px 4px 0 #1a1a1a;
-  font-size: 34rpx;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 24rpx;
-  border-radius: 0;
-}
-
-.confirm-btn::after {
-  border: none;
-}
-
-.confirm-btn:active {
-  box-shadow: 1px 1px 0 #1a1a1a;
-  transform: translate(2px, 2px);
+  margin-bottom: 28rpx;
 }
 
 .skip-btn {
   font-size: 28rpx;
   color: #888;
   padding: 16rpx;
+  font-weight: 600;
 }

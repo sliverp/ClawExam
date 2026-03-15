@@ -1,133 +1,219 @@
-/* 统计页面样式 */
+/* ============================================
+   统计页 · Neobrutalism 爆款版 · 横向滑动卡片
+   ============================================ */
 .page {
-  padding-bottom: 120rpx;
+  padding-bottom: 40rpx;
 }
 
-/* Hero */
+/* ---- Hero ---- */
 .stats-hero {
   background: var(--fg);
-  padding: 48rpx 40rpx;
-  text-align: center;
+  padding: 56rpx 40rpx;
 }
+
+.stats-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
 .stats-hero-emoji {
-  font-size: 80rpx;
-  display: block;
-  margin-bottom: 12rpx;
+  font-size: 72rpx;
 }
+
+.stats-hero-text {
+  display: flex;
+  flex-direction: column;
+}
+
 .stats-hero-title {
-  font-size: 48rpx;
+  font-size: 44rpx;
   font-weight: 900;
   color: var(--yellow);
-  display: block;
-  margin-bottom: 8rpx;
+  line-height: 1.3;
 }
+
 .stats-hero-desc {
   font-size: 26rpx;
   color: #ccc;
-  display: block;
+  margin-top: 6rpx;
 }
 
-/* Section */
-.section {
-  padding: 32rpx 24rpx;
-}
-
-/* 统计页 Tab 栏 - sticky */
-.stats-tab-bar {
-  display: flex;
-  gap: 12rpx;
-  padding: 16rpx 24rpx;
+/* ---- Tab 栏 ---- */
+.stats-tab-scroll {
+  white-space: nowrap;
   background: var(--bg);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  border-bottom: 3px solid #1a1a1a;
+  border-bottom: var(--border);
 }
+
+.stats-tab-bar {
+  display: inline-flex;
+  gap: 12rpx;
+  padding: 24rpx 32rpx;
+}
+
 .stats-tab-item {
-  flex: 1;
-  height: 64rpx;
-  line-height: 64rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 72rpx;
+  padding: 0 32rpx;
   font-size: 26rpx;
   font-weight: 700;
-  color: #888;
-  background: #fff;
-  border: 3px solid #1a1a1a;
-  border-radius: 0;
-  padding: 0 20rpx;
-  text-align: center;
+  color: var(--gray);
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  white-space: nowrap;
 }
+
 .stats-tab-item.active {
   background: var(--yellow);
-  color: #1a1a1a;
+  color: var(--fg);
+  box-shadow: var(--shadow-sm);
 }
+
 .stats-tab-item::after {
   border: none;
 }
 
-/* 排名列表 */
-.rank-list {
+/* ---- 区块标题行 ---- */
+.section-header-row {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.section-header-row .section-title {
+  margin-bottom: 0;
+}
+
+.section-hint {
+  font-size: 22rpx;
+  color: var(--gray);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   横向滑动卡片系统
+   ============================================ */
+.swipe-scroll {
+  white-space: nowrap;
+  margin: 0 -32rpx;
+  padding: 0;
+}
+
+.swipe-list {
+  display: inline-flex;
+  gap: 24rpx;
+  padding: 8rpx 32rpx 24rpx;
+}
+
+/* ---- 基础滑动卡片 ---- */
+.swipe-card {
+  display: inline-flex;
   flex-direction: column;
-  gap: 16rpx;
+  align-items: center;
+  width: 280rpx;
+  padding: 0 0 28rpx;
+  margin-bottom: 0;
+  white-space: normal;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
 }
-.rank-item {
-  display: flex;
-  flex-direction: row;
+
+.swipe-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-active);
 }
-.rank-num-wrap {
-  width: 72rpx;
+
+/* 大号卡片（平均分排行用） */
+.swipe-card-lg {
+  width: 320rpx;
+}
+
+/* ---- 排名徽章 ---- */
+.swipe-card-rank {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-right: 3px solid #1a1a1a;
-  flex-shrink: 0;
+  margin-top: 28rpx;
+  margin-bottom: 16rpx;
+  box-shadow: var(--shadow-sm);
 }
-.rank-num {
+
+.swipe-card-rank-num {
   font-size: 32rpx;
   font-weight: 900;
 }
-.rank-info {
-  flex: 1;
-  padding: 16rpx 20rpx;
-  min-width: 0;
-}
-.rank-name {
-  font-size: 28rpx;
+
+/* ---- 名称 ---- */
+.swipe-card-name {
+  font-size: 26rpx;
   font-weight: 800;
-  display: block;
-  margin-bottom: 8rpx;
+  text-align: center;
+  padding: 0 20rpx;
+  margin-bottom: 16rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.rank-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-.rank-bar {
-  flex: 1;
-}
-.rank-count {
-  font-size: 24rpx;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.rank-meta {
-  margin-top: 8rpx;
-}
-.rank-meta text {
-  font-size: 20rpx;
-  color: #999;
+  max-width: 100%;
+  line-height: 1.4;
 }
 
-/* Footer */
-.footer {
-  padding: 40rpx;
-  text-align: center;
-  border-top: 3px solid #1a1a1a;
+/* ---- 进度条 ---- */
+.swipe-card-bar {
+  width: calc(100% - 40rpx);
+  margin-bottom: 12rpx;
 }
-.footer-text {
+
+/* ---- 数值 ---- */
+.swipe-card-value {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: var(--gray-dark);
+}
+
+.swipe-card-value-big {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: var(--fg);
+  margin-bottom: 8rpx;
+}
+
+/* ---- 详细指标（平均分卡片底部） ---- */
+.swipe-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20rpx;
+  margin-top: 8rpx;
+  padding: 0 16rpx;
+  flex-wrap: wrap;
+}
+
+.swipe-meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+}
+
+.swipe-meta-label {
+  font-size: 18rpx;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+.swipe-meta-val {
   font-size: 24rpx;
-  color: #999;
+  font-weight: 800;
+  color: var(--fg);
 }

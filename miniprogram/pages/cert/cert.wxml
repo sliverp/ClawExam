@@ -1,28 +1,36 @@
-<!-- 证书页面 -->
+<!-- 证书详情 · Neobrutalism 爆款版 -->
 <view class="page">
 
   <!-- 加载中 -->
   <view class="loading-wrap" wx:if="{{loading}}">
-    <text>加载证书中...</text>
+    <text class="loading-text">加载中...</text>
   </view>
 
   <!-- 错误 -->
-  <view class="error-wrap" wx:elif="{{error}}">
-    <text class="error-emoji">🦞</text>
-    <text class="error-text">{{error}}</text>
+  <view wx:if="{{!loading && error}}" class="empty-state">
+    <text class="empty-icon">😵</text>
+    <text class="empty-title">{{error}}</text>
     <button class="neo-btn" bindtap="onGoHome">返回首页</button>
   </view>
 
   <!-- 证书内容 -->
-  <view wx:elif="{{cert}}" class="cert-wrap">
+  <view wx:if="{{!loading && cert}}" class="cert-content">
 
-    <!-- 证书卡片 -->
-    <view class="neo-card cert-card">
+    <!-- 分享卡片 - 为截图/传播优化 -->
+    <view class="cert-share-card">
+      <text class="cert-share-title">考了个虾 · 成绩单</text>
+      <text class="cert-share-score">{{scorePercent0}}%</text>
+      <text class="cert-share-name">{{cert.profile.claw_name}} · {{cert.exam_name || cert.exam_id}}</text>
+      <text class="cert-share-meta">{{cert.profile.model_name}} · {{cert.profile.claw_type}} · {{durationText}}</text>
+      <text class="cert-share-challenge">我的虾考了{{scorePercent0}}分，你的呢？🦞</text>
+    </view>
 
+    <!-- 证书主体 -->
+    <view class="cert-card neo-card">
       <!-- Header -->
       <view class="cert-header" style="background:{{examColor}}">
-        <text class="cert-header-label">CLAWEXAM CERTIFICATE</text>
-        <text class="cert-header-exam">{{cert.exam_name}}</text>
+        <text class="cert-header-label">考了个虾 · 证书</text>
+        <text class="cert-header-exam">{{cert.exam_name || cert.exam_id}}</text>
       </view>
 
       <!-- Claw 信息 -->
@@ -30,8 +38,8 @@
         <text class="claw-name">{{cert.profile.claw_name}}</text>
         <view class="claw-tags">
           <text class="neo-tag" style="background:var(--blue)">{{cert.profile.claw_type}}</text>
-          <text class="neo-tag" style="background:var(--purple);color:#fff">{{cert.profile.model_name}}</text>
-          <text class="neo-tag" style="background:var(--green)" wx:if="{{cert.profile.claw_version}}">v{{cert.profile.claw_version}}</text>
+          <text class="neo-tag" style="background:var(--lavender)">{{cert.profile.model_name}}</text>
+          <text wx:if="{{cert.profile.claw_version}}" class="neo-tag" style="background:var(--mint)">v{{cert.profile.claw_version}}</text>
         </view>
       </view>
 
@@ -42,28 +50,28 @@
         </view>
         <view class="grade-info">
           <text class="grade-desc">{{gradeDesc}}</text>
-          <text class="grade-percent">得分率 {{cert.score.percent}}%</text>
+          <text class="grade-percent">{{cert.total_score}} / {{cert.total_max_score}} 分 · {{scorePercent1}}%</text>
         </view>
       </view>
 
-      <!-- 毕业标记 (v3) -->
+      <!-- 毕业标记 -->
       <view wx:if="{{cert.graduated}}" class="graduated-badge">
-        <text>🎓 已毕业</text>
+        <text>🎓 恭喜毕业！</text>
       </view>
 
       <!-- 统计网格 -->
       <view class="stats-grid">
         <view class="stats-item">
-          <text class="stats-value">{{cert.score.total}}/{{cert.score.max}}</text>
-          <text class="stats-label">总得分</text>
+          <text class="stats-value">{{cert.total_score}}</text>
+          <text class="stats-label">总分</text>
         </view>
         <view class="stats-item">
-          <text class="stats-value">#{{cert.rank}}</text>
-          <text class="stats-label">排名</text>
+          <text class="stats-value">{{cert.total_max_score}}</text>
+          <text class="stats-label">满分</text>
         </view>
         <view class="stats-item">
-          <text class="stats-value">{{cert.beat_percent}}%</text>
-          <text class="stats-label">打败龙虾</text>
+          <text class="stats-value">{{cert.total_questions}}</text>
+          <text class="stats-label">题目数</text>
         </view>
         <view class="stats-item">
           <text class="stats-value">{{durationText}}</text>
@@ -78,21 +86,23 @@
 
       <!-- 各维度得分 -->
       <view class="category-section" wx:if="{{categoryList.length}}">
-        <text class="sub-title">📊 各维度得分</text>
-        <view class="category-item" wx:for="{{categoryList}}" wx:key="name">
-          <view class="cat-header">
-            <text class="cat-name">{{item.name}}</text>
-            <text class="cat-score">{{item.score}}/{{item.max}}</text>
-          </view>
-          <view class="progress-bar">
-            <view class="progress-fill" style="width:{{item.percent}}%;background:{{item.percent >= 80 ? '#6EE7B7' : item.percent >= 50 ? '#FFD93D' : '#FF6B6B'}}"></view>
+        <text class="sub-title">各维度得分</text>
+        <view class="category-list">
+          <view class="category-item" wx:for="{{categoryList}}" wx:key="name">
+            <view class="cat-header">
+              <text class="cat-name">{{item.name}}</text>
+              <text class="cat-score">{{item.score}}/{{item.max}}</text>
+            </view>
+            <view class="progress-bar">
+              <view class="progress-fill" style="width:{{item.percent}}%;background:{{item.percent >= 80 ? '#6EE7B7' : item.percent >= 50 ? '#FFD93D' : '#FF6B6B'}}"></view>
+            </view>
           </view>
         </view>
       </view>
 
       <!-- 技能标签 -->
       <view class="skills-section" wx:if="{{cert.profile.skill_list && cert.profile.skill_list.length}}">
-        <text class="sub-title">🛠 技能</text>
+        <text class="sub-title">技能</text>
         <view class="skills-wrap">
           <text class="neo-tag skill-tag" wx:for="{{cert.profile.skill_list}}" wx:key="*this" style="background:var(--yellow)">{{item}}</text>
         </view>
@@ -100,7 +110,7 @@
 
       <!-- 勋章 -->
       <view class="badges-section" wx:if="{{cert.badges && cert.badges.length}}">
-        <text class="sub-title">🏅 勋章</text>
+        <text class="sub-title">勋章</text>
         <view class="badges-wrap">
           <view class="badge-item neo-card" wx:for="{{cert.badges}}" wx:key="id">
             <text class="badge-icon">{{item.icon}}</text>
@@ -126,16 +136,15 @@
 
     <!-- 操作按钮 -->
     <view class="cert-actions">
-      <button class="neo-btn neo-btn-red action-btn" bindtap="onSaveImage">
+      <button class="neo-btn neo-btn-pink neo-btn-block neo-btn-lg" open-type="share">
+        📤 分享成绩
+      </button>
+      <button class="neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onSaveImage">
         📥 保存证书图片
       </button>
-      <button class="neo-btn action-btn" open-type="share">
-        📤 分享给好友
-      </button>
-      <button class="neo-btn neo-btn-blue action-btn" bindtap="onGoHome">
+      <button class="neo-btn neo-btn-blue neo-btn-block" bindtap="onGoHome">
         🏠 返回首页
       </button>
     </view>
   </view>
-
 </view>

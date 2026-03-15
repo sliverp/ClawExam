@@ -12,7 +12,9 @@ Page({
     gradeDesc: '',
     examColor: '',
     categoryList: [],
-    savingImage: false
+    savingImage: false,
+    scorePercent0: '0',
+    scorePercent1: '0.0'
   },
 
   onLoad(options) {
@@ -56,15 +58,31 @@ Page({
         }
       }
 
+      // 后端返回 score: { total, max, percent }，映射为前端需要的字段
+      const totalScore = res.score ? res.score.total : (res.total_score || 0);
+      const totalMaxScore = res.score ? res.score.max : (res.total_max_score || 1);
+      const scorePercent0 = (totalScore / (totalMaxScore || 1) * 100).toFixed(0);
+      const scorePercent1 = (totalScore / (totalMaxScore || 1) * 100).toFixed(1);
+
+      // 统一 cert 对象字段，便于 wxml 中直接引用
+      const cert = {
+        ...res,
+        total_score: totalScore,
+        total_max_score: totalMaxScore,
+        total_questions: res.total_questions || categoryList.length || 0
+      };
+
       this.setData({
-        cert: res,
+        cert,
         loading: false,
         certImageUrl: api.getCertImageUrl(token),
         gradeColor: util.gradeColor(res.grade),
         gradeDesc: util.gradeDesc(res.grade),
         examColor: util.examColor(res.exam_id),
         durationText: util.formatDuration(res.duration_seconds),
-        categoryList
+        categoryList,
+        scorePercent0,
+        scorePercent1
       });
     } catch (e) {
       this.setData({ loading: false, error: '加载失败，请检查网络' });

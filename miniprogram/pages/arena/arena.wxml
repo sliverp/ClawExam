@@ -1,57 +1,68 @@
+<!-- 竞技场详情 · Neobrutalism -->
 <view class="page">
+
   <!-- 加载中 -->
   <view class="loading-wrap" wx:if="{{loading}}">
-    <text>加载中...</text>
+    <text class="loading-text">加载中...</text>
   </view>
 
+  <!-- 错误 -->
+  <view wx:if="{{!loading && error}}" class="empty-state">
+    <text class="empty-icon">😵</text>
+    <text class="empty-title">{{error}}</text>
+    <button class="neo-btn" bindtap="onGoBack">返回竞技场列表</button>
+  </view>
+
+  <!-- 竞技场内容 -->
   <view wx:if="{{!loading && arena}}">
-    <!-- 竞技场信息 -->
-    <view class="arena-info neo-card">
-      <view class="arena-title-row">
-        <text class="arena-title">🏟️ {{arena.title}}</text>
-      </view>
-      <view class="arena-meta">
-        <text class="neo-tag" style="background:var(--yellow)">{{arena.exam_id}}</text>
-        <text class="arena-code">房间号: {{arena.id}}</text>
-        <text class="neo-tag" style="background:{{arena.status === 'open' ? '#6EE7B7' : '#eee'}}">{{arena.status === 'open' ? '进行中' : '已结束'}}</text>
-      </view>
-      <text class="arena-creator">创建者: {{arena.creator_name}}</text>
+    <!-- Header -->
+    <view class="arena-detail-hero" style="background:{{examColor || '#3EC1D3'}}">
+      <text class="arena-detail-emoji">⚔️</text>
+      <text class="arena-detail-title">{{arena.exam_name || arena.exam_id}}</text>
+      <text class="arena-detail-status neo-tag" style="background:{{arena.status === 'finished' ? '#6EE7B7' : '#FFD93D'}}">{{arena.status === 'finished' ? '已结束' : '进行中'}}</text>
     </view>
 
-    <!-- 排行榜 -->
-    <view class="section-title">🏆 排行榜</view>
-
-    <view wx:if="{{participants.length}}" class="lb-list">
-      <view class="lb-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{participants}}" wx:key="uid_hash">
-        <view class="lb-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#C0C0C0' : '#CD7F32') : '#eee'}}">
-          <text class="lb-rank-num">{{item.rank}}</text>
-        </view>
-        <view class="lb-avatar-wrap">
-          <image class="lb-avatar" src="{{item.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
-        </view>
-        <view class="lb-info">
-          <text class="lb-name">{{item.nickname}}{{item.is_me ? '（我）' : ''}}</text>
-          <view wx:if="{{item.status === 'finished'}}">
-            <text class="lb-score">{{item.percentText}}% · {{item.grade}}</text>
-            <text class="lb-detail">{{item.model_name}} · {{item.claw_name}} · ⏱ {{item.durationText}}</text>
+    <!-- 参赛者列表 -->
+    <view class="section">
+      <text class="section-title">参赛选手</text>
+      <view class="participant-list">
+        <view class="participant-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{participants}}" wx:key="uid_hash">
+          <view class="pt-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
+            <text class="pt-rank-num">{{index + 1}}</text>
           </view>
-          <text wx:else class="lb-waiting">等待参赛...</text>
+          <image class="pt-avatar" src="{{item.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
+          <view class="pt-info">
+            <view class="pt-name-row">
+              <text class="pt-name">{{item.nickname}}</text>
+              <text wx:if="{{item.is_me}}" class="neo-tag" style="background:var(--yellow);font-size:18rpx;padding:2rpx 10rpx">我</text>
+            </view>
+            <view wx:if="{{item.status === 'finished'}}" class="pt-score-row">
+              <text class="pt-score">{{item.percentText}}%</text>
+              <text class="pt-detail">{{item.claw_name}} · ⏱ {{item.durationText}}</text>
+            </view>
+            <text wx:else class="pt-waiting">等待中...</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <view wx:if="{{!participants.length}}" class="empty-text">
-      <text>还没有参与者</text>
-    </view>
+    <!-- 操作区域 - 保留修正后的PK流程 -->
+    <view class="section action-area">
+      <button wx:if="{{!joined && isLoggedIn}}" class="neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onJoin">
+        ⚔️ 加入竞技场
+      </button>
+      <button wx:if="{{!isLoggedIn}}" class="neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onJoin">
+        🦞 登录并加入
+      </button>
 
-    <!-- 操作按钮 -->
-    <view class="action-area">
-      <button wx:if="{{!joined && isLoggedIn}}" class="neo-btn neo-btn-red action-btn" bindtap="onJoin">加入竞技场</button>
-      <button wx:if="{{!isLoggedIn}}" class="neo-btn neo-btn-red action-btn" bindtap="onJoin">登录并加入</button>
-
-      <button wx:if="{{joined}}" class="neo-btn neo-btn-red action-btn" bindtap="onCopyCommand">📋 复制我的考试指令</button>
+      <button wx:if="{{joined}}" class="neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onCopyCommand">
+        📋 复制我的考试指令
+      </button>
       <text wx:if="{{joined}}" class="action-hint">把指令丢给你的 AI，让你的龙虾参加这场 PK</text>
-      <button class="neo-btn action-btn" open-type="share">📤 邀请好友来PK</button>
+
+      <button class="neo-btn neo-btn-purple neo-btn-block action-share-btn" open-type="share">
+        📤 邀请好友来PK
+      </button>
       <text class="action-hint">分享竞技场链接，好友进来后自己复制指令参赛</text>
     </view>
   </view>

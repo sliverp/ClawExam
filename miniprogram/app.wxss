@@ -1,48 +1,83 @@
-/* ClawExam Neobrutalism 全局样式 */
+/* ============================================
+   考了个虾 · Neobrutalism Design System v3
+   爆款升级版 · 更大胆 · 更出圈
+   ============================================ */
+
 page {
+  /* 色彩系统 - 更鲜明的撞色 */
   --bg: #FFFBEB;
+  --bg-alt: #FFF7D6;
   --fg: #1a1a1a;
-  --red: #E63B2E;
+  --white: #FFFFFF;
+  --red: #FF3B30;
   --orange: #FF6B35;
   --yellow: #FFD93D;
   --blue: #3EC1D3;
   --purple: #A855F7;
-  --pink: #FF6B6B;
+  --lavender: #C4B5FD;
+  --pink: #FF6B9D;
   --green: #6EE7B7;
+  --mint: #A7F3D0;
+  --lime: #C6F135;
+  --gray-light: #F5F5F0;
+  --gray: #888888;
+  --gray-dark: #666666;
+
+  /* 边框系统 */
+  --border-w: 3px;
   --border: 3px solid #1a1a1a;
+  --border-thick: 4px solid #1a1a1a;
+
+  /* 阴影系统 - 更强的层次 */
+  --shadow-sm: 3px 3px 0 #1a1a1a;
+  --shadow: 5px 5px 0 #1a1a1a;
+  --shadow-lg: 8px 8px 0 #1a1a1a;
+  --shadow-active: 2px 2px 0 #1a1a1a;
+
+  /* 圆角 */
+  --radius: 16rpx;
+  --radius-lg: 24rpx;
+  --radius-pill: 999rpx;
 
   background-color: var(--bg);
   color: var(--fg);
-  padding-bottom: 130rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding-bottom: 180rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   font-size: 28rpx;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-/* 通用 Neobrutalism 卡片 */
+/* ============================================
+   通用 Neobrutalism 卡片
+   ============================================ */
 .neo-card {
-  background: #fff;
+  background: var(--white);
   border: var(--border);
-  box-shadow: 4px 4px 0 #1a1a1a;
-  border-radius: 0;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
   margin-bottom: 24rpx;
   overflow: hidden;
 }
 
-/* 通用按钮 */
+/* ============================================
+   通用按钮 - 更大更有力
+   ============================================ */
 .neo-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 16rpx 32rpx;
-  border: 3px solid #1a1a1a;
-  box-shadow: 3px 3px 0 #1a1a1a;
-  font-weight: 700;
+  gap: 8rpx;
+  padding: 22rpx 40rpx;
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+  font-weight: 800;
   font-size: 28rpx;
   background: var(--yellow);
-  color: #1a1a1a;
-  border-radius: 0;
+  color: var(--fg);
+  border-radius: var(--radius);
   line-height: 1.4;
+  letter-spacing: 1rpx;
+  transition: all 0.1s ease;
 }
 
 .neo-btn::after {
@@ -50,89 +85,247 @@ page {
 }
 
 .neo-btn:active {
-  box-shadow: 1px 1px 0 #1a1a1a;
+  box-shadow: var(--shadow-active);
   transform: translate(2px, 2px);
 }
 
-.neo-btn-red {
-  background: var(--red);
-  color: #fff;
+.neo-btn-red { background: var(--red); color: var(--white); }
+.neo-btn-blue { background: var(--blue); color: var(--fg); }
+.neo-btn-purple { background: var(--purple); color: var(--white); }
+.neo-btn-green { background: var(--green); color: var(--fg); }
+.neo-btn-pink { background: var(--pink); color: var(--white); }
+.neo-btn-lime { background: var(--lime); color: var(--fg); }
+
+.neo-btn-lg {
+  padding: 28rpx 48rpx;
+  font-size: 32rpx;
+  box-shadow: var(--shadow);
 }
 
-.neo-btn-blue {
-  background: var(--blue);
-  color: #1a1a1a;
+.neo-btn-block {
+  display: flex;
+  width: 100%;
 }
 
-/* 通用标签 */
+/* ============================================
+   通用标签 - 更圆润
+   ============================================ */
 .neo-tag {
-  display: inline-block;
-  padding: 4rpx 16rpx;
-  border: 2px solid #1a1a1a;
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 16rpx;
+  border: 2px solid var(--fg);
   font-size: 22rpx;
-  font-weight: 600;
+  font-weight: 700;
+  border-radius: 8rpx;
   margin-right: 8rpx;
-  margin-bottom: 8rpx;
+  white-space: nowrap;
 }
 
-/* 进度条 */
+/* ============================================
+   进度条 - 更粗更有力
+   ============================================ */
 .progress-bar {
-  height: 20rpx;
-  background: #eee;
-  border: 2px solid #1a1a1a;
+  height: 24rpx;
+  background: var(--gray-light);
+  border: 2px solid var(--fg);
+  border-radius: 8rpx;
   position: relative;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  transition: width 0.3s;
+  border-radius: 6rpx;
+  transition: width 0.6s ease;
 }
 
-/* 标题 */
+/* ============================================
+   区块标题 - 更大的层级差
+   ============================================ */
 .section-title {
-  font-size: 40rpx;
+  font-size: 44rpx;
   font-weight: 900;
   margin-bottom: 24rpx;
-  padding: 16rpx 0;
+  padding: 0;
+  line-height: 1.3;
+  letter-spacing: 1rpx;
 }
 
-/* Tab 切换 */
+.section-subtitle {
+  font-size: 26rpx;
+  color: var(--gray-dark);
+  margin-bottom: 28rpx;
+  display: block;
+  line-height: 1.5;
+}
+
+/* ============================================
+   页面通用区块 - 更宽松
+   ============================================ */
+.section {
+  padding: 36rpx 32rpx;
+}
+
+/* ============================================
+   Tab 切换
+   ============================================ */
 .tab-bar {
   display: flex;
   gap: 16rpx;
-  margin-bottom: 24rpx;
+  margin-bottom: 28rpx;
   flex-wrap: wrap;
 }
 
 .tab-item {
-  padding: 12rpx 24rpx;
-  border: 3px solid #1a1a1a;
+  padding: 14rpx 28rpx;
+  border: var(--border);
   font-weight: 700;
   font-size: 26rpx;
-  background: #fff;
+  background: var(--white);
+  border-radius: var(--radius);
 }
 
-.tab-item::after {
-  border: none;
-}
+.tab-item::after { border: none; }
 
 .tab-item.active {
   background: var(--yellow);
-  box-shadow: 3px 3px 0 #1a1a1a;
+  box-shadow: var(--shadow-sm);
 }
 
-/* 加载状态 */
+/* ============================================
+   加载状态
+   ============================================ */
 .loading-wrap {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 80rpx 0;
+  padding: 120rpx 0;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: var(--gray);
+  font-weight: 600;
 }
 
 .empty-text {
   text-align: center;
-  color: #999;
-  padding: 60rpx 0;
+  color: var(--gray);
+  padding: 80rpx 0;
   font-size: 28rpx;
+}
+
+/* ============================================
+   分割装饰条
+   ============================================ */
+.divider-strip {
+  width: 100%;
+  padding: 16rpx 0;
+  background: var(--fg);
+  color: var(--yellow);
+  text-align: center;
+  font-weight: 800;
+  font-size: 24rpx;
+  letter-spacing: 8rpx;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.footer {
+  padding: 48rpx 32rpx;
+  text-align: center;
+}
+
+.footer-text {
+  font-size: 24rpx;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+/* ============================================
+   空状态 - 更有趣
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 48rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 32rpx;
+}
+
+.empty-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  margin-bottom: 16rpx;
+  color: var(--fg);
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: var(--gray);
+  margin-bottom: 48rpx;
+  line-height: 1.6;
+}
+
+/* ============================================
+   贴纸装饰元素
+   ============================================ */
+.sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 8rpx 20rpx;
+  border: var(--border);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 22rpx;
+  box-shadow: var(--shadow-sm);
+  transform: rotate(-2deg);
+}
+
+/* ============================================
+   滚动条隐藏
+   ============================================ */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================
+   动画关键帧
+   ============================================ */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-8rpx) rotate(2deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40rpx); }
+  to { opacity: 1; transform: translateY(0); }
 }

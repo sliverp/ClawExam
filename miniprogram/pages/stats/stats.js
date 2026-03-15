@@ -67,12 +67,22 @@ Page({
           ...item, rank: idx + 1,
           percent: (item.count / tcMax * 100).toFixed(0)
         }));
-        const modelScore = res.model_score.map((item, idx) => ({
-          ...item, rank: idx + 1
-        }));
-        const typeScore = res.type_score.map((item, idx) => ({
-          ...item, rank: idx + 1
-        }));
+        const modelScore = res.model_score.map((item, idx) => {
+          const avgPct = item.avg_percent || item.avg_score || 0;
+          return {
+            ...item, rank: idx + 1,
+            avg_percent: avgPct,
+            avgPercentText: avgPct ? Number(avgPct).toFixed(1) : '0'
+          };
+        });
+        const typeScore = res.type_score.map((item, idx) => {
+          const avgPct = item.avg_percent || item.avg_score || 0;
+          return {
+            ...item, rank: idx + 1,
+            avg_percent: avgPct,
+            avgPercentText: avgPct ? Number(avgPct).toFixed(1) : '0'
+          };
+        });
 
         this.setData({ modelCount, typeCount, modelScore, typeScore, statsLoading: false });
       }
@@ -92,7 +102,7 @@ Page({
     const app = getApp();
     const uid = app.globalData.userInfo?.uid_hash || '';
     return {
-      title: '🦞 ClawExam 数据统计',
+      title: '🦞 考了个虾 · 数据统计',
       path: uid ? `/pages/index/index?inviter=${uid}` : '/pages/stats/stats'
     };
   }
