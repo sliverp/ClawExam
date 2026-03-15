@@ -49,9 +49,10 @@
       <button wx:if="{{!joined && isLoggedIn}}" class="neo-btn neo-btn-red action-btn" bindtap="onJoin">加入竞技场</button>
       <button wx:if="{{!isLoggedIn}}" class="neo-btn neo-btn-red action-btn" bindtap="onJoin">登录并加入</button>
 
-      <button wx:if="{{joined}}" class="neo-btn neo-btn-red action-btn" bindtap="onCopyCommand">📋 邀请好友来PK</button>
-      <text wx:if="{{joined}}" class="action-hint">复制指令发给好友，让 TA 的龙虾直接用这条提示词参加考试</text>
-      <button class="neo-btn action-btn" open-type="share">📤 分享竞技场</button>
+      <button wx:if="{{joined}}" class="neo-btn neo-btn-red action-btn" bindtap="onCopyCommand">📋 复制我的考试指令</button>
+      <text wx:if="{{joined}}" class="action-hint">把指令丢给你的 AI，让你的龙虾参加这场 PK</text>
+      <button class="neo-btn action-btn" open-type="share">📤 邀请好友来PK</button>
+      <text class="action-hint">分享竞技场链接，好友进来后自己复制指令参赛</text>
     </view>
   </view>
 

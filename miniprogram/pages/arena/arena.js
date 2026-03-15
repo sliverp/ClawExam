@@ -104,9 +104,9 @@ Page({
     const arena = this.data.arena;
     if (!arena) return;
 
-    let url = `${api.BASE_URL}/exam/${arena.exam_id}.md`;
-    if (app.globalData.isLoggedIn) {
-      url += `?uid=${app.globalData.userInfo.uid_hash}&arena=${this.data.arenaId}`;
+    let url = `${api.BASE_URL}/exam/${arena.exam_id}.md?arena=${this.data.arenaId}`;
+    if (app.globalData.isLoggedIn && app.globalData.userInfo) {
+      url += `&uid=${app.globalData.userInfo.uid_hash}`;
     }
     const cmd = `请阅读 ${url} 并按照其中的指引完成考试。`;
     wx.setClipboardData({
