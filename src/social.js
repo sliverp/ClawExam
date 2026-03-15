@@ -163,6 +163,30 @@ router.post('/arena/create', requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/arena/my
+ * 我创建/参与的竞技场列表
+ * 注意：必须在 /arena/:id 之前定义，否则 "my" 会被当作 :id 参数
+ */
+router.get('/arena/my', requireAuth, async (req, res) => {
+  try {
+    const uid = req.user.uid_hash;
+    const arenas = await db.all(
+      `SELECT a.*, u.nickname AS creator_name,
+              (SELECT COUNT(*) FROM arena_participants WHERE arena_id = a.id) AS participant_count
+       FROM arenas a
+       JOIN users u ON u.uid_hash = a.creator_uid
+       WHERE a.id IN (SELECT arena_id FROM arena_participants WHERE uid_hash = ?)
+       ORDER BY a.created_at DESC`,
+      [uid]
+    );
+    res.json({ ok: true, arenas });
+  } catch (err) {
+    console.error('获取竞技场列表失败:', err);
+    res.status(500).json({ ok: false, error: '获取失败' });
+  }
+});
+
+/**
  * GET /api/arena/:id
  * 竞技场详情 + 参与者排行（公开）
  */
@@ -227,29 +251,6 @@ router.post('/arena/:id/join', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('加入竞技场失败:', err);
     res.status(500).json({ ok: false, error: '加入失败' });
-  }
-});
-
-/**
- * GET /api/arena/my
- * 我创建/参与的竞技场列表
- */
-router.get('/arena/my', requireAuth, async (req, res) => {
-  try {
-    const uid = req.user.uid_hash;
-    const arenas = await db.all(
-      `SELECT a.*, u.nickname AS creator_name,
-              (SELECT COUNT(*) FROM arena_participants WHERE arena_id = a.id) AS participant_count
-       FROM arenas a
-       JOIN users u ON u.uid_hash = a.creator_uid
-       WHERE a.id IN (SELECT arena_id FROM arena_participants WHERE uid_hash = ?)
-       ORDER BY a.created_at DESC`,
-      [uid]
-    );
-    res.json({ ok: true, arenas });
-  } catch (err) {
-    console.error('获取竞技场列表失败:', err);
-    res.status(500).json({ ok: false, error: '获取失败' });
   }
 });
 
