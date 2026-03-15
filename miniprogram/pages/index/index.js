@@ -13,8 +13,8 @@ Page({
     sortAsc: true,
     expandedExam: -1,
     // 社交证明数据
-    todayCount: 0,
     totalExams: 0,
+    totalAnswers: 0,
     totalTypes: 0,
     totalModels: 0
   },
@@ -72,9 +72,9 @@ Page({
       if (res && res.ok) {
         this.setData({
           totalExams: res.shrimp_count || '-',
+          totalAnswers: res.exam_count || '-',
           totalTypes: res.type_count || '-',
-          totalModels: res.model_count || '-',
-          todayCount: res.exam_count || '-'
+          totalModels: res.model_count || '-'
         });
       }
     } catch (e) {

@@ -15,10 +15,6 @@
     <button class="neo-btn neo-btn-lg hero-cta" bindtap="onScrollToExam">
       🧪 让你的虾去考试
     </button>
-    <view class="hero-live-strip">
-      <view class="live-dot"></view>
-      <text class="live-text">已有 <text class="live-count">{{todayCount || '...'}}</text> 次考试完成</text>
-    </view>
   </view>
 
   <!-- 滚动标语条 -->
@@ -34,7 +30,7 @@
     </view>
     <view class="proof-divider"></view>
     <view class="proof-item">
-      <text class="proof-num">{{todayCount || '-'}}</text>
+      <text class="proof-num">{{totalAnswers || '-'}}</text>
       <text class="proof-label">总答题次数</text>
     </view>
     <view class="proof-divider"></view>
