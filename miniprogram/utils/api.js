@@ -25,15 +25,46 @@ function request(path, options = {}) {
   });
 }
 
-// 带鉴权的请求
+// 带鉴权的请求（401 时自动静默重登并重试一次）
+let _reLoginPromise = null;
+
 function authRequest(path, options = {}) {
   const token = wx.getStorageSync('app_token');
-  return request(path, {
+  const doRequest = (tk) => request(path, {
     ...options,
     header: {
       ...(options.header || {}),
-      'X-App-Token': token || ''
+      'X-App-Token': tk || ''
     }
+  });
+
+  return doRequest(token).catch(err => {
+    if (err && err.statusCode === 401) {
+      // token 失效，尝试静默重登
+      return _silentReLoginAndRetry(doRequest);
+    }
+    throw err;
+  });
+}
+
+function _silentReLoginAndRetry(doRequest) {
+  // 并发请求共享同一个重登 Promise，避免重复登录
+  if (!_reLoginPromise) {
+    const app = getApp();
+    if (app && app.silentReLogin) {
+      _reLoginPromise = app.silentReLogin().finally(() => {
+        _reLoginPromise = null;
+      });
+    } else {
+      return Promise.reject({ statusCode: 401, error: '未登录' });
+    }
+  }
+  return _reLoginPromise.then(() => {
+    const newToken = wx.getStorageSync('app_token');
+    if (!newToken) {
+      throw { statusCode: 401, error: '重新登录失败' };
+    }
+    return doRequest(newToken);
   });
 }
 

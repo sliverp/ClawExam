@@ -12,16 +12,22 @@ Page({
     myUid: ''
   },
 
-  onShow() {
+  async onShow() {
     const app = getApp();
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 2 });
+    }
+
+    // 等登录状态验证完成
+    if (app.globalData.loginReady) {
+      await app.globalData.loginReady;
+    }
+
     const isLoggedIn = app.globalData.isLoggedIn;
     this.setData({
       isLoggedIn,
       myUid: app.globalData.userInfo?.uid_hash || ''
     });
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 2 });
-    }
 
     if (!isLoggedIn) {
       app.checkLoginOrPrompt('登录后才能查看好友排行榜，是否现在登录？');
@@ -60,7 +66,8 @@ Page({
           ...item,
           rank: idx + 1,
           durationText: util.formatDuration(item.best_duration),
-          percentText: Number(item.best_percent || 0).toFixed(1)
+          percentText: Number(item.best_percent || 0).toFixed(1),
+          dateText: item.started_at ? (util.formatTime ? util.formatTime(new Date(item.started_at)) : item.started_at) : ''
         }));
         this.setData({ leaderboard, loading: false });
       } else {

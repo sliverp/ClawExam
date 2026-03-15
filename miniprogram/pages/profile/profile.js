@@ -7,20 +7,27 @@ Page({
     showLoginPopup: false,
     userInfo: null,
     bestScores: [],
+    historyList: [],
     friendCount: 0,
     loading: false,
     topScore: null
   },
 
-  onShow() {
+  async onShow() {
     const app = getApp();
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 4 });
+    }
+
+    // 等登录状态验证完成
+    if (app.globalData.loginReady) {
+      await app.globalData.loginReady;
+    }
+
     this.setData({
       isLoggedIn: app.globalData.isLoggedIn,
       userInfo: app.globalData.userInfo
     });
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 4 });
-    }
 
     if (app.globalData.isLoggedIn) {
       this.loadMyData();
@@ -39,9 +46,10 @@ Page({
     this.setData({ loading: true });
 
     try {
-      const [scoresRes, friendsRes] = await Promise.all([
+      const [scoresRes, friendsRes, historyRes] = await Promise.all([
         api.getMyBestScores(),
-        api.getFriendsList()
+        api.getFriendsList(),
+        api.getMyExamHistory()
       ]);
 
       const app = getApp();
@@ -62,7 +70,7 @@ Page({
             percentText: score ? pct.toFixed(1) : '0',
             grade: grade,
             durationText: score ? util.formatDuration(score.best_duration) : '',
-            session_id: score ? score.session_id : ''
+            session_id: score ? (score.best_session_id || score.session_id) : ''
           };
           if (score && (!topScore || pct > Number(topScore.percentText))) {
             topScore = {
@@ -73,6 +81,33 @@ Page({
           return item;
         });
         this.setData({ bestScores, topScore });
+      }
+
+      // 全部考试历史记录
+      if (historyRes.ok) {
+        const examMap = {};
+        exams.forEach(e => { examMap[e.id] = e; });
+        const historyList = (historyRes.history || []).map(h => {
+          const exam = examMap[h.exam_id];
+          const pct = h.total_max > 0 ? Number((h.total_score * 100 / h.total_max).toFixed(1)) : 0;
+          const grade = pct >= 95 ? 'S' : pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F';
+          return {
+            id: h.id,
+            exam_id: h.exam_id,
+            exam_title: exam ? (exam.name || exam.id) : h.exam_id,
+            exam_color: util.examColor(h.exam_id),
+            claw_name: h.claw_name,
+            model_name: h.model_name,
+            total_score: h.total_score,
+            total_max: h.total_max,
+            percentText: pct.toFixed(1),
+            grade,
+            started_at: h.started_at,
+            dateText: util.formatTime ? util.formatTime(new Date(h.started_at)) : h.started_at,
+            answered_count: h.answered_count
+          };
+        });
+        this.setData({ historyList });
       }
 
       if (friendsRes.ok) {
@@ -124,6 +159,7 @@ Page({
             isLoggedIn: false,
             userInfo: null,
             bestScores: [],
+            historyList: [],
             friendCount: 0,
             topScore: null
           });

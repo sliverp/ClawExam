@@ -13,17 +13,23 @@ Page({
     creating: false
   },
 
-  onShow() {
+  async onShow() {
     const app = getApp();
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ selected: 3 });
+    }
+
+    // 等登录状态验证完成
+    if (app.globalData.loginReady) {
+      await app.globalData.loginReady;
+    }
+
     const isLoggedIn = app.globalData.isLoggedIn;
     const exams = (app.globalData.exams || []).map(e => ({
       ...e,
       color: util.examColor(e.id)
     }));
     this.setData({ isLoggedIn, exams });
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 3 });
-    }
 
     if (!isLoggedIn) {
       app.checkLoginOrPrompt('登录后才能创建和加入竞技场，是否现在登录？');

@@ -78,6 +78,7 @@ page {
   line-height: 1.4;
   letter-spacing: 1rpx;
   transition: all 0.1s ease;
+  white-space: nowrap;
 }
 
 .neo-btn::after {
@@ -105,6 +106,8 @@ page {
 .neo-btn-block {
   display: flex;
   width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ============================================

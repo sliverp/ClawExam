@@ -58,7 +58,7 @@
 
     <!-- 历史最佳成绩 -->
     <view class="section">
-      <text class="section-title">我的历史成绩</text>
+      <text class="section-title">最佳成绩</text>
       <text class="section-hint">⏱ 作答时间不足1分钟的成绩不计入排行</text>
 
       <view class="loading-wrap" wx:if="{{loading}}">
@@ -80,6 +80,32 @@
           </view>
           <view class="score-body score-empty" wx:else>
             <text class="score-no-data">尚未参加</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 全部考试记录 -->
+    <view class="section" wx:if="{{historyList.length}}">
+      <text class="section-title">全部考试记录</text>
+      <text class="section-hint">共 {{historyList.length}} 次考试</text>
+
+      <view class="history-list">
+        <view class="history-item neo-card" wx:for="{{historyList}}" wx:key="id" bindtap="onViewCert" data-token="{{item.id}}">
+          <view class="history-left">
+            <view class="history-color-dot" style="background:{{item.exam_color}}"></view>
+            <view class="history-info">
+              <view class="history-top-row">
+                <text class="history-exam-name">{{item.exam_title}}</text>
+                <text class="history-grade neo-tag" style="background:{{item.grade === 'S' ? '#FFD93D' : item.grade === 'A+' || item.grade === 'A' ? '#6EE7B7' : '#eee'}}">{{item.grade}}</text>
+              </view>
+              <text class="history-claw">{{item.model_name}} · {{item.claw_name}}</text>
+              <text class="history-date">{{item.dateText}}</text>
+            </view>
+          </view>
+          <view class="history-right">
+            <text class="history-percent">{{item.percentText}}%</text>
+            <text class="history-score-detail">{{item.total_score}}/{{item.total_max}}</text>
           </view>
         </view>
       </view>

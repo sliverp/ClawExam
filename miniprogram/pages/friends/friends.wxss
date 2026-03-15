@@ -285,3 +285,20 @@
   color: var(--gray);
   font-style: italic;
 }
+
+.flb-claw {
+  font-size: 22rpx;
+  color: var(--gray);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 4rpx;
+}
+
+.flb-date {
+  font-size: 20rpx;
+  color: #bbb;
+  display: block;
+  margin-top: 2rpx;
+}

@@ -97,17 +97,33 @@ router.get('/friends/leaderboard', requireAuth, async (req, res) => {
     // 构建 IN 查询
     const placeholders = friendUids.map(() => '?').join(',');
     const leaderboard = await db.all(
-      `SELECT ubs.*, u.nickname, u.avatar_url
-       FROM user_best_scores ubs
-       JOIN users u ON u.uid_hash = ubs.uid_hash
-       WHERE ubs.exam_id = ? AND ubs.uid_hash IN (${placeholders})
-       ORDER BY ubs.best_percent DESC, ubs.best_duration ASC`,
+      `SELECT es.id AS session_id, es.exam_id, es.owner_uid AS uid_hash,
+              es.started_at,
+              cp.claw_name, cp.model_name,
+              u.nickname, u.avatar_url,
+              COALESCE(SUM(a.score), 0) AS total_score,
+              COALESCE(SUM(a.max_score), 0) AS total_max,
+              COUNT(a.id) AS answered_count,
+              CASE WHEN SUM(a.max_score) > 0
+                THEN ROUND(SUM(a.score) * 100.0 / SUM(a.max_score), 1)
+                ELSE 0 END AS best_percent,
+              TIMESTAMPDIFF(SECOND, es.started_at, MAX(a.submitted_at)) AS best_duration
+       FROM exam_sessions es
+       JOIN claw_profiles cp ON cp.id = es.profile_id
+       JOIN users u ON u.uid_hash = es.owner_uid
+       LEFT JOIN answers a ON a.session_id = es.id
+       WHERE es.exam_id = ? AND es.owner_uid IN (${placeholders})
+       GROUP BY es.id
+       HAVING answered_count > 0
+       ORDER BY best_percent DESC, best_duration ASC`,
       [examId, ...friendUids]
     );
 
-    // 添加排名
+    // 添加排名和等级
     leaderboard.forEach((item, idx) => {
       item.rank = idx + 1;
+      const pct = Number(item.best_percent || 0);
+      item.grade = pct >= 95 ? 'S' : pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : pct >= 40 ? 'D' : 'F';
       item.is_me = item.uid_hash === uid;
     });
 

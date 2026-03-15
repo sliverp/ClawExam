@@ -76,7 +76,7 @@
     <!-- 好友排行列表 -->
     <view class="section list-section" wx:if="{{!loading && leaderboard.length}}">
       <view class="friends-lb-list">
-        <view class="friends-lb-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{leaderboard}}" wx:key="uid_hash">
+        <view class="friends-lb-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{leaderboard}}" wx:key="session_id">
           <view class="flb-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
             <text class="flb-rank-num">{{index + 1}}</text>
           </view>
@@ -90,7 +90,8 @@
               <text class="flb-score">{{item.percentText}}%</text>
               <text class="flb-grade neo-tag" style="background:{{item.grade === 'S' ? '#FFD93D' : item.grade === 'A+' || item.grade === 'A' ? '#6EE7B7' : '#eee'}}">{{item.grade}}</text>
             </view>
-            <text wx:else class="flb-waiting">尚未参加</text>
+            <text class="flb-claw" wx:if="{{item.claw_name || item.model_name}}">{{item.model_name}} · {{item.claw_name}}</text>
+            <text class="flb-date" wx:if="{{item.dateText}}">{{item.dateText}}</text>
           </view>
         </view>
       </view>

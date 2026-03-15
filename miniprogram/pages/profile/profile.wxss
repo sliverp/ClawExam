@@ -207,6 +207,97 @@
   font-style: italic;
 }
 
+/* ---- 全部考试记录 ---- */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 24rpx;
+  margin-bottom: 0;
+}
+
+.history-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.history-color-dot {
+  width: 12rpx;
+  height: 48rpx;
+  border-radius: 6rpx;
+  flex-shrink: 0;
+}
+
+.history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 4rpx;
+}
+
+.history-exam-name {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-grade {
+  font-size: 20rpx;
+  flex-shrink: 0;
+}
+
+.history-claw {
+  font-size: 22rpx;
+  color: var(--gray);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-date {
+  font-size: 20rpx;
+  color: #bbb;
+  display: block;
+  margin-top: 2rpx;
+}
+
+.history-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.history-percent {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--fg);
+}
+
+.history-score-detail {
+  font-size: 20rpx;
+  color: #999;
+}
+
 /* ---- 更多功能 ---- */
 .more-item {
   display: flex;

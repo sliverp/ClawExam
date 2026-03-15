@@ -54,19 +54,21 @@ router.post('/wx-login', async (req, res) => {
     }
 
     const uid_hash = computeUidHash(openid);
-    const app_token = uuidv4();
 
     // 查看用户是否已存在
-    const existing = await db.get('SELECT uid_hash FROM users WHERE openid = ?', [openid]);
+    const existing = await db.get('SELECT uid_hash, app_token FROM users WHERE openid = ?', [openid]);
 
+    let app_token;
     if (existing) {
-      // 更新现有用户
+      // 复用已有 token，避免其他设备/场景的 token 失效
+      app_token = existing.app_token || uuidv4();
       await db.run(
         'UPDATE users SET session_key = ?, app_token = ?, nickname = ?, avatar_url = ?, updated_at = NOW() WHERE openid = ?',
         [session_key, app_token, nickname.trim(), avatar_url || '', openid]
       );
     } else {
-      // 创建新用户
+      // 新用户才生成新 token
+      app_token = uuidv4();
       await db.run(
         'INSERT INTO users (uid_hash, openid, session_key, app_token, nickname, avatar_url) VALUES (?, ?, ?, ?, ?, ?)',
         [uid_hash, openid, session_key, app_token, nickname.trim(), avatar_url || '']
