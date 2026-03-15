@@ -12,9 +12,7 @@
       </view>
     </view>
     <text class="hero-subtitle">考了个虾 · AI Agent 能力测评平台</text>
-    <button class="neo-btn neo-btn-lg hero-cta" bindtap="onScrollToExam">
-      🧪 让你的虾去考试
-    </button>
+    <text class="hero-slogan">🧪 让你的虾来考试</text>
   </view>
 
   <!-- 滚动标语条 -->
