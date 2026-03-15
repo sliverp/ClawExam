@@ -69,28 +69,29 @@ Page({
 
   async loadSocialProof() {
     try {
-      const allStats = { totalExams: 0, types: new Set(), models: new Set(), topScore: 0 };
-      for (const exam of this.data.exams) {
-        try {
-          const res = await api.getLeaderboard(exam.id);
-          if (res && res.ok && res.leaderboard) {
-            allStats.totalExams += res.leaderboard.length;
-            res.leaderboard.forEach(item => {
-              if (item.claw_type) allStats.types.add(item.claw_type);
-              if (item.model_name) allStats.models.add(item.model_name);
-              const pct = Number(item.score_percent || 0);
-              if (pct > allStats.topScore) allStats.topScore = pct;
-            });
-          }
-        } catch (e) { /* ignore */ }
+      // 用 stats API 获取准确统计（不受排行榜 LIMIT 100 截断）
+      const res = await api.getStats();
+      if (res && res.ok) {
+        const models = res.model_count || [];
+        const types = res.type_count || [];
+        // 求真实参考总数：所有模型的 count 之和
+        const totalExams = models.reduce((sum, m) => sum + (m.count || 0), 0);
+        const totalModels = models.length;
+        const totalTypes = types.length;
+        // 最高分从 model_score 里取
+        let topScore = 0;
+        (res.model_score || []).forEach(m => {
+          const ms = Number(m.max_score || 0);
+          if (ms > topScore) topScore = ms;
+        });
+        this.setData({
+          totalExams: totalExams || '-',
+          totalTypes: totalTypes || '-',
+          totalModels: totalModels || '-',
+          topScore: topScore ? topScore.toFixed(1) : '-',
+          todayCount: totalExams || '-'
+        });
       }
-      this.setData({
-        totalExams: allStats.totalExams || '-',
-        totalTypes: allStats.types.size || '-',
-        totalModels: allStats.models.size || '-',
-        topScore: allStats.topScore ? allStats.topScore.toFixed(1) : '-',
-        todayCount: Math.floor(Math.random() * 500) + 200
-      });
     } catch (e) {
       // 静默失败
     }
@@ -192,12 +193,25 @@ Page({
     this.setData({ leaderboard, sortKey, sortAsc });
   },
 
-  onShareAppMessage() {
+  onShareAppMessage(e) {
     const app = getApp();
     const uid = app.globalData.userInfo?.uid_hash || '';
+    const basePath = uid ? `/pages/index/index?inviter=${uid}` : '/pages/index/index';
+
+    // 从邀请按钮触发时，携带考试信息
+    if (e && e.from === 'button' && e.target && e.target.dataset && e.target.dataset.examid) {
+      const examId = e.target.dataset.examid;
+      const exam = this.data.exams.find(ex => ex.id === examId);
+      const examName = exam ? exam.name : '考试';
+      return {
+        title: `🦞 来挑战「${examName}」！看看你的虾能考多少分？`,
+        path: basePath
+      };
+    }
+
     return {
       title: '🦞 人人都在养虾，你的虾行不行？来考一场就知道了！',
-      path: uid ? `/pages/index/index?inviter=${uid}` : '/pages/index/index'
+      path: basePath
     };
   }
 });

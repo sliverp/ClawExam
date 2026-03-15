@@ -274,6 +274,29 @@
   word-break: break-all;
 }
 
+/* 按钮行 - 邀请70% + 复制30% */
+.exam-btn-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.exam-btn-invite {
+  flex: 7;
+  font-size: 28rpx !important;
+  padding: 24rpx 0 !important;
+  min-width: 0;
+}
+
+.exam-btn-copy {
+  flex: 3;
+  font-size: 26rpx !important;
+  padding: 24rpx 0 !important;
+  background: var(--white) !important;
+  min-width: 0;
+}
+
+.exam-btn-invite::after, .exam-btn-copy::after { border: none; }
+
 /* ============================================
    排行榜
    ============================================ */
@@ -281,22 +304,18 @@
   padding-top: 36rpx;
 }
 
-.lb-tab-scroll {
-  white-space: nowrap;
+.lb-tab-bar {
+  display: flex;
+  gap: 12rpx;
   margin-bottom: 28rpx;
 }
 
-.lb-tab-bar {
-  display: inline-flex;
-  gap: 16rpx;
-  padding: 0 4rpx;
-}
-
 .lb-tab-item {
-  display: inline-flex;
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16rpx 32rpx;
+  padding: 16rpx 0;
   border: var(--border);
   font-weight: 800;
   font-size: 26rpx;

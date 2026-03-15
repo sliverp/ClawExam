@@ -52,7 +52,7 @@
       </view>
 
       <view wx:if="{{!loading && arenas.length}}" class="arena-list">
-        <view class="arena-item neo-card" wx:for="{{arenas}}" wx:key="arena_id" bindtap="onGoArena" data-id="{{item.arena_id}}">
+        <view class="arena-item neo-card" wx:for="{{arenas}}" wx:key="id" bindtap="onGoArena" data-id="{{item.id}}">
           <view class="arena-item-header" style="background:{{item.exam_color || '#3EC1D3'}}">
             <text class="arena-item-exam">{{item.exam_name || item.exam_id}}</text>
             <text class="neo-tag arena-status-tag" style="background:{{item.status === 'finished' ? '#6EE7B7' : '#FFD93D'}}">{{item.status === 'finished' ? '已结束' : '进行中'}}</text>

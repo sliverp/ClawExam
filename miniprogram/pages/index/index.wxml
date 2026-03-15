@@ -73,9 +73,14 @@
             <text class="exam-cmd-label">考试指令</text>
             <text class="exam-cmd-text" selectable="true">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
           </view>
-          <button class="neo-btn neo-btn-red neo-btn-block" data-examid="{{item.id}}" catchtap="onCopyCommand">
-            📋 复制考试指令
-          </button>
+          <view class="exam-btn-row">
+            <button class="neo-btn neo-btn-red exam-btn-invite" data-examid="{{item.id}}" open-type="share">
+              📤 邀请好友来考试
+            </button>
+            <button class="neo-btn exam-btn-copy" data-examid="{{item.id}}" catchtap="onCopyCommand">
+              📋 复制
+            </button>
+          </view>
         </view>
       </view>
     </view>
@@ -89,16 +94,14 @@
   <!-- 排行榜 -->
   <view class="section lb-section">
     <!-- Tab 切换 -->
-    <scroll-view scroll-x class="lb-tab-scroll" enhanced show-scrollbar="{{false}}">
-      <view class="lb-tab-bar">
-        <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
-          wx:for="{{exams}}" wx:key="id"
-          data-examid="{{item.id}}" bindtap="onTabSwitch"
-          style="{{activeExamId === item.id ? 'background:' + item.color : ''}}">
-          {{item.name}}
-        </button>
-      </view>
-    </scroll-view>
+    <view class="lb-tab-bar">
+      <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+        wx:for="{{exams}}" wx:key="id"
+        data-examid="{{item.id}}" bindtap="onTabSwitch"
+        style="{{activeExamId === item.id ? 'background:' + item.color : ''}}">
+        {{item.name}}
+      </button>
+    </view>
 
     <!-- 加载中 -->
     <view class="loading-wrap" wx:if="{{lbLoading}}">
