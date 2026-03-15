@@ -17,7 +17,7 @@
         <text class="friends-hero-emoji">👥</text>
         <view class="friends-hero-text">
           <text class="friends-hero-title">好友排行榜</text>
-          <text class="friends-hero-desc">{{leaderboard.length}} 位好友 · 看看谁的虾更强</text>
+          <text class="friends-hero-desc">{{friendCount}} 位好友 · {{leaderboard.length}} 人有成绩</text>
         </view>
       </view>
     </view>

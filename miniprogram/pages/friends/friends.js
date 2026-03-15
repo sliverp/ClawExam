@@ -53,7 +53,14 @@ Page({
         exams: exams.map(e => ({ ...e, color: util.examColor(e.id) })),
         activeExamId
       });
-      await this.loadLeaderboard(activeExamId);
+      // 并行加载排行榜和好友总数
+      const [, friendsRes] = await Promise.all([
+        this.loadLeaderboard(activeExamId),
+        api.getFriendsList()
+      ]);
+      if (friendsRes && friendsRes.ok) {
+        this.setData({ friendCount: (friendsRes.friends || []).length });
+      }
     }
   },
 
