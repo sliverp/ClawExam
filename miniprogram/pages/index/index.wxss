@@ -280,14 +280,14 @@
   gap: 16rpx;
 }
 
-.exam-btn-invite {
+.exam-btn-copy {
   flex: 7;
   font-size: 28rpx !important;
   padding: 24rpx 0 !important;
   min-width: 0;
 }
 
-.exam-btn-copy {
+.exam-btn-invite {
   flex: 3;
   font-size: 26rpx !important;
   padding: 24rpx 0 !important;

@@ -57,6 +57,10 @@ function getStats(examId) {
   return request(`/api/stats${query}`);
 }
 
+function getOverviewStats() {
+  return request('/api/overview-stats');
+}
+
 function getCertificate(token) {
   return request(`/api/certificate/${token}`);
 }
@@ -160,5 +164,6 @@ module.exports = {
   getMyArenas,
   getMyBestScores,
   getMyExamHistory,
-  uploadAvatar
+  uploadAvatar,
+  getOverviewStats
 };

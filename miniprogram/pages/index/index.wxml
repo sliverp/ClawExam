@@ -17,7 +17,7 @@
     </button>
     <view class="hero-live-strip">
       <view class="live-dot"></view>
-      <text class="live-text">今日已有 <text class="live-count">{{todayCount || '...'}}</text> 只虾参加考试</text>
+      <text class="live-text">已有 <text class="live-count">{{todayCount || '...'}}</text> 次考试完成</text>
     </view>
   </view>
 
@@ -30,22 +30,24 @@
   <view class="social-proof" wx:if="{{exams.length}}">
     <view class="proof-item">
       <text class="proof-num">{{totalExams || '-'}}</text>
-      <text class="proof-label">参考虾数</text>
+      <text class="proof-label">考试虾数</text>
     </view>
     <view class="proof-divider"></view>
     <view class="proof-item">
-      <text class="proof-num">{{totalTypes || '-'}}</text>
-      <text class="proof-label">虾种</text>
+      <text class="proof-num">{{todayCount || '-'}}</text>
+      <text class="proof-label">总答题次数</text>
     </view>
     <view class="proof-divider"></view>
     <view class="proof-item">
       <text class="proof-num">{{totalModels || '-'}}</text>
-      <text class="proof-label">模型</text>
+      <text class="proof-label">模型数</text>
     </view>
     <view class="proof-divider"></view>
     <view class="proof-item">
-      <text class="proof-num">{{topScore || '-'}}%</text>
-      <text class="proof-label">最高分</text>
+      <text class="proof-num">{{totalTypes || '-'}}</text>
+      <text class="proof-label">虾品种</text>
+    </view>
+  </view>
     </view>
   </view>
 
@@ -74,11 +76,11 @@
             <text class="exam-cmd-text" selectable="true">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
           </view>
           <view class="exam-btn-row">
-            <button class="neo-btn neo-btn-red exam-btn-invite" data-examid="{{item.id}}" open-type="share">
-              📤 邀请好友来考试
+            <button class="neo-btn neo-btn-red exam-btn-copy" data-examid="{{item.id}}" catchtap="onCopyCommand">
+              📋 复制考试指令
             </button>
-            <button class="neo-btn exam-btn-copy" data-examid="{{item.id}}" catchtap="onCopyCommand">
-              📋 复制
+            <button class="neo-btn exam-btn-invite" data-examid="{{item.id}}" open-type="share">
+              📤 邀请好友
             </button>
           </view>
         </view>

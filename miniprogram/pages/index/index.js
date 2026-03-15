@@ -16,8 +16,7 @@ Page({
     todayCount: 0,
     totalExams: 0,
     totalTypes: 0,
-    totalModels: 0,
-    topScore: 0
+    totalModels: 0
   },
 
   onLoad(options) {
@@ -69,27 +68,13 @@ Page({
 
   async loadSocialProof() {
     try {
-      // 用 stats API 获取准确统计（不受排行榜 LIMIT 100 截断）
-      const res = await api.getStats();
+      const res = await api.getOverviewStats();
       if (res && res.ok) {
-        const models = res.model_count || [];
-        const types = res.type_count || [];
-        // 求真实参考总数：所有模型的 count 之和
-        const totalExams = models.reduce((sum, m) => sum + (m.count || 0), 0);
-        const totalModels = models.length;
-        const totalTypes = types.length;
-        // 最高分从 model_score 里取
-        let topScore = 0;
-        (res.model_score || []).forEach(m => {
-          const ms = Number(m.max_score || 0);
-          if (ms > topScore) topScore = ms;
-        });
         this.setData({
-          totalExams: totalExams || '-',
-          totalTypes: totalTypes || '-',
-          totalModels: totalModels || '-',
-          topScore: topScore ? topScore.toFixed(1) : '-',
-          todayCount: totalExams || '-'
+          totalExams: res.shrimp_count || '-',
+          totalTypes: res.type_count || '-',
+          totalModels: res.model_count || '-',
+          todayCount: res.exam_count || '-'
         });
       }
     } catch (e) {

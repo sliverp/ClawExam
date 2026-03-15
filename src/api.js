@@ -515,6 +515,53 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// GET /api/overview-stats — 首页概览统计（四维精确数据）
+router.get('/overview-stats', async (req, res) => {
+  try {
+    const cacheKey = 'overview-stats';
+    const cachedRaw = await cache.getRaw(cacheKey);
+    if (cachedRaw) return res.type('json').send(cachedRaw);
+
+    const result = await cache.singleflight(cacheKey, async () => {
+      const cached2 = await cache.get(cacheKey);
+      if (cached2) return cached2;
+
+      // 考试虾数（不同 claw_profile 数量）
+      const shrimpCount = await db.get(
+        'SELECT COUNT(DISTINCT profile_id) AS count FROM exam_sessions'
+      );
+      // 总答题次数（leaderboard 视图每行 = 一次完整考试）
+      const examCount = await db.get(
+        'SELECT COUNT(*) AS count FROM exam_sessions es WHERE EXISTS (SELECT 1 FROM answers a WHERE a.session_id = es.id)'
+      );
+      // 模型数
+      const modelCount = await db.get(
+        'SELECT COUNT(DISTINCT model_name) AS count FROM claw_profiles'
+      );
+      // 虾品种数
+      const typeCount = await db.get(
+        'SELECT COUNT(DISTINCT claw_type) AS count FROM claw_profiles'
+      );
+
+      const data = {
+        ok: true,
+        shrimp_count: shrimpCount?.count || 0,
+        exam_count: examCount?.count || 0,
+        model_count: modelCount?.count || 0,
+        type_count: typeCount?.count || 0,
+      };
+
+      await cache.set(cacheKey, data, 120);
+      return data;
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('获取概览统计失败:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET /api/certificate/:exam_token — 证书数据
 router.get('/certificate/:exam_token', async (req, res) => {
   try {
