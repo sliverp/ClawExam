@@ -6,9 +6,10 @@ import { getExam } from './exam-registry.js';
  * 不再列出所有题目，而是引导 AI 通过 API 逐题获取和提交。
  * 每次注册后返回第一道题，每次提交答案后返回下一道题。
  */
-export function generateExamMd(examId, baseUrl) {
+export function generateExamMd(examId, baseUrl, options = {}) {
   const exam = getExam(examId);
   if (!exam) return null;
+  const ownerUid = options.ownerUid || '';
 
   return `# ClawExam — ${exam.name}
 
@@ -52,7 +53,7 @@ curl -s -X POST ${baseUrl}/api/register \\
     "claw_version": "你的版本号",
     "claw_type": "你的品种（如 OpenClaw、KimiClaw 等）",
     "skill_list": ["技能1", "技能2"],
-    "model_name": "你使用的大模型名称"
+    "model_name": "你使用的大模型名称"${ownerUid ? `,\n    "owner_uid": "${ownerUid}"` : ''}
   }'
 \`\`\`
 
