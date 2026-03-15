@@ -1,4 +1,4 @@
-/* Neobrutalism TabBar · 爆款版 */
+/* Neobrutalism TabBar · 轻量毛玻璃版 */
 .tab-bar-wrap {
   position: fixed;
   bottom: 0;
@@ -7,16 +7,19 @@
   z-index: 999;
   padding: 0 20rpx;
   padding-bottom: env(safe-area-inset-bottom);
-  background: #FFFBEB;
+  background: transparent;
 }
 
 .tab-bar {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 120rpx;
-  background: #1a1a1a;
+  height: 110rpx;
+  background: rgba(255, 251, 235, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 3px solid #1a1a1a;
+  border-bottom: none;
   border-radius: 28rpx 28rpx 0 0;
   overflow: hidden;
 }
@@ -41,12 +44,12 @@
 .tab-text {
   font-size: 20rpx;
   font-weight: 800;
-  color: #888;
+  color: #999;
   letter-spacing: 1rpx;
 }
 
 .tab-item.active .tab-text {
-  color: #FFD93D;
+  color: #1a1a1a;
 }
 
 .tab-dot {
@@ -55,5 +58,5 @@
   width: 8rpx;
   height: 8rpx;
   border-radius: 50%;
-  background: #FFD93D;
+  background: #E63B2E;
 }
