@@ -123,6 +123,15 @@
   margin-bottom: 16rpx;
 }
 
+.action-hint {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: -8rpx;
+  margin-bottom: 20rpx;
+}
+
 .empty-text {
   text-align: center;
   color: #999;

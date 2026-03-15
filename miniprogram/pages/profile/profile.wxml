@@ -20,6 +20,7 @@
 
     <!-- 历史最佳成绩 -->
     <text class="section-title">🦞 我的小龙虾历史成绩</text>
+    <text class="section-hint">⏱ 作答时间不足1分钟的成绩不计入排行</text>
 
     <view class="loading-wrap" wx:if="{{loading}}">
       <text>加载中...</text>

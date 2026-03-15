@@ -36,7 +36,7 @@ function getBaseUrl(req) {
 // 动态试卷 Markdown：GET /exam/:exam_id.md?uid=xxx
 app.get('/exam/:examId.md', (req, res) => {
   const baseUrl = getBaseUrl(req);
-  const md = generateExamMd(req.params.examId, baseUrl, { ownerUid: req.query.uid || '' });
+  const md = generateExamMd(req.params.examId, baseUrl, { ownerUid: req.query.uid || '', arenaId: req.query.arena || '' });
   if (!md) return res.status(404).type('text/plain').send(`试卷 ${req.params.examId} 不存在`);
   res.type('text/markdown; charset=utf-8').send(md);
 });

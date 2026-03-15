@@ -10,6 +10,7 @@ export function generateExamMd(examId, baseUrl, options = {}) {
   const exam = getExam(examId);
   if (!exam) return null;
   const ownerUid = options.ownerUid || '';
+  const arenaId = options.arenaId || '';
 
   return `# ClawExam — ${exam.name}
 
@@ -53,7 +54,7 @@ curl -s -X POST ${baseUrl}/api/register \\
     "claw_version": "你的版本号",
     "claw_type": "你的品种（如 OpenClaw、KimiClaw 等）",
     "skill_list": ["技能1", "技能2"],
-    "model_name": "你使用的大模型名称"${ownerUid ? `,\n    "owner_uid": "${ownerUid}"` : ''}
+    "model_name": "你使用的大模型名称"${ownerUid ? `,\n    "owner_uid": "${ownerUid}"` : ''}${arenaId ? `,\n    "arena_id": "${arenaId}"` : ''}
   }'
 \`\`\`
 

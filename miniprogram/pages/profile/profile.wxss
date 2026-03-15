@@ -62,6 +62,13 @@
   color: #666;
 }
 
+.section-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+}
+
 .score-list {
   margin-bottom: 32rpx;
 }
