@@ -21,7 +21,10 @@ Page({
     totalTypes: 0,
     totalModels: 0,
     // 竞技场菜单
-    showArenaMenu: false
+    showArenaMenu: false,
+    // 排行榜状态
+    lbMyBest: null,  // 当前登录用户在此exam的最佳成绩
+    lbHasNoData: false  // 标记是否未参加过此考试
   },
 
   onLoad(options) {
@@ -88,7 +91,15 @@ Page({
   },
 
   async loadLeaderboard(examId) {
-    this.setData({ lbLoading: true, leaderboard: [], lbMySection: [], lbMyRank: -1, lbHasGap: false });
+    this.setData({ 
+      lbLoading: true, 
+      leaderboard: [], 
+      lbMySection: [], 
+      lbMyRank: -1, 
+      lbHasGap: false,
+      lbMyBest: null,
+      lbHasNoData: false
+    });
     try {
       const res = await api.getLeaderboard(examId);
       console.log('[排行榜] examId:', examId, 'response:', JSON.stringify(res).slice(0, 500));
@@ -103,44 +114,73 @@ Page({
         // 前三名
         const top3 = fullList.slice(0, 3);
 
-        // 查找本人在排行榜中的位置
+        // 如果登录了，获取用户自己的最佳成绩
         const app = getApp();
-        const myUid = app.globalData.userInfo?.uid_hash || '';
-        let myIdx = -1;
-        if (myUid) {
-          myIdx = fullList.findIndex(item => item.uid_hash === myUid);
-        }
-
+        let myBestScore = null;
+        let myRank = -1;
         let lbMySection = [];
-        let lbMyRank = -1;
-        let lbHasGap = false;
+        let lbHasNoData = false;
 
-        if (myIdx >= 0) {
-          lbMyRank = fullList[myIdx].rank;
-          // 如果本人在前3名内，不需要额外展示
-          if (myIdx >= 3) {
-            // 本人前后2位
-            const start = Math.max(3, myIdx - 2);
-            const end = Math.min(fullList.length - 1, myIdx + 2);
-            for (let i = start; i <= end; i++) {
-              lbMySection.push({
-                ...fullList[i],
-                isMe: i === myIdx
-              });
+        if (app.globalData.isLoggedIn) {
+          try {
+            const scoresRes = await api.getMyBestScores();
+            if (scoresRes && scoresRes.ok && scoresRes.scores) {
+              // 找到当前exam的最佳成绩
+              myBestScore = scoresRes.scores.find(s => s.exam_id === examId);
+              
+              if (myBestScore) {
+                // 在排行榜中查找匹配的位置（基于score_percent和duration_seconds）
+                myRank = fullList.findIndex(item => 
+                  Math.abs(item.score_percent - myBestScore.score_percent) < 0.01 &&
+                  item.duration_seconds === myBestScore.duration_seconds &&
+                  item.claw_name === myBestScore.claw_name
+                );
+
+                if (myRank >= 0) {
+                  const actualRank = myRank + 1;
+                  console.log('[排行榜] 找到用户的虾在排行榜中的位置:', actualRank);
+                  
+                  // 如果本人在前3名内，标记一下
+                  if (myRank < 3) {
+                    top3[myRank].isMe = true;
+                    myBestScore.rank = actualRank;
+                  } else {
+                    // 本人不在前3名，展示本人前后各2位
+                    const start = Math.max(3, myRank - 2);
+                    const end = Math.min(fullList.length - 1, myRank + 2);
+                    for (let i = start; i <= end; i++) {
+                      lbMySection.push({
+                        ...fullList[i],
+                        isMe: i === myRank
+                      });
+                    }
+                    // 判断是否有间隔
+                    const hasGap = start > 3;
+                    this.setData({ lbHasGap: hasGap });
+                    myBestScore.rank = actualRank;
+                  }
+                } else {
+                  console.warn('[排行榜] 未能在排行榜中找到用户的虾，可能被过滤或未提交');
+                  lbHasNoData = true;
+                }
+              } else {
+                // 用户在此exam没有最佳成绩
+                console.log('[排行榜] 用户在此exam未参加过考试');
+                lbHasNoData = true;
+              }
             }
-            // 判断是否有间隔（本人区域与前三名不连续）
-            lbHasGap = start > 3;
-          } else {
-            // 本人在前3名中，标记一下
-            top3[myIdx].isMe = true;
+          } catch (e) {
+            console.warn('[排行榜] 获取用户最佳成绩失败:', e);
+            // 静默失败，只展示全局排行榜
           }
         }
 
         this.setData({
           leaderboard: top3,
           lbMySection,
-          lbMyRank,
-          lbHasGap,
+          lbMyRank: myRank >= 0 ? myRank + 1 : -1,
+          lbMyBest: myBestScore,
+          lbHasNoData,
           lbLoading: false,
           sortKey: 'rank',
           sortAsc: true

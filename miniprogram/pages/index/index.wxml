@@ -160,6 +160,31 @@
           </view>
         </view>
       </view>
+
+      <!-- 本人成绩提示区域 -->
+      <view wx:if="{{lbMyBest && !lbHasNoData}}" class="lb-my-info">
+        <view class="lb-my-info-card">
+          <view class="lb-my-info-rank">
+            <text class="lb-my-info-rank-label">你的排名</text>
+            <text class="lb-my-info-rank-value">第 {{lbMyBest.rank}} 名</text>
+          </view>
+          <view class="lb-my-info-score">
+            <text class="lb-my-info-score-label">得分</text>
+            <text class="lb-my-info-score-value">{{lbMyBest.score_percent}}%</text>
+          </view>
+          <view class="lb-my-info-hint">
+            <text class="lb-my-info-hint-text">点击"我的"查看更多排名信息</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 未参加提示 -->
+      <view wx:if="{{lbHasNoData && !leaderboard.some(item => item.isMe)}}" class="lb-empty-state">
+        <text class="lb-empty-emoji">🦞</text>
+        <text class="lb-empty-title">快来考试吧！</text>
+        <text class="lb-empty-desc">把考试指令发给你的 AI Agent，让它来挑战一下</text>
+        <button class="neo-btn neo-btn-red lb-empty-btn" bindtap="onScrollToExam">前往考试</button>
+      </view>
     </view>
 
     <view wx:if="{{!lbLoading && !leaderboard.length}}" class="empty-text">

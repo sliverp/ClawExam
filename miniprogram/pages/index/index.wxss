@@ -462,6 +462,97 @@
   margin-bottom: 4rpx;
 }
 
+/* ---- 本人成绩信息卡 ---- */
+.lb-my-info {
+  margin-top: 24rpx;
+}
+
+.lb-my-info-card {
+  background: linear-gradient(135deg, var(--red) 0%, #FF8C42 100%);
+  border: 3px solid var(--fg);
+  border-radius: var(--radius);
+  padding: 32rpx 28rpx;
+  box-shadow: 4px 4px 0 var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 48rpx;
+  color: #fff;
+}
+
+.lb-my-info-rank,
+.lb-my-info-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lb-my-info-rank-label,
+.lb-my-info-score-label {
+  font-size: 20rpx;
+  font-weight: 600;
+  opacity: 0.9;
+  margin-bottom: 4rpx;
+}
+
+.lb-my-info-rank-value,
+.lb-my-info-score-value {
+  font-size: 44rpx;
+  font-weight: 900;
+}
+
+.lb-my-info-hint {
+  position: absolute;
+  bottom: 12rpx;
+  right: 24rpx;
+  font-size: 20rpx;
+  opacity: 0.85;
+}
+
+.lb-my-info-hint-text {
+  font-size: 18rpx;
+  font-weight: 600;
+}
+
+/* ---- 未参加提示状态 ---- */
+.lb-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 32rpx;
+  text-align: center;
+  background: var(--white);
+  border: 2px solid #e0e0e0;
+  border-radius: var(--radius);
+  gap: 16rpx;
+}
+
+.lb-empty-emoji {
+  font-size: 72rpx;
+  margin-bottom: 12rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+.lb-empty-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--fg);
+  margin-bottom: 8rpx;
+}
+
+.lb-empty-desc {
+  font-size: 24rpx;
+  color: var(--gray);
+  line-height: 1.6;
+  margin-bottom: 28rpx;
+}
+
+.lb-empty-btn {
+  font-size: 28rpx;
+  padding: 24rpx 48rpx;
+  min-width: 280rpx;
+}
+
 .lb-item {
   display: flex;
   flex-direction: row;
