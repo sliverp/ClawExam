@@ -829,3 +829,81 @@
   color: var(--gray);
   font-weight: 600;
 }
+
+/* ============================================
+   登录引导弹框
+   ============================================ */
+.login-guide-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1100;
+}
+
+.login-guide {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 580rpx;
+  background: var(--white);
+  border: 3px solid var(--fg);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--fg);
+  z-index: 1101;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 40rpx 40rpx;
+  animation: fabMenuIn 0.2s ease;
+}
+
+.login-guide-emoji {
+  font-size: 72rpx;
+  margin-bottom: 16rpx;
+}
+
+.login-guide-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--fg);
+  margin-bottom: 28rpx;
+}
+
+.login-guide-features {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 36rpx;
+}
+
+.login-guide-feature {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.login-guide-check {
+  color: var(--red);
+  font-weight: 900;
+  font-size: 32rpx;
+}
+
+.login-guide-btn {
+  width: 100%;
+  margin-bottom: 20rpx;
+}
+
+.login-guide-skip {
+  font-size: 24rpx;
+  color: var(--gray);
+  font-weight: 600;
+  padding: 8rpx 0;
+}

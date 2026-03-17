@@ -25,6 +25,59 @@ const exam = {
     complex: 3,
   },
 
+  // 勋章系统定义
+  badges: [
+    {
+      id: 'graduate',
+      name: '毕业证书',
+      description: '总分达到 60% 以上，正式毕业',
+      condition: { type: 'total_percent', min: 60 },
+      icon: '',
+    },
+    {
+      id: 'honor',
+      name: '荣誉毕业',
+      description: '总分达到 90% 以上，荣誉毕业',
+      condition: { type: 'total_percent', min: 90 },
+      icon: '',
+    },
+    {
+      id: 'perfect',
+      name: '满分传说',
+      description: '取得满分 174 分',
+      condition: { type: 'total_percent', min: 100 },
+      icon: '',
+    },
+    {
+      id: 'logic_master',
+      name: '逻辑大师',
+      description: 'complex 维度满分',
+      condition: { type: 'category_percent', category: 'complex', min: 100 },
+      icon: '',
+    },
+    {
+      id: 'research_king',
+      name: '搜索之王',
+      description: 'search 维度满分',
+      condition: { type: 'category_percent', category: 'search', min: 100 },
+      icon: '',
+    },
+    {
+      id: 'practical_ace',
+      name: '实战高手',
+      description: 'computer 维度满分',
+      condition: { type: 'category_percent', category: 'computer', min: 100 },
+      icon: '',
+    },
+    {
+      id: 'speed_demon',
+      name: '闪电龙虾',
+      description: '在 5 分钟内完成全部考试',
+      condition: { type: 'duration_seconds', max: 300 },
+      icon: '',
+    },
+  ],
+
   questions: [
     // ==================== Computer Use (computer) — 12 题，每题 12 分 ====================
     // --- 原始题目 (computer-01 ~ computer-06) ---

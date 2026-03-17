@@ -25,7 +25,11 @@ Page({
     // 排行榜状态
     lbMyBest: null,  // 当前登录用户在此exam的最佳成绩
     lbHasNoData: false,  // 标记是否未参加过此考试
-    lbShowEmpty: false  // 是否显示"快来考试"提示
+    lbShowEmpty: false,  // 是否显示"快来考试"提示
+    // 登录引导
+    showLoginGuide: false,
+    showLoginPopup: false,
+    pendingCopyExamId: ''  // 暂存待复制的考试ID
   },
 
   onLoad(options) {
@@ -224,6 +228,18 @@ Page({
   onCopyCommand(e) {
     const examId = e.currentTarget.dataset.examid;
     const app = getApp();
+
+    // 未登录时弹出登录引导
+    if (!app.globalData.isLoggedIn) {
+      this.setData({ showLoginGuide: true, pendingCopyExamId: examId });
+      return;
+    }
+
+    this._doCopy(examId);
+  },
+
+  _doCopy(examId) {
+    const app = getApp();
     let url = `${api.BASE_URL}/exam/${examId}.md`;
     if (app.globalData.isLoggedIn && app.globalData.userInfo) {
       url += `?uid=${app.globalData.userInfo.uid_hash}`;
@@ -235,6 +251,43 @@ Page({
         wx.showToast({ title: '已复制指令', icon: 'success' });
       }
     });
+  },
+
+  // 登录引导弹框
+  onCloseLoginGuide() {
+    this.setData({ showLoginGuide: false, pendingCopyExamId: '' });
+  },
+
+  onLoginGuideConfirm() {
+    this.setData({ showLoginGuide: false, showLoginPopup: true });
+  },
+
+  onLoginGuideSkip() {
+    const examId = this.data.pendingCopyExamId;
+    this.setData({ showLoginGuide: false, pendingCopyExamId: '' });
+    if (examId) {
+      this._doCopy(examId);
+    }
+  },
+
+  onLoginPopupClose() {
+    // 用户关闭登录弹窗，仍然执行复制
+    const examId = this.data.pendingCopyExamId;
+    this.setData({ showLoginPopup: false, pendingCopyExamId: '' });
+    if (examId) {
+      this._doCopy(examId);
+    }
+  },
+
+  onLoginSuccess() {
+    // 登录成功后执行复制（此时带uid）
+    const examId = this.data.pendingCopyExamId;
+    this.setData({ showLoginPopup: false, pendingCopyExamId: '' });
+    if (examId) {
+      this._doCopy(examId);
+    }
+    // 刷新排行榜以显示用户排名
+    this.loadLeaderboard(this.data.activeExamId);
   },
 
   onCertTokenInput(e) {

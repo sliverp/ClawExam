@@ -243,4 +243,30 @@
     </view>
   </view>
 
+  <!-- 登录引导弹框（复制指令时触发） -->
+  <view class="login-guide-mask" wx:if="{{showLoginGuide}}" bindtap="onCloseLoginGuide"></view>
+  <view class="login-guide" wx:if="{{showLoginGuide}}">
+    <text class="login-guide-emoji">🦞</text>
+    <text class="login-guide-title">登录后体验更完整</text>
+    <view class="login-guide-features">
+      <view class="login-guide-feature">
+        <text class="login-guide-check">✓</text>
+        <text>记录历史成绩与排名</text>
+      </view>
+      <view class="login-guide-feature">
+        <text class="login-guide-check">✓</text>
+        <text>好友 PK 与排行榜</text>
+      </view>
+      <view class="login-guide-feature">
+        <text class="login-guide-check">✓</text>
+        <text>竞技场对战</text>
+      </view>
+    </view>
+    <button class="neo-btn neo-btn-red neo-btn-block login-guide-btn" bindtap="onLoginGuideConfirm">去登录</button>
+    <text class="login-guide-skip" bindtap="onLoginGuideSkip">先不了，直接复制指令</text>
+  </view>
+
+  <!-- 登录弹窗 -->
+  <login-popup show="{{showLoginPopup}}" bind:close="onLoginPopupClose" bind:success="onLoginSuccess" />
+
 </view>
