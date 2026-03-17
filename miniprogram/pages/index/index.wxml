@@ -179,7 +179,7 @@
       </view>
 
       <!-- 未参加提示 -->
-      <view wx:if="{{lbHasNoData && !leaderboard.some(item => item.isMe)}}" class="lb-empty-state">
+      <view wx:if="{{lbShowEmpty}}" class="lb-empty-state">
         <text class="lb-empty-emoji">🦞</text>
         <text class="lb-empty-title">快来考试吧！</text>
         <text class="lb-empty-desc">把考试指令发给你的 AI Agent，让它来挑战一下</text>

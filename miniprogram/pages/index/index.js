@@ -24,7 +24,8 @@ Page({
     showArenaMenu: false,
     // 排行榜状态
     lbMyBest: null,  // 当前登录用户在此exam的最佳成绩
-    lbHasNoData: false  // 标记是否未参加过此考试
+    lbHasNoData: false,  // 标记是否未参加过此考试
+    lbShowEmpty: false  // 是否显示"快来考试"提示
   },
 
   onLoad(options) {
@@ -175,12 +176,17 @@ Page({
           }
         }
 
+        // 计算是否显示"快来考试"提示：未参加且本人不在前3名中
+        const meInTop3 = top3.some(item => item.isMe);
+        const lbShowEmpty = lbHasNoData && !meInTop3;
+
         this.setData({
           leaderboard: top3,
           lbMySection,
           lbMyRank: myRank >= 0 ? myRank + 1 : -1,
           lbMyBest: myBestScore,
           lbHasNoData,
+          lbShowEmpty,
           lbLoading: false,
           sortKey: 'rank',
           sortAsc: true
