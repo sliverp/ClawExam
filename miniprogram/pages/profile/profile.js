@@ -16,7 +16,7 @@ Page({
   async onShow() {
     const app = getApp();
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 4 });
+      this.getTabBar().setData({ selected: 2 });
     }
 
     // 等登录状态验证完成

@@ -5,6 +5,9 @@ Page({
   data: {
     exams: [],
     leaderboard: [],
+    lbMySection: [],
+    lbMyRank: -1,
+    lbHasGap: false,
     activeExamId: '',
     certToken: '',
     loading: true,
@@ -16,7 +19,9 @@ Page({
     totalExams: 0,
     totalAnswers: 0,
     totalTypes: 0,
-    totalModels: 0
+    totalModels: 0,
+    // 竞技场菜单
+    showArenaMenu: false
   },
 
   onLoad(options) {
@@ -83,18 +88,63 @@ Page({
   },
 
   async loadLeaderboard(examId) {
-    this.setData({ lbLoading: true, leaderboard: [] });
+    this.setData({ lbLoading: true, leaderboard: [], lbMySection: [], lbMyRank: -1, lbHasGap: false });
     try {
       const res = await api.getLeaderboard(examId);
       console.log('[排行榜] examId:', examId, 'response:', JSON.stringify(res).slice(0, 500));
       if (res && res.ok) {
-        const leaderboard = (res.leaderboard || []).slice(0, 20).map((item, idx) => ({
+        const fullList = (res.leaderboard || []).map((item, idx) => ({
           ...item,
           rank: item.rank || idx + 1,
           durationText: util.formatDuration(item.duration_seconds),
           percentText: Number(item.score_percent || 0).toFixed(1)
         }));
-        this.setData({ leaderboard, lbLoading: false, sortKey: 'rank', sortAsc: true });
+
+        // 前三名
+        const top3 = fullList.slice(0, 3);
+
+        // 查找本人在排行榜中的位置
+        const app = getApp();
+        const myUid = app.globalData.userInfo?.uid_hash || '';
+        let myIdx = -1;
+        if (myUid) {
+          myIdx = fullList.findIndex(item => item.uid_hash === myUid);
+        }
+
+        let lbMySection = [];
+        let lbMyRank = -1;
+        let lbHasGap = false;
+
+        if (myIdx >= 0) {
+          lbMyRank = fullList[myIdx].rank;
+          // 如果本人在前3名内，不需要额外展示
+          if (myIdx >= 3) {
+            // 本人前后2位
+            const start = Math.max(3, myIdx - 2);
+            const end = Math.min(fullList.length - 1, myIdx + 2);
+            for (let i = start; i <= end; i++) {
+              lbMySection.push({
+                ...fullList[i],
+                isMe: i === myIdx
+              });
+            }
+            // 判断是否有间隔（本人区域与前三名不连续）
+            lbHasGap = start > 3;
+          } else {
+            // 本人在前3名中，标记一下
+            top3[myIdx].isMe = true;
+          }
+        }
+
+        this.setData({
+          leaderboard: top3,
+          lbMySection,
+          lbMyRank,
+          lbHasGap,
+          lbLoading: false,
+          sortKey: 'rank',
+          sortAsc: true
+        });
       } else {
         console.warn('[排行榜] 返回非 ok:', res);
         this.setData({ lbLoading: false });
@@ -176,6 +226,24 @@ Page({
       return sortAsc ? va - vb : vb - va;
     });
     this.setData({ leaderboard, sortKey, sortAsc });
+  },
+
+  onOpenArenaMenu() {
+    this.setData({ showArenaMenu: true });
+  },
+
+  onCloseArenaMenu() {
+    this.setData({ showArenaMenu: false });
+  },
+
+  onGoArenaList() {
+    this.setData({ showArenaMenu: false });
+    wx.navigateTo({ url: '/pages/arena-list/arena-list' });
+  },
+
+  onGoFriends() {
+    this.setData({ showArenaMenu: false });
+    wx.navigateTo({ url: '/pages/friends/friends' });
   },
 
   onShareAppMessage(e) {

@@ -82,7 +82,7 @@
 
   <!-- 装饰分割 -->
   <view class="divider-strip">
-    <text>🏆 TOP 20 排行榜 🏆</text>
+    <text>🏆 排行榜 🏆</text>
   </view>
 
   <!-- 排行榜 -->
@@ -107,37 +107,46 @@
       <!-- 前三名领奖台 -->
       <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
         <!-- 第2名 -->
-        <view class="podium-item podium-2" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
+        <view class="podium-item podium-2 {{leaderboard[1].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
           <text class="podium-medal">🥈</text>
           <text class="podium-name">{{leaderboard[1].claw_name}}</text>
           <text class="podium-score">{{leaderboard[1].percentText}}%</text>
+          <text class="podium-me-tag" wx:if="{{leaderboard[1].isMe}}">我</text>
           <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
         </view>
         <!-- 第1名 -->
-        <view class="podium-item podium-1" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
+        <view class="podium-item podium-1 {{leaderboard[0].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
           <text class="podium-crown">👑</text>
           <text class="podium-name">{{leaderboard[0].claw_name}}</text>
           <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
+          <text class="podium-me-tag" wx:if="{{leaderboard[0].isMe}}">我</text>
           <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
         </view>
         <!-- 第3名 -->
-        <view class="podium-item podium-3" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
+        <view class="podium-item podium-3 {{leaderboard[2].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
           <text class="podium-medal">🥉</text>
           <text class="podium-name">{{leaderboard[2].claw_name}}</text>
           <text class="podium-score">{{leaderboard[2].percentText}}%</text>
+          <text class="podium-me-tag" wx:if="{{leaderboard[2].isMe}}">我</text>
           <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
         </view>
       </view>
 
-      <!-- 第4名开始的列表 -->
-      <view class="lb-rest-list">
-        <view class="lb-item neo-card" wx:for="{{leaderboard}}" wx:key="rank" wx:if="{{index >= 3}}" bindtap="onViewCert" data-token="{{item.session_id}}">
-          <view class="lb-rank">
+      <!-- 本人排名区域（本人不在前3时显示） -->
+      <view wx:if="{{lbMySection.length}}" class="lb-my-section">
+        <!-- 间隔省略号 -->
+        <view class="lb-gap" wx:if="{{lbHasGap}}">
+          <text class="lb-gap-dots">···</text>
+        </view>
+        <!-- 本人前后排名 -->
+        <view class="lb-item neo-card {{item.isMe ? 'lb-item-me' : ''}}" wx:for="{{lbMySection}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id}}">
+          <view class="lb-rank {{item.isMe ? 'lb-rank-me' : ''}}">
             <text class="lb-rank-num">{{item.rank}}</text>
           </view>
           <view class="lb-info">
             <view class="lb-name-row">
               <text class="lb-name">{{item.claw_name}}</text>
+              <text class="neo-tag lb-me-tag" wx:if="{{item.isMe}}">我</text>
               <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
             </view>
             <view class="lb-score-row">
@@ -147,10 +156,6 @@
                 </view>
               </view>
               <text class="lb-score-text">{{item.percentText}}%</text>
-            </view>
-            <view class="lb-bottom">
-              <text class="lb-meta-text">{{item.claw_type}} · ⏱ {{item.durationText}}</text>
-              <text class="lb-cert-link">证书 →</text>
             </view>
           </view>
         </view>
@@ -186,6 +191,31 @@
   <!-- Footer -->
   <view class="footer">
     <text class="footer-text">考了个虾 · 你的虾到底行不行？</text>
+  </view>
+
+  <!-- 竞技场悬浮按钮 -->
+  <view class="fab-arena" bindtap="onOpenArenaMenu">
+    <text class="fab-arena-icon">⚔️</text>
+    <text class="fab-arena-text">竞技场</text>
+  </view>
+
+  <!-- 竞技场菜单弹层 -->
+  <view class="fab-mask" wx:if="{{showArenaMenu}}" bindtap="onCloseArenaMenu"></view>
+  <view class="fab-menu {{showArenaMenu ? 'fab-menu-show' : ''}}" wx:if="{{showArenaMenu}}">
+    <view class="fab-menu-item" bindtap="onGoArenaList">
+      <text class="fab-menu-item-icon">⚔️</text>
+      <view class="fab-menu-item-info">
+        <text class="fab-menu-item-title">竞技对战</text>
+        <text class="fab-menu-item-desc">创建或加入竞技场</text>
+      </view>
+    </view>
+    <view class="fab-menu-item" bindtap="onGoFriends">
+      <text class="fab-menu-item-icon">👥</text>
+      <view class="fab-menu-item-info">
+        <text class="fab-menu-item-title">好友排行</text>
+        <text class="fab-menu-item-desc">和好友比比谁更强</text>
+      </view>
+    </view>
   </view>
 
 </view>

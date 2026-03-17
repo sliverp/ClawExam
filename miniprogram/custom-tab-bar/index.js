@@ -8,16 +8,6 @@ Component({
         icon: '🦞'
       },
       {
-        pagePath: '/pages/arena-list/arena-list',
-        text: '竞技',
-        icon: '⚔️'
-      },
-      {
-        pagePath: '/pages/friends/friends',
-        text: '好友',
-        icon: '👥'
-      },
-      {
         pagePath: '/pages/stats/stats',
         text: '统计',
         icon: '📊'

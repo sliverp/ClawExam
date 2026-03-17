@@ -27,14 +27,6 @@
         "text": "首页"
       },
       {
-        "pagePath": "pages/arena-list/arena-list",
-        "text": "竞技场"
-      },
-      {
-        "pagePath": "pages/friends/friends",
-        "text": "好友榜"
-      },
-      {
         "pagePath": "pages/stats/stats",
         "text": "统计"
       },

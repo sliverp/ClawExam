@@ -15,9 +15,6 @@ Page({
 
   async onShow() {
     const app = getApp();
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 1 });
-    }
 
     // 等登录状态验证完成
     if (app.globalData.loginReady) {

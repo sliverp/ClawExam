@@ -403,6 +403,65 @@
   gap: 20rpx;
 }
 
+/* ---- 本人排名区域 ---- */
+.lb-my-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.lb-gap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0;
+}
+
+.lb-gap-dots {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #ccc;
+  letter-spacing: 8rpx;
+}
+
+.lb-item-me {
+  border-color: var(--red) !important;
+  box-shadow: 4px 4px 0 var(--red) !important;
+}
+
+.lb-rank-me {
+  background: var(--red) !important;
+}
+
+.lb-rank-me .lb-rank-num {
+  color: #fff;
+}
+
+.lb-me-tag {
+  font-size: 18rpx;
+  padding: 2rpx 12rpx;
+  background: var(--red) !important;
+  color: #fff !important;
+  flex-shrink: 0;
+}
+
+/* 领奖台"我"标记 */
+.podium-me {
+  position: relative;
+}
+
+.podium-me-tag {
+  display: inline-block;
+  font-size: 18rpx;
+  font-weight: 800;
+  background: var(--red);
+  color: #fff;
+  padding: 2rpx 16rpx;
+  border-radius: 20rpx;
+  border: 2px solid var(--fg);
+  margin-bottom: 4rpx;
+}
+
 .lb-item {
   display: flex;
   flex-direction: row;
@@ -573,4 +632,109 @@
 .cert-search-btn {
   flex-shrink: 0;
   height: 80rpx;
+}
+
+/* ============================================
+   竞技场悬浮按钮
+   ============================================ */
+.fab-arena {
+  position: fixed;
+  left: 40rpx;
+  bottom: calc(180rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: var(--fg);
+  color: #fff;
+  padding: 20rpx 32rpx;
+  border-radius: 100rpx;
+  border: 3px solid var(--fg);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+  z-index: 998;
+  transition: all 0.15s ease;
+}
+
+.fab-arena:active {
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  transform: translate(2px, 2px);
+}
+
+.fab-arena-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.fab-arena-text {
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+}
+
+/* 遮罩 */
+.fab-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+}
+
+/* 弹出菜单 */
+.fab-menu {
+  position: fixed;
+  left: 40rpx;
+  bottom: calc(260rpx + env(safe-area-inset-bottom));
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  animation: fabMenuIn 0.2s ease;
+}
+
+@keyframes fabMenuIn {
+  from { opacity: 0; transform: translateY(20rpx) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: var(--white);
+  border: 3px solid var(--fg);
+  border-radius: var(--radius);
+  padding: 28rpx 32rpx;
+  box-shadow: 4px 4px 0 var(--fg);
+  min-width: 360rpx;
+  transition: all 0.1s ease;
+}
+
+.fab-menu-item:active {
+  box-shadow: 2px 2px 0 var(--fg);
+  transform: translate(2px, 2px);
+}
+
+.fab-menu-item-icon {
+  font-size: 44rpx;
+  flex-shrink: 0;
+}
+
+.fab-menu-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.fab-menu-item-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--fg);
+  margin-bottom: 4rpx;
+}
+
+.fab-menu-item-desc {
+  font-size: 22rpx;
+  color: var(--gray);
+  font-weight: 600;
 }
