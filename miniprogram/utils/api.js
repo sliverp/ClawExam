@@ -78,8 +78,11 @@ function getExam(examId) {
   return request(`/api/exams/${examId}`);
 }
 
-function getLeaderboard(examId) {
-  const query = examId ? `?exam_id=${examId}` : '';
+function getLeaderboard(examId, uid) {
+  let query = examId ? `?exam_id=${examId}` : '';
+  if (uid) {
+    query += (query ? '&' : '?') + `uid=${uid}`;
+  }
   return request(`/api/leaderboard${query}`);
 }
 

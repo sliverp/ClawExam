@@ -23,9 +23,8 @@ Page({
     // 竞技场菜单
     showArenaMenu: false,
     // 排行榜状态
-    lbMyBest: null,  // 当前登录用户在此exam的最佳成绩
-    lbHasNoData: false,  // 标记是否未参加过此考试
-    lbShowEmpty: false,  // 是否显示"快来考试"提示
+    lbHasRecord: false,  // 当前登录用户是否在此exam有排行记录
+    lbTotalCount: 0,     // 排行榜总人数
     // 登录引导
     showLoginGuide: false,
     showLoginPopup: false,
@@ -102,95 +101,35 @@ Page({
       lbMySection: [], 
       lbMyRank: -1, 
       lbHasGap: false,
-      lbMyBest: null,
-      lbHasNoData: false
+      lbHasRecord: false,
+      lbTotalCount: 0
     });
     try {
-      const res = await api.getLeaderboard(examId);
-      console.log('[排行榜] examId:', examId, 'response:', JSON.stringify(res).slice(0, 500));
+      const app = getApp();
+      const uid = app.globalData.isLoggedIn ? (app.globalData.userInfo?.uid_hash || '') : '';
+      const res = await api.getLeaderboard(examId, uid);
+      console.log('[排行榜] examId:', examId, 'uid:', uid, 'response:', JSON.stringify(res).slice(0, 500));
       if (res && res.ok) {
-        const fullList = (res.leaderboard || []).map((item, idx) => ({
+        const formatItem = (item) => ({
           ...item,
-          rank: item.rank || idx + 1,
           durationText: util.formatDuration(item.duration_seconds),
           percentText: Number(item.score_percent || 0).toFixed(1)
-        }));
+        });
 
-        // 前三名
-        const top3 = fullList.slice(0, 3);
-
-        // 如果登录了，获取用户自己的最佳成绩
-        const app = getApp();
-        let myBestScore = null;
-        let myRank = -1;
-        let lbMySection = [];
-        let lbHasNoData = false;
-
-        if (app.globalData.isLoggedIn) {
-          try {
-            const scoresRes = await api.getMyBestScores();
-            if (scoresRes && scoresRes.ok && scoresRes.scores) {
-              // 找到当前exam的最佳成绩
-              myBestScore = scoresRes.scores.find(s => s.exam_id === examId);
-              
-              if (myBestScore) {
-                // 在排行榜中查找匹配的位置（基于score_percent和duration_seconds）
-                myRank = fullList.findIndex(item => 
-                  Math.abs(item.score_percent - myBestScore.score_percent) < 0.01 &&
-                  item.duration_seconds === myBestScore.duration_seconds &&
-                  item.claw_name === myBestScore.claw_name
-                );
-
-                if (myRank >= 0) {
-                  const actualRank = myRank + 1;
-                  console.log('[排行榜] 找到用户的虾在排行榜中的位置:', actualRank);
-                  
-                  // 如果本人在前3名内，标记一下
-                  if (myRank < 3) {
-                    top3[myRank].isMe = true;
-                    myBestScore.rank = actualRank;
-                  } else {
-                    // 本人不在前3名，展示本人前后各2位
-                    const start = Math.max(3, myRank - 2);
-                    const end = Math.min(fullList.length - 1, myRank + 2);
-                    for (let i = start; i <= end; i++) {
-                      lbMySection.push({
-                        ...fullList[i],
-                        isMe: i === myRank
-                      });
-                    }
-                    // 判断是否有间隔
-                    const hasGap = start > 3;
-                    this.setData({ lbHasGap: hasGap });
-                    myBestScore.rank = actualRank;
-                  }
-                } else {
-                  console.warn('[排行榜] 未能在排行榜中找到用户的虾，可能被过滤或未提交');
-                  lbHasNoData = true;
-                }
-              } else {
-                // 用户在此exam没有最佳成绩
-                console.log('[排行榜] 用户在此exam未参加过考试');
-                lbHasNoData = true;
-              }
-            }
-          } catch (e) {
-            console.warn('[排行榜] 获取用户最佳成绩失败:', e);
-            // 静默失败，只展示全局排行榜
-          }
-        }
-
-        // 计算是否显示"快来考试"提示：未参加且本人不在前3名中
-        const meInTop3 = top3.some(item => item.isMe);
-        const lbShowEmpty = lbHasNoData && !meInTop3;
+        const leaderboard = (res.leaderboard || []).map(formatItem);
+        const lbMySection = (res.my_section || []).map(formatItem);
+        const lbMyRank = res.my_rank || -1;
+        const lbHasGap = res.has_gap || false;
+        const lbHasRecord = res.has_record || false;
+        const lbTotalCount = res.total_count || 0;
 
         this.setData({
-          leaderboard: top3,
+          leaderboard,
           lbMySection,
-          lbMyRank: myRank >= 0 ? myRank + 1 : -1,
-          lbMyBest: myBestScore,
-          lbHasNoData,
-          lbShowEmpty,
+          lbMyRank,
+          lbHasGap,
+          lbHasRecord,
+          lbTotalCount,
           lbLoading: false,
           sortKey: 'rank',
           sortAsc: true

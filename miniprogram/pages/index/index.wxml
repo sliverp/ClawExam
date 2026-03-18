@@ -104,87 +104,136 @@
 
     <!-- 排行榜列表 -->
     <view wx:if="{{!lbLoading && leaderboard.length}}" class="lb-list">
-      <!-- 前三名领奖台 -->
-      <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
-        <!-- 第2名 -->
-        <view class="podium-item podium-2 {{leaderboard[1].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
-          <text class="podium-medal">🥈</text>
-          <text class="podium-name">{{leaderboard[1].claw_name}}</text>
-          <text class="podium-score">{{leaderboard[1].percentText}}%</text>
-          <text class="podium-me-tag" wx:if="{{leaderboard[1].isMe}}">我</text>
-          <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
-        </view>
-        <!-- 第1名 -->
-        <view class="podium-item podium-1 {{leaderboard[0].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
-          <text class="podium-crown">👑</text>
-          <text class="podium-name">{{leaderboard[0].claw_name}}</text>
-          <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
-          <text class="podium-me-tag" wx:if="{{leaderboard[0].isMe}}">我</text>
-          <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
-        </view>
-        <!-- 第3名 -->
-        <view class="podium-item podium-3 {{leaderboard[2].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
-          <text class="podium-medal">🥉</text>
-          <text class="podium-name">{{leaderboard[2].claw_name}}</text>
-          <text class="podium-score">{{leaderboard[2].percentText}}%</text>
-          <text class="podium-me-tag" wx:if="{{leaderboard[2].isMe}}">我</text>
-          <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
-        </view>
-      </view>
 
-      <!-- 本人排名区域（本人不在前3时显示） -->
-      <view wx:if="{{lbMySection.length}}" class="lb-my-section">
-        <!-- 间隔省略号 -->
-        <view class="lb-gap" wx:if="{{lbHasGap}}">
-          <text class="lb-gap-dots">···</text>
-        </view>
-        <!-- 本人前后排名 -->
-        <view class="lb-item neo-card {{item.isMe ? 'lb-item-me' : ''}}" wx:for="{{lbMySection}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id}}">
-          <view class="lb-rank {{item.isMe ? 'lb-rank-me' : ''}}">
-            <text class="lb-rank-num">{{item.rank}}</text>
+      <!-- ====== 模式A：有记录 → 前3领奖台 + 用户上下文 ====== -->
+      <block wx:if="{{lbHasRecord}}">
+        <!-- 前三名领奖台 -->
+        <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
+          <!-- 第2名 -->
+          <view class="podium-item podium-2 {{leaderboard[1].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
+            <text class="podium-medal">🥈</text>
+            <text class="podium-name">{{leaderboard[1].claw_name}}</text>
+            <text class="podium-score">{{leaderboard[1].percentText}}%</text>
+            <text class="podium-me-tag" wx:if="{{leaderboard[1].isMe}}">我</text>
+            <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
           </view>
-          <view class="lb-info">
-            <view class="lb-name-row">
-              <text class="lb-name">{{item.claw_name}}</text>
-              <text class="neo-tag lb-me-tag" wx:if="{{item.isMe}}">我</text>
-              <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
+          <!-- 第1名 -->
+          <view class="podium-item podium-1 {{leaderboard[0].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
+            <text class="podium-crown">👑</text>
+            <text class="podium-name">{{leaderboard[0].claw_name}}</text>
+            <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
+            <text class="podium-me-tag" wx:if="{{leaderboard[0].isMe}}">我</text>
+            <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
+          </view>
+          <!-- 第3名 -->
+          <view class="podium-item podium-3 {{leaderboard[2].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
+            <text class="podium-medal">🥉</text>
+            <text class="podium-name">{{leaderboard[2].claw_name}}</text>
+            <text class="podium-score">{{leaderboard[2].percentText}}%</text>
+            <text class="podium-me-tag" wx:if="{{leaderboard[2].isMe}}">我</text>
+            <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
+          </view>
+        </view>
+
+        <!-- 本人排名区域（本人不在前3时显示） -->
+        <view wx:if="{{lbMySection.length}}" class="lb-my-section">
+          <!-- 间隔省略号 -->
+          <view class="lb-gap" wx:if="{{lbHasGap}}">
+            <text class="lb-gap-dots">···</text>
+          </view>
+          <!-- 本人前后排名 -->
+          <view class="lb-item neo-card {{item.isMe ? 'lb-item-me' : ''}}" wx:for="{{lbMySection}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id}}">
+            <view class="lb-rank {{item.isMe ? 'lb-rank-me' : ''}}">
+              <text class="lb-rank-num">{{item.rank}}</text>
             </view>
-            <view class="lb-score-row">
-              <view class="lb-score-bar">
-                <view class="progress-bar">
-                  <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
-                </view>
+            <view class="lb-info">
+              <view class="lb-name-row">
+                <text class="lb-name">{{item.claw_name}}</text>
+                <text class="neo-tag lb-me-tag" wx:if="{{item.isMe}}">我</text>
+                <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
               </view>
-              <text class="lb-score-text">{{item.percentText}}%</text>
+              <view class="lb-score-row">
+                <view class="lb-score-bar">
+                  <view class="progress-bar">
+                    <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
+                  </view>
+                </view>
+                <text class="lb-score-text">{{item.percentText}}%</text>
+              </view>
             </view>
           </view>
         </view>
-      </view>
 
-      <!-- 本人成绩提示区域 -->
-      <view wx:if="{{lbMyBest && !lbHasNoData}}" class="lb-my-info">
-        <view class="lb-my-info-card">
-          <view class="lb-my-info-rank">
-            <text class="lb-my-info-rank-label">你的排名</text>
-            <text class="lb-my-info-rank-value">第 {{lbMyBest.rank}} 名</text>
-          </view>
-          <view class="lb-my-info-score">
-            <text class="lb-my-info-score-label">得分</text>
-            <text class="lb-my-info-score-value">{{lbMyBest.score_percent}}%</text>
-          </view>
-          <view class="lb-my-info-hint">
-            <text class="lb-my-info-hint-text">点击"我的"查看更多排名信息</text>
+        <!-- 用户在前3时展示排名信息 -->
+        <view wx:if="{{lbMyRank > 0 && lbMyRank <= 3}}" class="lb-my-info">
+          <view class="lb-my-info-card">
+            <view class="lb-my-info-rank">
+              <text class="lb-my-info-rank-label">你的排名</text>
+              <text class="lb-my-info-rank-value">第 {{lbMyRank}} 名</text>
+            </view>
+            <view class="lb-my-info-score">
+              <text class="lb-my-info-score-label">共</text>
+              <text class="lb-my-info-score-value">{{lbTotalCount}} 名</text>
+            </view>
           </view>
         </view>
-      </view>
+      </block>
 
-      <!-- 未参加提示 -->
-      <view wx:if="{{lbShowEmpty}}" class="lb-empty-state">
-        <text class="lb-empty-emoji">🦞</text>
-        <text class="lb-empty-title">快来考试吧！</text>
-        <text class="lb-empty-desc">把考试指令发给你的 AI Agent，让它来挑战一下</text>
-        <button class="neo-btn neo-btn-red lb-empty-btn" bindtap="onScrollToExam">前往考试</button>
-      </view>
+      <!-- ====== 模式B：无记录 → 前10名列表 ====== -->
+      <block wx:else>
+        <!-- 前三名领奖台 -->
+        <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
+          <view class="podium-item podium-2" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
+            <text class="podium-medal">🥈</text>
+            <text class="podium-name">{{leaderboard[1].claw_name}}</text>
+            <text class="podium-score">{{leaderboard[1].percentText}}%</text>
+            <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
+          </view>
+          <view class="podium-item podium-1" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
+            <text class="podium-crown">👑</text>
+            <text class="podium-name">{{leaderboard[0].claw_name}}</text>
+            <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
+            <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
+          </view>
+          <view class="podium-item podium-3" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
+            <text class="podium-medal">🥉</text>
+            <text class="podium-name">{{leaderboard[2].claw_name}}</text>
+            <text class="podium-score">{{leaderboard[2].percentText}}%</text>
+            <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
+          </view>
+        </view>
+
+        <!-- 第4-10名列表 -->
+        <view class="lb-rest-list" wx:if="{{leaderboard.length > 3}}">
+          <view class="lb-item neo-card" wx:for="{{leaderboard}}" wx:if="{{index >= 3}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id}}">
+            <view class="lb-rank">
+              <text class="lb-rank-num">{{item.rank}}</text>
+            </view>
+            <view class="lb-info">
+              <view class="lb-name-row">
+                <text class="lb-name">{{item.claw_name}}</text>
+                <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
+              </view>
+              <view class="lb-score-row">
+                <view class="lb-score-bar">
+                  <view class="progress-bar">
+                    <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
+                  </view>
+                </view>
+                <text class="lb-score-text">{{item.percentText}}%</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 未参加提示 -->
+        <view class="lb-empty-state">
+          <text class="lb-empty-emoji">🦞</text>
+          <text class="lb-empty-title">快来考试吧！</text>
+          <text class="lb-empty-desc">把考试指令发给你的 AI Agent，让它来挑战一下</text>
+          <button class="neo-btn neo-btn-red lb-empty-btn" bindtap="onScrollToExam">前往考试</button>
+        </view>
+      </block>
     </view>
 
     <view wx:if="{{!lbLoading && !leaderboard.length}}" class="empty-text">

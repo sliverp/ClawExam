@@ -388,58 +388,124 @@ router.get('/result/:exam_token', async (req, res) => {
   }
 });
 
-// GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选，带 Redis 缓存 + singleflight 防击穿）
+// GET /api/leaderboard?exam_id=v1&uid=xxx — 排行榜（带 Redis 缓存 + singleflight 防击穿）
+// uid 可选：传入时返回 top3 + 用户上下文（前后各2名），不传时返回 top10
 router.get('/leaderboard', async (req, res) => {
   try {
     const examId = req.query.exam_id;
+    const uid = req.query.uid || null;
     const cacheKey = `leaderboard:${examId || 'all'}`;
 
-    // 1. 尝试命中缓存（直接拿原始 JSON 字符串，跳过 parse + stringify）
+    // 1. 先获取完整排行榜（缓存 or DB）
+    let fullData;
     const cachedRaw = await cache.getRaw(cacheKey);
     if (cachedRaw) {
-      return res.type('json').send(cachedRaw);
+      fullData = JSON.parse(cachedRaw);
+    } else {
+      fullData = await cache.singleflight(cacheKey, async () => {
+        const cached2 = await cache.get(cacheKey);
+        if (cached2) return cached2;
+
+        let rows;
+        if (examId) {
+          rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 500', [examId]);
+        } else {
+          rows = await db.all('SELECT * FROM leaderboard LIMIT 500');
+        }
+
+        const examMeta = examId ? getExam(examId) : null;
+        if (rows.length === 0) {
+          return { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] };
+        }
+
+        const leaderboard = rows.map((r, i) => ({
+          rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
+          claw_type: r.claw_type || 'OpenClaw',
+          model_name: r.model_name, owner_name: r.owner_name,
+          skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
+          session_id: r.session_id,
+          total_score: r.total_score, total_max_score: r.total_max_score,
+          answered_count: r.answered_count, score_percent: r.score_percent || 0,
+          duration_seconds: r.duration_seconds || 0,
+          started_at: r.started_at,
+        }));
+
+        const data = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
+        await cache.set(cacheKey, data, 60);
+        return data;
+      });
     }
 
-    // 2. 缓存未命中，singleflight 保证同一 key 只有一个请求去查 DB
-    const result = await cache.singleflight(cacheKey, async () => {
-      // 再查一次缓存（可能前一个 singleflight 已经写入了）
-      const cached2 = await cache.get(cacheKey);
-      if (cached2) return cached2;
+    // 2. 根据 uid 构建返回结果
+    const allItems = fullData.leaderboard || [];
 
-      let rows;
-      if (examId) {
-        rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 100', [examId]);
+    if (uid && allItems.length > 0) {
+      // 查找用户在此考试的最佳成绩对应的 session_id
+      const userBest = await db.get(
+        'SELECT best_session_id, best_percent, best_duration, claw_name FROM user_best_scores WHERE uid_hash = ? AND exam_id = ?',
+        [uid, examId]
+      );
+
+      let myIndex = -1;
+      if (userBest) {
+        myIndex = allItems.findIndex(item => item.session_id === userBest.best_session_id);
+      }
+
+      // 前3名
+      const top3 = allItems.slice(0, 3);
+
+      if (myIndex >= 0) {
+        // 标记"我"在 top3 中
+        if (myIndex < 3) {
+          top3[myIndex] = { ...top3[myIndex], isMe: true };
+        }
+
+        // 用户不在前3，构建上下文区域（前2 + 自己 + 后2）
+        let mySection = [];
+        let hasGap = false;
+        if (myIndex >= 3) {
+          const start = Math.max(3, myIndex - 2);
+          const end = Math.min(allItems.length - 1, myIndex + 2);
+          for (let i = start; i <= end; i++) {
+            mySection.push({ ...allItems[i], isMe: i === myIndex });
+          }
+          hasGap = start > 3;
+        }
+
+        res.json({
+          ok: true,
+          exam_id: fullData.exam_id,
+          exam_name: fullData.exam_name,
+          leaderboard: top3,
+          my_rank: myIndex + 1,
+          my_section: mySection,
+          has_gap: hasGap,
+          has_record: true,
+          total_count: allItems.length,
+        });
       } else {
-        rows = await db.all('SELECT * FROM leaderboard LIMIT 100');
+        // 用户没有记录或不在排行榜中，返回前10
+        res.json({
+          ok: true,
+          exam_id: fullData.exam_id,
+          exam_name: fullData.exam_name,
+          leaderboard: allItems.slice(0, 10),
+          my_rank: -1,
+          my_section: [],
+          has_gap: false,
+          has_record: false,
+          total_count: allItems.length,
+        });
       }
-
-      if (rows.length === 0) {
-        const examMeta = examId ? getExam(examId) : null;
-        return { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] };
-      }
-
-      const examMeta = examId ? getExam(examId) : null;
-      const leaderboard = rows.map((r, i) => ({
-        rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
-        claw_type: r.claw_type || 'OpenClaw',
-        model_name: r.model_name, owner_name: r.owner_name,
-        skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
-        session_id: r.session_id,
-        total_score: r.total_score, total_max_score: r.total_max_score,
-        answered_count: r.answered_count, score_percent: r.score_percent || 0,
-        duration_seconds: r.duration_seconds || 0,
-        started_at: r.started_at,
-      }));
-
-      const data = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
-
-      // 写入缓存，TTL 60s
-      await cache.set(cacheKey, data, 60);
-
-      return data;
-    });
-
-    res.json(result);
+    } else {
+      // 未传 uid（web 页面），返回完整列表，保持向后兼容
+      res.json({
+        ok: true,
+        exam_id: fullData.exam_id,
+        exam_name: fullData.exam_name,
+        leaderboard: allItems,
+      });
+    }
   } catch (err) {
     console.error('获取排行榜失败:', err);
     res.status(500).json({ ok: false, error: err.message });
