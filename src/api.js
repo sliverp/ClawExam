@@ -498,12 +498,12 @@ router.get('/leaderboard', async (req, res) => {
         });
       }
     } else {
-      // 未传 uid（web 页面），返回完整列表，保持向后兼容
+      // 未传 uid（web 页面），返回前100条
       res.json({
         ok: true,
         exam_id: fullData.exam_id,
         exam_name: fullData.exam_name,
-        leaderboard: allItems,
+        leaderboard: allItems.slice(0, 100),
       });
     }
   } catch (err) {

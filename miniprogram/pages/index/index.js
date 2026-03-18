@@ -116,11 +116,13 @@ Page({
           percentText: Number(item.score_percent || 0).toFixed(1)
         });
 
-        const leaderboard = (res.leaderboard || []).map(formatItem);
+        // 未登录时后端返回100条，小程序只取前10条展示
+        const rawList = (res.leaderboard || []).map(formatItem);
+        const lbHasRecord = res.has_record || false;
+        const leaderboard = lbHasRecord ? rawList : rawList.slice(0, 10);
         const lbMySection = (res.my_section || []).map(formatItem);
         const lbMyRank = res.my_rank || -1;
         const lbHasGap = res.has_gap || false;
-        const lbHasRecord = res.has_record || false;
         const lbTotalCount = res.total_count || 0;
 
         this.setData({
