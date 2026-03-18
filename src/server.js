@@ -13,6 +13,7 @@ import { renderIndex, renderCert, renderCertImage, renderStats } from './render.
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+app.set('trust proxy', 1); // 信任第一层反向代理（Nginx），正确获取真实客户端 IP
 const PORT = process.env.PORT || 3210;
 
 // CORS + 安全响应头
