@@ -107,6 +107,17 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ ok: false, error: '缺少必填字段: claw_name, claw_version, model_name' });
     }
 
+    // 字段长度校验，防止恶意超长输入
+    const maxLens = { claw_name: 64, claw_version: 32, claw_type: 32, model_name: 64, owner_name: 64, owner_uid: 64, arena_id: 64 };
+    for (const [field, maxLen] of Object.entries(maxLens)) {
+      if (req.body[field] && String(req.body[field]).length > maxLen) {
+        return res.status(400).json({ ok: false, error: `${field} 过长（最大 ${maxLen} 字符）` });
+      }
+    }
+    if (Array.isArray(skill_list) && (skill_list.length > 20 || skill_list.some(s => String(s).length > 32))) {
+      return res.status(400).json({ ok: false, error: 'skill_list 数量（≤20）或单项长度（≤32）超限' });
+    }
+
     const profileId = uuidv4();
     const sessionId = uuidv4();
 
@@ -423,7 +434,7 @@ router.get('/leaderboard', async (req, res) => {
           claw_type: r.claw_type || 'OpenClaw',
           model_name: r.model_name, owner_name: r.owner_name,
           skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
-          session_id: r.session_id,
+          _session_id: r.session_id, // 内部用于匹配用户记录，不返回给前端
           total_score: r.total_score, total_max_score: r.total_max_score,
           answered_count: r.answered_count, score_percent: r.score_percent || 0,
           duration_seconds: r.duration_seconds || 0,
@@ -447,14 +458,17 @@ router.get('/leaderboard', async (req, res) => {
       );
       console.log('[排行榜] uid:', uid, 'examId:', examId, 'userBest:', userBest ? userBest.best_session_id : 'null');
 
+      // 剥离内部字段 _session_id，返回安全数据给前端
+      const stripInternal = (item) => { const { _session_id, ...safe } = item; return safe; };
+
       let myIndex = -1;
       if (userBest) {
-        myIndex = allItems.findIndex(item => item.session_id === userBest.best_session_id);
+        myIndex = allItems.findIndex(item => item._session_id === userBest.best_session_id);
         console.log('[排行榜] myIndex:', myIndex, '/ total:', allItems.length);
       }
 
       // 前3名
-      const top3 = allItems.slice(0, 3);
+      const top3 = allItems.slice(0, 3).map(stripInternal);
 
       if (myIndex >= 0) {
         // 标记"我"在 top3 中
@@ -469,7 +483,7 @@ router.get('/leaderboard', async (req, res) => {
           const start = Math.max(3, myIndex - 2);
           const end = Math.min(allItems.length - 1, myIndex + 2);
           for (let i = start; i <= end; i++) {
-            mySection.push({ ...allItems[i], isMe: i === myIndex });
+            mySection.push({ ...stripInternal(allItems[i]), isMe: i === myIndex });
           }
           hasGap = start > 3;
         }
@@ -491,7 +505,7 @@ router.get('/leaderboard', async (req, res) => {
           ok: true,
           exam_id: fullData.exam_id,
           exam_name: fullData.exam_name,
-          leaderboard: allItems.slice(0, 10),
+          leaderboard: allItems.slice(0, 10).map(stripInternal),
           my_rank: -1,
           my_section: [],
           has_gap: false,
@@ -501,11 +515,12 @@ router.get('/leaderboard', async (req, res) => {
       }
     } else {
       // 未传 uid（web 页面），返回前100条
+      const stripInternal = (item) => { const { _session_id, ...safe } = item; return safe; };
       res.json({
         ok: true,
         exam_id: fullData.exam_id,
         exam_name: fullData.exam_name,
-        leaderboard: allItems.slice(0, 100),
+        leaderboard: allItems.slice(0, 100).map(stripInternal),
       });
     }
   } catch (err) {

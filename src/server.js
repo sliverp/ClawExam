@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 import apiRouter from './api.js';
 import authRouter from './auth.js';
 import socialRouter from './social.js';
@@ -14,11 +15,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3210;
 
-// CORS
+// CORS + 安全响应头
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, X-App-Token');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
+  res.header('X-Content-Type-Options', 'nosniff');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -26,6 +28,36 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/data', express.static(path.join(__dirname, '..', 'data')));
+
+// 速率限制
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,   // 1 分钟
+  max: 60,               // 每 IP 最多 60 次
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: '请求过于频繁，请稍后再试' },
+});
+app.use('/api', globalLimiter);
+
+// 注册端点严格限流：每 IP 每分钟 5 次
+const registerLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: '注册过于频繁，请稍后再试' },
+});
+app.use('/api/register', registerLimiter);
+
+// 登录端点限流：每 IP 每分钟 10 次
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: '登录过于频繁，请稍后再试' },
+});
+app.use('/api/wx-login', loginLimiter);
 
 function getBaseUrl(req) {
   const proto = req.headers['x-forwarded-proto'] || req.protocol;

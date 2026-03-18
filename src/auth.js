@@ -27,6 +27,8 @@ function computeUidHash(openid) {
   return crypto.createHash('sha256').update(openid + UID_SALT).digest('hex').substring(0, 16);
 }
 
+const TOKEN_TTL_DAYS = 14;
+
 /**
  * POST /api/wx-login
  * 微信登录注册
@@ -55,23 +57,19 @@ router.post('/wx-login', async (req, res) => {
 
     const uid_hash = computeUidHash(openid);
 
-    // 查看用户是否已存在
-    const existing = await db.get('SELECT uid_hash, app_token FROM users WHERE openid = ?', [openid]);
+    // 每次登录都生成新 token 并设置过期时间
+    const app_token = uuidv4();
+    const existing = await db.get('SELECT uid_hash FROM users WHERE openid = ?', [openid]);
 
-    let app_token;
     if (existing) {
-      // 复用已有 token，避免其他设备/场景的 token 失效
-      app_token = existing.app_token || uuidv4();
       await db.run(
-        'UPDATE users SET session_key = ?, app_token = ?, nickname = ?, avatar_url = ?, updated_at = NOW() WHERE openid = ?',
-        [session_key, app_token, nickname.trim(), avatar_url || '', openid]
+        'UPDATE users SET session_key = ?, app_token = ?, token_expires_at = DATE_ADD(NOW(), INTERVAL ? DAY), nickname = ?, avatar_url = ?, updated_at = NOW() WHERE openid = ?',
+        [session_key, app_token, TOKEN_TTL_DAYS, nickname.trim(), avatar_url || '', openid]
       );
     } else {
-      // 新用户才生成新 token
-      app_token = uuidv4();
       await db.run(
-        'INSERT INTO users (uid_hash, openid, session_key, app_token, nickname, avatar_url) VALUES (?, ?, ?, ?, ?, ?)',
-        [uid_hash, openid, session_key, app_token, nickname.trim(), avatar_url || '']
+        'INSERT INTO users (uid_hash, openid, session_key, app_token, token_expires_at, nickname, avatar_url) VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY), ?, ?)',
+        [uid_hash, openid, session_key, app_token, TOKEN_TTL_DAYS, nickname.trim(), avatar_url || '']
       );
     }
 
@@ -134,13 +132,28 @@ router.put('/user/me', requireAuth, async (req, res) => {
 });
 
 /**
+ * 校验图片 magic bytes
+ */
+function isValidImage(buffer) {
+  if (buffer.length < 4) return false;
+  // JPEG: FF D8 FF
+  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return 'image/jpeg';
+  // PNG: 89 50 4E 47
+  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return 'image/png';
+  // GIF: 47 49 46
+  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) return 'image/gif';
+  // WebP: 52 49 46 46 ... 57 45 42 50
+  if (buffer.length >= 12 && buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46
+      && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return 'image/webp';
+  return false;
+}
+
+/**
  * POST /api/upload/avatar
  * 上传头像图片（接收 multipart/form-data）
  */
 router.post('/upload/avatar', requireAuth, async (req, res) => {
   try {
-    // 使用 express 内置的 raw body（或 multer）来处理文件上传
-    // 这里用简单方式：接收 raw buffer
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));
     req.on('end', () => {
@@ -150,6 +163,11 @@ router.post('/upload/avatar', requireAuth, async (req, res) => {
       }
       if (buffer.length > 2 * 1024 * 1024) {
         return res.status(400).json({ ok: false, error: '文件过大（最大 2MB）' });
+      }
+
+      const mimeType = isValidImage(buffer);
+      if (!mimeType) {
+        return res.status(400).json({ ok: false, error: '不支持的图片格式，仅支持 JPEG/PNG/GIF/WebP' });
       }
 
       const filename = `${req.user.uid_hash}.jpg`;
