@@ -6,7 +6,8 @@
     "pages/stats/stats",
     "pages/profile/profile",
     "pages/arena/arena",
-    "pages/cert/cert"
+    "pages/cert/cert",
+    "pages/privacy/privacy"
   ],
   "window": {
     "navigationBarBackgroundColor": "#1a1a1a",

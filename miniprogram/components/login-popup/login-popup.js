@@ -11,7 +11,8 @@ Component({
   data: {
     avatarUrl: '',
     nickname: '',
-    loading: false
+    loading: false,
+    privacyAgreed: false
   },
 
   methods: {
@@ -24,11 +25,23 @@ Component({
     },
 
     onClose() {
-      this.setData({ avatarUrl: '', nickname: '', loading: false });
+      this.setData({ avatarUrl: '', nickname: '', loading: false, privacyAgreed: false });
       this.triggerEvent('close');
     },
 
+    onTogglePrivacy() {
+      this.setData({ privacyAgreed: !this.data.privacyAgreed });
+    },
+
+    onViewPrivacy() {
+      wx.navigateTo({ url: '/pages/privacy/privacy' });
+    },
+
     async onConfirm() {
+      if (!this.data.privacyAgreed) {
+        wx.showToast({ title: '请先阅读并同意隐私政策', icon: 'none' });
+        return;
+      }
       if (!this.data.nickname.trim()) {
         wx.showToast({ title: '请输入昵称', icon: 'none' });
         return;

@@ -29,6 +29,16 @@
         />
       </view>
 
+      <view class="privacy-wrap">
+        <view class="privacy-check" bindtap="onTogglePrivacy">
+          <view class="checkbox {{privacyAgreed ? 'checked' : ''}}">
+            <text wx:if="{{privacyAgreed}}">✓</text>
+          </view>
+          <text class="privacy-text">我已阅读并同意</text>
+        </view>
+        <text class="privacy-link" bindtap="onViewPrivacy">《隐私政策》</text>
+      </view>
+
       <button class="confirm-btn neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onConfirm" loading="{{loading}}" disabled="{{loading}}">
         确认登录
       </button>
