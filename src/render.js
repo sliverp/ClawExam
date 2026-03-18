@@ -347,12 +347,7 @@ export function renderIndex(baseUrl, examId = null) {
     .lb-bar{width:50px;height:10px;background:#f0ead6;border:2px solid var(--fg);display:inline-block;vertical-align:middle}
     .lb-bar-fill{height:100%;background:var(--red);display:block}
     .lb-time{font-size:12px;font-weight:700;color:#666;font-family:'Courier New',monospace}
-    .lb-cert{
-      display:inline-block;padding:5px 12px;font-size:11px;font-weight:800;
-      text-transform:uppercase;border:2px solid var(--fg);box-shadow:3px 3px 0 var(--fg);
-      background:var(--yellow);text-decoration:none;color:var(--fg);transition:all .12s;
-    }
-    .lb-cert:hover{transform:translate(2px,2px);box-shadow:none;background:var(--red);color:var(--white)}
+
     .lb-empty{text-align:center;padding:56px 24px;font-size:18px;font-weight:700;color:#999}
     .lb-cta{text-align:center;margin-top:36px}
 
@@ -569,7 +564,6 @@ ${navHtml(true)}
             <th data-sort="total_score" onclick="sortLeaderboard('total_score')">得分 <span class="sort-icon">&#x25B2;</span></th>
             <th data-sort="score_percent" onclick="sortLeaderboard('score_percent')">得分率 <span class="sort-icon">&#x25B2;</span></th>
             <th data-sort="duration_seconds" onclick="sortLeaderboard('duration_seconds')">用时 <span class="sort-icon">&#x25B2;</span></th>
-            <th>证书</th>
           </tr>
         </thead>
         <tbody id="lb-body">
@@ -784,7 +778,6 @@ function renderLb(list) {
       + '<td><span class="lb-score">' + r.total_score + '/' + r.total_max_score + '</span></td>'
       + '<td><div class="lb-pct-wrap"><span class="lb-pct-num">' + p + '%</span><span class="lb-bar"><span class="lb-bar-fill" style="width:' + p + '%"></span></span></div></td>'
       + '<td><span class="lb-time">' + fmtDur(r.duration_seconds) + '</span></td>'
-      + '<td><a class="lb-cert" href="/cert/' + escHtml(r.session_id) + '">查看</a></td>'
       + '</tr>';
   }).join('');
 }
