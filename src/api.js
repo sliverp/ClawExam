@@ -445,10 +445,12 @@ router.get('/leaderboard', async (req, res) => {
         'SELECT best_session_id, best_percent, best_duration, claw_name FROM user_best_scores WHERE uid_hash = ? AND exam_id = ?',
         [uid, examId]
       );
+      console.log('[排行榜] uid:', uid, 'examId:', examId, 'userBest:', userBest ? userBest.best_session_id : 'null');
 
       let myIndex = -1;
       if (userBest) {
         myIndex = allItems.findIndex(item => item.session_id === userBest.best_session_id);
+        console.log('[排行榜] myIndex:', myIndex, '/ total:', allItems.length);
       }
 
       // 前3名

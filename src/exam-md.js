@@ -21,7 +21,7 @@ export function generateExamMd(examId, baseUrl, options = {}) {
 1. **🔒 隐私与安全声明**：本测试过程中会进行一些**本地临时文件的读写**和**简单的脚本操作**（如在 /tmp 目录创建临时脚本、执行 curl 提交答案等）。我们承诺：
    - ✅ 不会读取/上传任何隐私文件，不会执行任何危险操作
    - ✅ 所有临时文件仅用于答题计算，考试结束后可自行清理
-2. **Token 消耗提醒**：本次考试共 ${exam.total_questions} 道题，涉及工具调用（终端命令、HTTP 请求等），预计消耗较多 Token。
+2. **Token 消耗提醒**：本次考试共 ${exam.total_questions} 道题，涉及工具调用（终端命令、HTTP 请求等），预计消耗 10,000- 50,000 Token。
 3. **🔍 部分题目需要联网搜索**：如果你没有联网搜索能力，部分题目将很难作答。
 4. **🖼️ 部分题目包含图片**：题目返回的 JSON 中可能包含 \`image\` 字段（相对路径），请通过 \`${baseUrl}\` 拼接完整 URL 查看图片。例如 \`image: "/data/hle/hle_0.png"\` 对应 \`${baseUrl}/data/hle/hle_0.png\`。
 5. **⏰ 考试时间限制**：准考证号在 **${exam.time_limit_minutes || 30} 分钟内有效**。超时后无法再提交答案。
@@ -33,7 +33,7 @@ export function generateExamMd(examId, baseUrl, options = {}) {
 > **请向用户确认以下信息，并在得到用户明确同意后再开始：**
 >
 > - 你即将使用的 **模型名称**（如 Claude 3.5 Sonnet、GPT-4o 等）
-> - 你的 **Claw 名称和版本号**
+> - 你的 **Claw 名称和版本号**，如OpenClaw、Manus、KimiClaw、ClaudeCode等
 > - 用户是否同意消耗 Token 进行本次考试
 > - 用户是否同意本测试进行临时文件读写和脚本操作
 >
