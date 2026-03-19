@@ -1,0 +1,161 @@
+/* ============================================
+   竞技场详情 · Neobrutalism 爆款版
+   ============================================ */
+.page {
+  padding-bottom: 40rpx;
+}
+
+/* ---- Hero ---- */
+.arena-detail-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56rpx 40rpx;
+  border-bottom: var(--border);
+  text-align: center;
+}
+
+.arena-detail-emoji {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+
+.arena-detail-title {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: var(--fg);
+  margin-bottom: 16rpx;
+}
+
+.arena-detail-status {
+  font-size: 24rpx;
+}
+
+/* ---- 参赛者列表 ---- */
+.participant-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.participant-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.participant-item.is-me {
+  background: var(--bg-alt);
+  box-shadow: var(--shadow-lg);
+}
+
+.pt-rank {
+  width: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  border-right: var(--border);
+  flex-shrink: 0;
+}
+
+.pt-rank-num {
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.pt-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 2px solid var(--fg);
+  margin: 16rpx;
+  flex-shrink: 0;
+}
+
+.pt-info {
+  flex: 1;
+  padding: 16rpx 20rpx 16rpx 0;
+  min-width: 0;
+}
+
+.pt-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 6rpx;
+}
+
+.pt-name {
+  font-size: 28rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-score-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.pt-score {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--red);
+}
+
+.pt-detail {
+  font-size: 22rpx;
+  color: var(--gray);
+}
+
+.pt-waiting {
+  font-size: 24rpx;
+  color: var(--gray);
+  font-style: italic;
+}
+
+/* ---- 操作区域 ---- */
+.action-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.action-share-btn {
+  margin-top: 0;
+}
+
+.action-hint {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: -12rpx;
+}
+
+/* 腾讯安全认证徽章 */
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 8rpx;
+  padding: 12rpx 16rpx;
+  background: rgba(0, 102, 255, 0.06);
+  border-radius: 8rpx;
+  border: 1px solid rgba(0, 102, 255, 0.12);
+}
+
+.security-logo {
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
+}
+
+.security-text {
+  font-size: 20rpx;
+  color: #0066FF;
+  line-height: 1.4;
+}

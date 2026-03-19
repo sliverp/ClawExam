@@ -1,0 +1,304 @@
+/* ============================================
+   好友榜 · Neobrutalism 爆款版
+   ============================================ */
+.page {
+  padding-bottom: 40rpx;
+}
+
+/* ---- Hero ---- */
+.friends-hero {
+  background: var(--purple);
+  padding: 56rpx 40rpx;
+  border-bottom: var(--border);
+}
+
+.friends-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+
+.friends-hero-emoji {
+  font-size: 72rpx;
+}
+
+.friends-hero-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.friends-hero-title {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.3;
+}
+
+.friends-hero-desc {
+  font-size: 26rpx;
+  color: rgba(255,255,255,0.8);
+  margin-top: 6rpx;
+}
+
+/* ============================================
+   PK 对比卡片 - 社交货币
+   ============================================ */
+.pk-card {
+  background: var(--fg);
+  border-radius: 0;
+  padding: 32rpx;
+  border-bottom: var(--border);
+}
+
+.pk-header {
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+.pk-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--yellow);
+}
+
+.pk-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+}
+
+.pk-player {
+  flex: 1;
+  text-align: center;
+}
+
+.pk-player-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  border: 4px solid #555;
+  margin: 0 auto 12rpx;
+  display: block;
+  background: #333;
+}
+
+.pk-player.winner .pk-player-avatar {
+  border-color: var(--yellow);
+}
+
+.pk-player-name {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #fff;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.pk-player-score {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #ccc;
+}
+
+.pk-player.winner .pk-player-score {
+  color: var(--lime);
+}
+
+.pk-vs-badge {
+  width: 80rpx;
+  height: 80rpx;
+  background: var(--red);
+  border: 4px solid var(--yellow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ---- 邀请区域 ---- */
+.invite-section {
+  padding-bottom: 0;
+}
+
+.invite-card {
+  background: var(--bg-alt);
+}
+
+.invite-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 28rpx;
+  gap: 24rpx;
+}
+
+.invite-text {
+  flex: 1;
+}
+
+.invite-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.invite-desc {
+  font-size: 24rpx;
+  color: var(--gray);
+  display: block;
+}
+
+.invite-btn {
+  flex-shrink: 0;
+}
+
+/* ---- Tab 栏 ---- */
+.tab-section {
+  padding-bottom: 0;
+}
+
+.friends-tab-bar {
+  display: flex;
+  gap: 12rpx;
+  padding: 4rpx;
+}
+
+.friends-tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14rpx 0;
+  border: var(--border);
+  font-weight: 700;
+  font-size: 26rpx;
+  background: var(--white);
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+.friends-tab-item::after { border: none; }
+
+.friends-tab-item.active {
+  background: var(--yellow);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- 好友排行列表 ---- */
+.list-section {
+  padding-top: 16rpx;
+}
+
+.friends-lb-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.friends-lb-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.friends-lb-item.is-me {
+  background: var(--bg-alt);
+  box-shadow: var(--shadow-lg);
+}
+
+.flb-rank {
+  width: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  border-right: var(--border);
+  flex-shrink: 0;
+}
+
+.flb-rank-num {
+  font-size: 30rpx;
+  font-weight: 900;
+}
+
+.flb-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  border: 2px solid var(--fg);
+  margin: 16rpx 16rpx 16rpx 20rpx;
+  flex-shrink: 0;
+}
+
+.flb-info {
+  flex: 1;
+  padding: 16rpx 20rpx 16rpx 0;
+  min-width: 0;
+}
+
+.flb-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-bottom: 6rpx;
+}
+
+.flb-name {
+  font-size: 28rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flb-me-tag {
+  font-size: 18rpx;
+  padding: 2rpx 10rpx;
+}
+
+.flb-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.flb-score {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--red);
+}
+
+.flb-grade {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+}
+
+.flb-waiting {
+  font-size: 24rpx;
+  color: var(--gray);
+  font-style: italic;
+}
+
+.flb-claw {
+  font-size: 22rpx;
+  color: var(--gray);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 4rpx;
+}
+
+.flb-date {
+  font-size: 20rpx;
+  color: #bbb;
+  display: block;
+  margin-top: 2rpx;
+}

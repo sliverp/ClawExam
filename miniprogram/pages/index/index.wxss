@@ -1,0 +1,988 @@
+/* ============================================
+   首页 · Neobrutalism 爆款版
+   ============================================ */
+.page {
+  padding-bottom: 40rpx;
+}
+
+/* ============================================
+   全屏 Hero - 第一眼就炸
+   ============================================ */
+.hero-fullscreen {
+  position: relative;
+  min-height: 420rpx;
+  background: var(--fg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx 48rpx 32rpx;
+  overflow: hidden;
+}
+
+.hero-main-emoji {
+  font-size: 100rpx;
+  margin-bottom: 16rpx;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(4px 4px 0 rgba(255,217,61,0.4));
+}
+
+.hero-title-wrap {
+  text-align: center;
+  margin-bottom: 8rpx;
+}
+
+.hero-title-sm {
+  display: block;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #999;
+  margin-bottom: 4rpx;
+  letter-spacing: 6rpx;
+}
+
+.hero-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.hero-title-lg {
+  font-size: 52rpx;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.hero-title-accent {
+  font-size: 52rpx;
+  font-weight: 900;
+  color: var(--yellow);
+  line-height: 1.15;
+}
+
+.hero-subtitle {
+  font-size: 22rpx;
+  color: #888;
+  margin-bottom: 16rpx;
+  text-align: center;
+}
+
+.hero-slogan {
+  font-size: 28rpx;
+  color: var(--yellow);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 4rpx;
+}
+
+/* Hero 安全认证标识 */
+.hero-security {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 20rpx;
+  padding: 8rpx 20rpx;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 40rpx;
+}
+
+.hero-security-icon {
+  width: 28rpx;
+  height: 28rpx;
+  flex-shrink: 0;
+}
+
+.hero-security-text {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
+.hero-live-strip {
+  width: 100%;
+  margin-top: 36rpx;
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 20rpx 28rpx;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.live-dot {
+  width: 16rpx;
+  height: 16rpx;
+  background: var(--red);
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.live-text {
+  font-size: 24rpx;
+  color: #ccc;
+  font-weight: 600;
+}
+
+.live-count {
+  color: var(--yellow);
+  font-weight: 800;
+}
+
+/* ============================================
+   滚动标语条 - 黄底黑字更醒目
+   ============================================ */
+.marquee-strip {
+  background: var(--yellow);
+  padding: 18rpx 0;
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: var(--border);
+  border-bottom: var(--border);
+}
+
+.marquee-text {
+  display: inline-block;
+  color: var(--fg);
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 4rpx;
+  animation: marquee 15s linear infinite;
+}
+
+/* ============================================
+   社交证明数据条
+   ============================================ */
+.social-proof {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 28rpx 24rpx;
+  background: var(--white);
+  border-bottom: var(--border);
+}
+
+.proof-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.proof-num {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: var(--fg);
+  line-height: 1.2;
+}
+
+.proof-label {
+  font-size: 20rpx;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+.proof-divider {
+  width: 2rpx;
+  height: 56rpx;
+  background: #e0e0e0;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   考试卡片 - 可展开的简洁版
+   ============================================ */
+.exam-section {
+  padding-top: 36rpx;
+}
+
+.exam-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.exam-card {
+  margin-bottom: 0;
+}
+
+.exam-card-mini {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 28rpx 28rpx;
+}
+
+.exam-icon-wrap {
+  width: 96rpx;
+  height: 96rpx;
+  border: var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.exam-icon {
+  font-size: 48rpx;
+}
+
+.exam-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.exam-name {
+  font-size: 32rpx;
+  font-weight: 800;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.exam-meta {
+  font-size: 24rpx;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+.exam-arrow {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+/* 展开详情 */
+.exam-detail {
+  padding: 0 28rpx 28rpx;
+  border-top: 2px dashed #e0e0e0;
+  margin-top: 0;
+  padding-top: 24rpx;
+}
+
+.exam-desc {
+  font-size: 26rpx;
+  color: var(--gray-dark);
+  line-height: 1.7;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.exam-cmd-box {
+  background: var(--bg-alt);
+  border: 2px dashed var(--fg);
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 24rpx;
+}
+
+.exam-cmd-label {
+  font-size: 20rpx;
+  font-weight: 800;
+  color: var(--gray);
+  text-transform: uppercase;
+  letter-spacing: 2rpx;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.exam-cmd-text {
+  font-size: 24rpx;
+  color: var(--fg);
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+/* 按钮行 - 邀请70% + 复制30% */
+.exam-btn-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.exam-btn-copy {
+  flex: 7;
+  font-size: 28rpx !important;
+  padding: 24rpx 0 !important;
+  min-width: 0;
+}
+
+.exam-btn-invite {
+  flex: 3;
+  font-size: 24rpx !important;
+  padding: 24rpx 8rpx !important;
+  background: var(--white) !important;
+  color: var(--fg) !important;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  line-height: 1.2 !important;
+}
+
+.exam-btn-invite::after, .exam-btn-copy::after { border: none; }
+
+/* 腾讯安全认证徽章 */
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 16rpx;
+  padding: 12rpx 16rpx;
+  background: rgba(0, 102, 255, 0.06);
+  border-radius: 8rpx;
+  border: 1px solid rgba(0, 102, 255, 0.12);
+}
+
+.security-logo {
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
+}
+
+.security-text {
+  font-size: 20rpx;
+  color: #0066FF;
+  line-height: 1.4;
+}
+
+/* ============================================
+   排行榜
+   ============================================ */
+.lb-section {
+  padding-top: 36rpx;
+}
+
+.lb-tab-bar {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 28rpx;
+}
+
+.lb-tab-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 0;
+  border: var(--border);
+  font-weight: 800;
+  font-size: 26rpx;
+  background: var(--white);
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+
+.lb-tab-item::after { border: none; }
+
+.lb-tab-item.active {
+  box-shadow: var(--shadow-sm);
+  color: var(--fg);
+}
+
+/* ---- 领奖台 (前三名) ---- */
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 32rpx 16rpx 0;
+  margin-bottom: 36rpx;
+}
+
+.podium-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 220rpx;
+}
+
+.podium-medal {
+  font-size: 48rpx;
+  margin-bottom: 8rpx;
+}
+
+.podium-crown {
+  font-size: 56rpx;
+  margin-bottom: 8rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+.podium-name {
+  font-size: 24rpx;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 4rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.podium-score {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: var(--red);
+  margin-bottom: 12rpx;
+}
+
+.podium-score-gold {
+  font-size: 40rpx;
+  color: var(--red);
+}
+
+.podium-bar {
+  width: 100%;
+  border: var(--border);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* ---- 排行榜列表 (4名起) ---- */
+.lb-rest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+/* ---- 本人排名区域 ---- */
+.lb-my-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.lb-gap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0;
+}
+
+.lb-gap-dots {
+  font-size: 40rpx;
+  font-weight: 900;
+  color: #ccc;
+  letter-spacing: 8rpx;
+}
+
+.lb-item-me {
+  border-color: var(--red) !important;
+  box-shadow: 4px 4px 0 var(--red) !important;
+}
+
+.lb-rank-me {
+  background: var(--red) !important;
+}
+
+.lb-rank-me .lb-rank-num {
+  color: #fff;
+}
+
+.lb-me-tag {
+  font-size: 18rpx;
+  padding: 2rpx 12rpx;
+  background: var(--red) !important;
+  color: #fff !important;
+  flex-shrink: 0;
+}
+
+/* 领奖台"我"标记 */
+.podium-me {
+  position: relative;
+}
+
+.podium-me-tag {
+  display: inline-block;
+  font-size: 18rpx;
+  font-weight: 800;
+  background: var(--red);
+  color: #fff;
+  padding: 2rpx 16rpx;
+  border-radius: 20rpx;
+  border: 2px solid var(--fg);
+  margin-bottom: 4rpx;
+}
+
+/* ---- 本人成绩信息卡 ---- */
+.lb-my-info {
+  margin-top: 24rpx;
+}
+
+.lb-my-info-card {
+  background: linear-gradient(135deg, var(--red) 0%, #FF8C42 100%);
+  border: 3px solid var(--fg);
+  border-radius: var(--radius);
+  padding: 32rpx 28rpx;
+  box-shadow: 4px 4px 0 var(--fg);
+  display: flex;
+  align-items: center;
+  gap: 48rpx;
+  color: #fff;
+}
+
+.lb-my-info-rank,
+.lb-my-info-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lb-my-info-rank-label,
+.lb-my-info-score-label {
+  font-size: 20rpx;
+  font-weight: 600;
+  opacity: 0.9;
+  margin-bottom: 4rpx;
+}
+
+.lb-my-info-rank-value,
+.lb-my-info-score-value {
+  font-size: 44rpx;
+  font-weight: 900;
+}
+
+.lb-my-info-hint {
+  position: absolute;
+  bottom: 12rpx;
+  right: 24rpx;
+  font-size: 20rpx;
+  opacity: 0.85;
+}
+
+.lb-my-info-hint-text {
+  font-size: 18rpx;
+  font-weight: 600;
+}
+
+/* ---- 未参加提示状态 ---- */
+.lb-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 32rpx;
+  text-align: center;
+  background: var(--white);
+  border: 2px solid #e0e0e0;
+  border-radius: var(--radius);
+  gap: 16rpx;
+}
+
+.lb-empty-compact {
+  padding: 32rpx 32rpx 28rpx;
+  gap: 8rpx;
+}
+
+.lb-empty-compact .lb-empty-title {
+  font-size: 30rpx;
+  margin-bottom: 0;
+}
+
+.lb-empty-compact .lb-empty-desc {
+  font-size: 22rpx;
+  margin-bottom: 12rpx;
+}
+
+.lb-empty-compact .lb-empty-btn {
+  font-size: 26rpx;
+  padding: 16rpx 40rpx;
+  min-width: 240rpx;
+}
+
+.lb-empty-emoji {
+  font-size: 72rpx;
+  margin-bottom: 12rpx;
+  animation: float 3s ease-in-out infinite;
+}
+
+.lb-empty-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--fg);
+  margin-bottom: 8rpx;
+}
+
+.lb-empty-desc {
+  font-size: 24rpx;
+  color: var(--gray);
+  line-height: 1.6;
+  margin-bottom: 28rpx;
+}
+
+.lb-empty-btn {
+  font-size: 28rpx;
+  padding: 24rpx 48rpx;
+  min-width: 280rpx;
+}
+
+.lb-item {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 0;
+  border-radius: var(--radius);
+}
+
+.lb-rank {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: var(--border);
+  flex-shrink: 0;
+  background: var(--gray-light);
+}
+
+.lb-rank-num {
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.lb-info {
+  flex: 1;
+  padding: 24rpx 28rpx;
+  min-width: 0;
+}
+
+/* 高密度排行item */
+.lb-info-dense {
+  padding: 16rpx 20rpx;
+}
+
+.lb-info-dense .lb-name-row {
+  margin-bottom: 6rpx;
+}
+
+.lb-info-dense .lb-score-row {
+  margin-bottom: 4rpx;
+}
+
+.lb-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 10rpx;
+}
+
+.lb-name {
+  font-size: 28rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-model-tag {
+  font-size: 18rpx;
+  padding: 2rpx 12rpx;
+  flex-shrink: 0;
+}
+
+.lb-score-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.lb-score-bar { flex: 1; }
+
+.lb-score-text {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: var(--red);
+  white-space: nowrap;
+  min-width: 90rpx;
+  text-align: right;
+}
+
+/* 耗时文本 */
+.lb-duration-text {
+  font-size: 22rpx;
+  color: var(--gray);
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: 4rpx;
+}
+
+/* 技能标签行 */
+.lb-skill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6rpx;
+  margin-top: 2rpx;
+}
+
+.lb-skill-tag {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: #7C3AED;
+  background: #F3E8FF;
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  border: 1px solid #DDD6FE;
+  line-height: 1.4;
+}
+
+.lb-skill-more {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: var(--gray);
+  padding: 2rpx 8rpx;
+  line-height: 1.4;
+}
+
+.lb-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lb-meta-text {
+  font-size: 22rpx;
+  color: var(--gray);
+}
+
+.lb-cert-link {
+  font-size: 24rpx;
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* ============================================
+   查证书
+   ============================================ */
+.cert-section {
+  padding-top: 8rpx;
+}
+
+.cert-search-card {
+  background: var(--yellow);
+}
+
+.cert-search-header {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 24rpx 28rpx;
+  border-bottom: var(--border);
+}
+
+.cert-search-icon {
+  font-size: 36rpx;
+}
+
+.cert-search-title {
+  font-size: 32rpx;
+  font-weight: 900;
+}
+
+.cert-search-body {
+  display: flex;
+  gap: 16rpx;
+  padding: 24rpx 28rpx;
+  align-items: center;
+}
+
+.cert-input {
+  flex: 1;
+  height: 80rpx;
+  border: var(--border);
+  padding: 0 24rpx;
+  background: var(--white);
+  font-size: 28rpx;
+  border-radius: 12rpx;
+}
+
+.cert-search-btn {
+  flex-shrink: 0;
+  height: 80rpx;
+}
+
+/* ============================================
+   竞技场悬浮按钮
+   ============================================ */
+.fab-arena {
+  position: fixed;
+  left: 40rpx;
+  bottom: calc(180rpx + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: var(--fg);
+  color: #fff;
+  padding: 20rpx 32rpx;
+  border-radius: 100rpx;
+  border: 3px solid var(--fg);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.3);
+  z-index: 998;
+  transition: all 0.15s ease;
+}
+
+.fab-arena:active {
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+  transform: translate(2px, 2px);
+}
+
+.fab-arena-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.fab-arena-text {
+  font-size: 24rpx;
+  font-weight: 800;
+  letter-spacing: 2rpx;
+}
+
+/* 遮罩 */
+.fab-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+}
+
+/* 弹出菜单 */
+.fab-menu {
+  position: fixed;
+  left: 40rpx;
+  bottom: calc(260rpx + env(safe-area-inset-bottom));
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  animation: fabMenuIn 0.2s ease;
+}
+
+@keyframes fabMenuIn {
+  from { opacity: 0; transform: translateY(20rpx) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: var(--white);
+  border: 3px solid var(--fg);
+  border-radius: var(--radius);
+  padding: 28rpx 32rpx;
+  box-shadow: 4px 4px 0 var(--fg);
+  min-width: 360rpx;
+  transition: all 0.1s ease;
+}
+
+.fab-menu-item:active {
+  box-shadow: 2px 2px 0 var(--fg);
+  transform: translate(2px, 2px);
+}
+
+.fab-menu-item-icon {
+  font-size: 44rpx;
+  flex-shrink: 0;
+}
+
+.fab-menu-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.fab-menu-item-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: var(--fg);
+  margin-bottom: 4rpx;
+}
+
+.fab-menu-item-desc {
+  font-size: 22rpx;
+  color: var(--gray);
+  font-weight: 600;
+}
+
+/* ============================================
+   登录引导弹框
+   ============================================ */
+.login-guide-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1100;
+}
+
+.login-guide {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 580rpx;
+  background: var(--white);
+  border: 3px solid var(--fg);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--fg);
+  z-index: 1101;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48rpx 40rpx 40rpx;
+  animation: fabMenuIn 0.2s ease;
+}
+
+.login-guide-emoji {
+  font-size: 72rpx;
+  margin-bottom: 16rpx;
+}
+
+.login-guide-title {
+  font-size: 36rpx;
+  font-weight: 900;
+  color: var(--fg);
+  margin-bottom: 28rpx;
+}
+
+.login-guide-features {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+  margin-bottom: 36rpx;
+}
+
+.login-guide-feature {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.login-guide-check {
+  color: var(--red);
+  font-weight: 900;
+  font-size: 32rpx;
+}
+
+.login-guide-btn {
+  width: 100%;
+  margin-bottom: 20rpx;
+}
+
+.login-guide-skip {
+  font-size: 24rpx;
+  color: var(--gray);
+  font-weight: 600;
+  padding: 8rpx 0;
+}

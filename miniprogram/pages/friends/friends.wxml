@@ -1,0 +1,106 @@
+<!-- 好友榜 · Neobrutalism 爆款版 -->
+<view class="page">
+
+  <!-- 未登录 -->
+  <view wx:if="{{!isLoggedIn}}" class="empty-state">
+    <text class="empty-icon">👥</text>
+    <text class="empty-title">登录后查看好友排行榜</text>
+    <text class="empty-desc">和好友比一比，谁的虾更厉害</text>
+    <button class="neo-btn neo-btn-red neo-btn-lg" bindtap="onGoLogin">🦞 登录虾场</button>
+  </view>
+
+  <!-- 已登录 -->
+  <view wx:if="{{isLoggedIn}}">
+    <!-- Hero -->
+    <view class="friends-hero">
+      <view class="friends-hero-inner">
+        <text class="friends-hero-emoji">👥</text>
+        <view class="friends-hero-text">
+          <text class="friends-hero-title">好友排行榜</text>
+          <text class="friends-hero-desc">{{friendCount}} 位好友 · {{leaderboard.length}} 人有成绩</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- PK 对比卡片 -->
+    <view class="pk-card" wx:if="{{pkData}}">
+      <view class="pk-header">
+        <text class="pk-title">⚡ 最近 PK 战况</text>
+      </view>
+      <view class="pk-vs">
+        <view class="pk-player {{pkData.myScore >= pkData.friendScore ? 'winner' : ''}}">
+          <image class="pk-player-avatar" src="{{pkData.myAvatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+          <text class="pk-player-name">我的虾</text>
+          <text class="pk-player-score">{{pkData.myScore}}%</text>
+        </view>
+        <view class="pk-vs-badge">VS</view>
+        <view class="pk-player {{pkData.friendScore > pkData.myScore ? 'winner' : ''}}">
+          <image class="pk-player-avatar" src="{{pkData.friendAvatar || '/images/default-avatar.png'}}" mode="aspectFill" />
+          <text class="pk-player-name">{{pkData.friendName}}</text>
+          <text class="pk-player-score">{{pkData.friendScore}}%</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 邀请好友 -->
+    <view class="section invite-section">
+      <view class="invite-card neo-card">
+        <view class="invite-body">
+          <view class="invite-text">
+            <text class="invite-title">邀请好友一起来</text>
+            <text class="invite-desc">分享小程序，好友打开即可自动添加</text>
+          </view>
+          <button class="neo-btn neo-btn-purple invite-btn" open-type="share">
+            📤 邀请
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- Tab 切换 -->
+    <view class="section tab-section" wx:if="{{exams.length}}">
+      <view class="friends-tab-bar">
+        <button class="friends-tab-item {{activeExamId === item.id ? 'active' : ''}}"
+          wx:for="{{exams}}" wx:key="id"
+          data-examid="{{item.id}}" bindtap="onTabSwitch">
+          {{item.name}}
+        </button>
+      </view>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading-wrap" wx:if="{{loading}}">
+      <text class="loading-text">加载中...</text>
+    </view>
+
+    <!-- 好友排行列表 -->
+    <view class="section list-section" wx:if="{{!loading && leaderboard.length}}">
+      <view class="friends-lb-list">
+        <view class="friends-lb-item neo-card {{item.is_me ? 'is-me' : ''}}" wx:for="{{leaderboard}}" wx:key="session_id">
+          <view class="flb-rank" style="background:{{index < 3 ? (index === 0 ? '#FFD93D' : index === 1 ? '#E5E7EB' : '#FDE68A') : '#F5F5F0'}}">
+            <text class="flb-rank-num">{{index + 1}}</text>
+          </view>
+          <image class="flb-avatar" src="{{item.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
+          <view class="flb-info">
+            <view class="flb-name-row">
+              <text class="flb-name">{{item.nickname}}</text>
+              <text wx:if="{{item.is_me}}" class="neo-tag flb-me-tag" style="background:var(--yellow)">我</text>
+            </view>
+            <view class="flb-score-row" wx:if="{{item.best_percent !== undefined && item.best_percent !== null}}">
+              <text class="flb-score">{{item.percentText}}%</text>
+              <text class="flb-grade neo-tag" style="background:{{item.grade === 'S' ? '#FFD93D' : item.grade === 'A+' || item.grade === 'A' ? '#6EE7B7' : '#eee'}}">{{item.grade}}</text>
+            </view>
+            <text class="flb-claw" wx:if="{{item.claw_name || item.model_name}}">{{item.model_name}} · {{item.claw_name}}</text>
+            <text class="flb-date" wx:if="{{item.dateText}}">{{item.dateText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{!loading && !leaderboard.length}}" class="empty-text">
+      <text>暂无好友成绩</text>
+    </view>
+  </view>
+
+  <login-popup show="{{showLoginPopup}}" bind:close="onLoginClose" bind:success="onLoginSuccess" />
+</view>

@@ -1,0 +1,176 @@
+/* ============================================
+   登录弹窗 · Neobrutalism 爆款版
+   ============================================ */
+.login-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.popup-content {
+  position: relative;
+  width: 100%;
+  background: #FFFBEB;
+  border-top: 4px solid #1a1a1a;
+  border-radius: 32rpx 32rpx 0 0;
+  overflow: hidden;
+}
+
+/* 顶部装饰条 */
+.popup-strip {
+  background: #1a1a1a;
+  padding: 16rpx 0;
+  text-align: center;
+  color: #FFD93D;
+  font-size: 22rpx;
+  letter-spacing: 10rpx;
+}
+
+.popup-body {
+  padding: 56rpx 48rpx;
+  padding-bottom: calc(56rpx + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.popup-title {
+  font-size: 52rpx;
+  font-weight: 900;
+  margin-bottom: 12rpx;
+  color: #1a1a1a;
+}
+
+.popup-desc {
+  font-size: 26rpx;
+  color: #888;
+  margin-bottom: 48rpx;
+}
+
+.avatar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: 40rpx;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  border: 4px solid #1a1a1a;
+  box-shadow: 5px 5px 0 #1a1a1a;
+  background: #fff;
+}
+
+.avatar-tip {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 16rpx;
+  font-weight: 600;
+}
+
+.nickname-wrap {
+  width: 100%;
+  margin-bottom: 40rpx;
+}
+
+.nickname-label {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.nickname-input {
+  width: 100%;
+  height: 100rpx;
+  border: 3px solid #1a1a1a;
+  padding: 0 28rpx;
+  font-size: 32rpx;
+  background: #fff;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+}
+
+.confirm-btn {
+  margin-bottom: 28rpx;
+}
+
+/* 隐私政策勾选 */
+.privacy-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-bottom: 32rpx;
+  flex-wrap: wrap;
+}
+
+.privacy-check {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox {
+  width: 36rpx;
+  height: 36rpx;
+  border: 3px solid #1a1a1a;
+  border-radius: 6rpx;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12rpx;
+  font-size: 24rpx;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.checkbox.checked {
+  background: #E63B2E;
+  border-color: #1a1a1a;
+}
+
+.privacy-text {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: 600;
+}
+
+.privacy-link {
+  font-size: 24rpx;
+  color: #E63B2E;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.skip-btn {
+  font-size: 28rpx;
+  color: #888;
+  padding: 16rpx;
+  font-weight: 600;
+}

@@ -1,0 +1,43 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/arena-list/arena-list",
+    "pages/friends/friends",
+    "pages/stats/stats",
+    "pages/profile/profile",
+    "pages/arena/arena",
+    "pages/cert/cert",
+    "pages/privacy/privacy"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#1a1a1a",
+    "navigationBarTitleText": "ClawExam",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FFFBEB",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#1a1a1a",
+    "selectedColor": "#E63B2E",
+    "backgroundColor": "#FFFBEB",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "统计"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

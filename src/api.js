@@ -100,11 +100,22 @@ router.get('/exams/:exam_id', (req, res) => {
 // POST /api/register — 注册 Claw 并创建考试会话，返回第一道题
 router.post('/register', async (req, res) => {
   try {
-    const { exam_id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info } = req.body;
+    const { exam_id, claw_name, claw_version, claw_type, skill_list, model_name, owner_name, extra_info, owner_uid, arena_id } = req.body;
     if (!exam_id) return res.status(400).json({ ok: false, error: '缺少必填字段: exam_id' });
     if (!examExists(exam_id)) return res.status(404).json({ ok: false, error: `试卷 ${exam_id} 不存在` });
     if (!claw_name || !claw_version || !model_name) {
       return res.status(400).json({ ok: false, error: '缺少必填字段: claw_name, claw_version, model_name' });
+    }
+
+    // 字段长度校验，防止恶意超长输入
+    const maxLens = { claw_name: 64, claw_version: 32, claw_type: 32, model_name: 64, owner_name: 64, owner_uid: 64, arena_id: 64 };
+    for (const [field, maxLen] of Object.entries(maxLens)) {
+      if (req.body[field] && String(req.body[field]).length > maxLen) {
+        return res.status(400).json({ ok: false, error: `${field} 过长（最大 ${maxLen} 字符）` });
+      }
+    }
+    if (Array.isArray(skill_list) && (skill_list.length > 20 || skill_list.some(s => String(s).length > 32))) {
+      return res.status(400).json({ ok: false, error: 'skill_list 数量（≤20）或单项长度（≤32）超限' });
     }
 
     const profileId = uuidv4();
@@ -121,8 +132,8 @@ router.post('/register', async (req, res) => {
          JSON.stringify(Array.isArray(skill_list) ? skill_list : []),
          model_name, owner_name || '', JSON.stringify(extra_info || {})]);
 
-      await conn.run('INSERT INTO exam_sessions (id, profile_id, exam_id) VALUES (?, ?, ?)',
-        [sessionId, profileId, exam_id]);
+      await conn.run('INSERT INTO exam_sessions (id, profile_id, exam_id, owner_uid, arena_id) VALUES (?, ?, ?, ?, ?)',
+        [sessionId, profileId, exam_id, owner_uid || null, arena_id || null]);
 
       // 批量插入组卷记录，一条 SQL 搞定，不再逐条 INSERT
       const placeholders = questionIds.map(() => '(?, ?, ?)').join(', ');
@@ -225,11 +236,14 @@ router.post('/submit', async (req, res) => {
         ? Math.max(0, Math.round((new Date(lastAnswerRow.last_at) - new Date(session.started_at)) / 1000))
         : 0;
 
+      // 作答时间不足60秒不参与排名
+      const isSpeedrun = submitDuration > 0 && submitDuration < 60;
+
       response.all_done = true;
       response.summary = `🎉 恭喜！你已完成全部 ${totalRow.cnt} 道题！总得分：${totalScore} / ${sessionMax}`;
 
       // 作答时间不足60秒，提示 AI 不要刷题
-      if (submitDuration > 0 && submitDuration < 60) {
+      if (isSpeedrun) {
         response.speedrun_warning = `⚠️ 你的作答时间仅 ${submitDuration} 秒（不足1分钟），本次成绩不计入排行榜。AI 小于1分钟就交卷了，不要刷题哦！请认真作答，每道题仔细思考后再提交。`;
         response.summary += `\n⚠️ 用时 ${submitDuration} 秒，不足1分钟，成绩不计入排行榜。不要刷题哦！`;
       }
@@ -238,6 +252,62 @@ router.post('/submit', async (req, res) => {
       response.cert_url = `${baseUrl}/cert/${exam_token}`;
       response.cert_image_url = `${baseUrl}/cert/${exam_token}/image`;
       response.share_message = `🐾 快把你的证书分享给朋友，邀请更多人来挑战 ClawExam！\n📄 证书页面: ${baseUrl}/cert/${exam_token}\n🖼️ 证书图片（可直接保存分享）: ${baseUrl}/cert/${exam_token}/image`;
+
+      // ===== 更新用户最佳成绩和竞技场 =====
+      const fullSession = await db.get('SELECT owner_uid, arena_id FROM exam_sessions WHERE id = ?', [exam_token]);
+
+      if (fullSession?.owner_uid && !isSpeedrun) {
+        const scorePercent = sessionMax > 0 ? Math.round(totalScore * 1000 / sessionMax) / 10 : 0;
+
+        // 计算等级
+        let grade = 'F';
+        if (scorePercent >= 95) grade = 'S';
+        else if (scorePercent >= 90) grade = 'A+';
+        else if (scorePercent >= 80) grade = 'A';
+        else if (scorePercent >= 70) grade = 'B';
+        else if (scorePercent >= 60) grade = 'C';
+        else if (scorePercent >= 40) grade = 'D';
+
+        // 获取虾名和模型
+        const profile = await db.get(
+          'SELECT claw_name, model_name FROM claw_profiles WHERE id = (SELECT profile_id FROM exam_sessions WHERE id = ?)',
+          [exam_token]
+        );
+
+        // 查现有最佳成绩
+        const existing = await db.get(
+          'SELECT best_percent FROM user_best_scores WHERE uid_hash = ? AND exam_id = ?',
+          [fullSession.owner_uid, session.exam_id]
+        );
+
+        if (!existing || scorePercent > existing.best_percent) {
+          await db.run(
+            `INSERT INTO user_best_scores (uid_hash, exam_id, best_session_id, best_score, best_max_score, best_percent, best_duration, claw_name, model_name, grade)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+               best_session_id = VALUES(best_session_id), best_score = VALUES(best_score),
+               best_max_score = VALUES(best_max_score), best_percent = VALUES(best_percent),
+               best_duration = VALUES(best_duration), claw_name = VALUES(claw_name),
+               model_name = VALUES(model_name), grade = VALUES(grade)`,
+            [fullSession.owner_uid, session.exam_id, exam_token, totalScore, sessionMax, scorePercent,
+             submitDuration, profile?.claw_name || '', profile?.model_name || '', grade]
+          );
+        }
+
+        // 更新竞技场成绩
+        if (fullSession.arena_id) {
+          await db.run(
+            `UPDATE arena_participants SET
+              session_id = ?, score = ?, max_score = ?, score_percent = ?,
+              duration_seconds = ?, claw_name = ?, model_name = ?, grade = ?,
+              status = 'finished', finished_at = NOW()
+              WHERE arena_id = ? AND uid_hash = ?`,
+            [exam_token, totalScore, sessionMax, scorePercent, submitDuration,
+             profile?.claw_name || '', profile?.model_name || '', grade,
+             fullSession.arena_id, fullSession.owner_uid]
+          );
+        }
+      }
     } else {
       response.next_question = await getNextQuestion(exam_token, session.exam_id);
     }
@@ -329,58 +399,130 @@ router.get('/result/:exam_token', async (req, res) => {
   }
 });
 
-// GET /api/leaderboard?exam_id=v1 — 排行榜（按试卷筛选，带 Redis 缓存 + singleflight 防击穿）
+// GET /api/leaderboard?exam_id=v1&uid=xxx — 排行榜（带 Redis 缓存 + singleflight 防击穿）
+// uid 可选：传入时返回 top3 + 用户上下文（前后各2名），不传时返回 top10
 router.get('/leaderboard', async (req, res) => {
   try {
     const examId = req.query.exam_id;
+    const uid = req.query.uid || null;
     const cacheKey = `leaderboard:${examId || 'all'}`;
 
-    // 1. 尝试命中缓存（直接拿原始 JSON 字符串，跳过 parse + stringify）
+    // 1. 先获取完整排行榜（缓存 or DB）
+    let fullData;
     const cachedRaw = await cache.getRaw(cacheKey);
     if (cachedRaw) {
-      return res.type('json').send(cachedRaw);
+      fullData = JSON.parse(cachedRaw);
+    } else {
+      fullData = await cache.singleflight(cacheKey, async () => {
+        const cached2 = await cache.get(cacheKey);
+        if (cached2) return cached2;
+
+        let rows;
+        if (examId) {
+          rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 500', [examId]);
+        } else {
+          rows = await db.all('SELECT * FROM leaderboard LIMIT 500');
+        }
+
+        const examMeta = examId ? getExam(examId) : null;
+        if (rows.length === 0) {
+          return { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] };
+        }
+
+        const leaderboard = rows.map((r, i) => ({
+          rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
+          claw_type: r.claw_type || 'OpenClaw',
+          model_name: r.model_name, owner_name: r.owner_name,
+          skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
+          _session_id: r.session_id, // 内部用于匹配用户记录，不返回给前端
+          total_score: r.total_score, total_max_score: r.total_max_score,
+          answered_count: r.answered_count, score_percent: r.score_percent || 0,
+          duration_seconds: r.duration_seconds || 0,
+          started_at: r.started_at,
+        }));
+
+        const data = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
+        await cache.set(cacheKey, data, 60);
+        return data;
+      });
     }
 
-    // 2. 缓存未命中，singleflight 保证同一 key 只有一个请求去查 DB
-    const result = await cache.singleflight(cacheKey, async () => {
-      // 再查一次缓存（可能前一个 singleflight 已经写入了）
-      const cached2 = await cache.get(cacheKey);
-      if (cached2) return cached2;
+    // 2. 根据 uid 构建返回结果
+    const allItems = fullData.leaderboard || [];
 
-      let rows;
-      if (examId) {
-        rows = await db.all('SELECT * FROM leaderboard WHERE exam_id = ? LIMIT 100', [examId]);
+    if (uid && allItems.length > 0) {
+      // 查找用户在此考试的最佳成绩对应的 session_id
+      const userBest = await db.get(
+        'SELECT best_session_id, best_percent, best_duration, claw_name FROM user_best_scores WHERE uid_hash = ? AND exam_id = ?',
+        [uid, examId]
+      );
+      console.log('[排行榜] uid:', uid, 'examId:', examId, 'userBest:', userBest ? userBest.best_session_id : 'null');
+
+      // 剥离内部字段 _session_id，返回安全数据给前端
+      const stripInternal = (item) => { const { _session_id, ...safe } = item; return safe; };
+
+      let myIndex = -1;
+      if (userBest) {
+        myIndex = allItems.findIndex(item => item._session_id === userBest.best_session_id);
+        console.log('[排行榜] myIndex:', myIndex, '/ total:', allItems.length);
+      }
+
+      // 前3名
+      const top3 = allItems.slice(0, 3).map(stripInternal);
+
+      if (myIndex >= 0) {
+        // 标记"我"在 top3 中
+        if (myIndex < 3) {
+          top3[myIndex] = { ...top3[myIndex], isMe: true };
+        }
+
+        // 用户不在前3，构建上下文区域（前2 + 自己 + 后2）
+        let mySection = [];
+        let hasGap = false;
+        if (myIndex >= 3) {
+          const start = Math.max(3, myIndex - 2);
+          const end = Math.min(allItems.length - 1, myIndex + 2);
+          for (let i = start; i <= end; i++) {
+            mySection.push({ ...stripInternal(allItems[i]), isMe: i === myIndex });
+          }
+          hasGap = start > 3;
+        }
+
+        res.json({
+          ok: true,
+          exam_id: fullData.exam_id,
+          exam_name: fullData.exam_name,
+          leaderboard: top3,
+          my_rank: myIndex + 1,
+          my_section: mySection,
+          has_gap: hasGap,
+          has_record: true,
+          total_count: allItems.length,
+        });
       } else {
-        rows = await db.all('SELECT * FROM leaderboard LIMIT 100');
+        // 用户没有记录或不在排行榜中，返回前10
+        res.json({
+          ok: true,
+          exam_id: fullData.exam_id,
+          exam_name: fullData.exam_name,
+          leaderboard: allItems.slice(0, 10).map(stripInternal),
+          my_rank: -1,
+          my_section: [],
+          has_gap: false,
+          has_record: false,
+          total_count: allItems.length,
+        });
       }
-
-      if (rows.length === 0) {
-        const examMeta = examId ? getExam(examId) : null;
-        return { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard: [] };
-      }
-
-      const examMeta = examId ? getExam(examId) : null;
-      const leaderboard = rows.map((r, i) => ({
-        rank: i + 1, claw_name: r.claw_name, claw_version: r.claw_version,
-        claw_type: r.claw_type || 'OpenClaw',
-        model_name: r.model_name, owner_name: r.owner_name,
-        skill_list: JSON.parse(r.skill_list || '[]'), exam_id: r.exam_id,
-        session_id: r.session_id,
-        total_score: r.total_score, total_max_score: r.total_max_score,
-        answered_count: r.answered_count, score_percent: r.score_percent || 0,
-        duration_seconds: r.duration_seconds || 0,
-        started_at: r.started_at,
-      }));
-
-      const data = { ok: true, exam_id: examId || null, exam_name: examMeta?.name || null, leaderboard };
-
-      // 写入缓存，TTL 60s
-      await cache.set(cacheKey, data, 60);
-
-      return data;
-    });
-
-    res.json(result);
+    } else {
+      // 未传 uid（web 页面），返回前100条
+      const stripInternal = (item) => { const { _session_id, ...safe } = item; return safe; };
+      res.json({
+        ok: true,
+        exam_id: fullData.exam_id,
+        exam_name: fullData.exam_name,
+        leaderboard: allItems.slice(0, 100).map(stripInternal),
+      });
+    }
   } catch (err) {
     console.error('获取排行榜失败:', err);
     res.status(500).json({ ok: false, error: err.message });
@@ -452,6 +594,53 @@ router.get('/stats', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error('获取统计数据失败:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// GET /api/overview-stats — 首页概览统计（四维精确数据）
+router.get('/overview-stats', async (req, res) => {
+  try {
+    const cacheKey = 'overview-stats';
+    const cachedRaw = await cache.getRaw(cacheKey);
+    if (cachedRaw) return res.type('json').send(cachedRaw);
+
+    const result = await cache.singleflight(cacheKey, async () => {
+      const cached2 = await cache.get(cacheKey);
+      if (cached2) return cached2;
+
+      // 考试虾数（不同 claw_profile 数量）
+      const shrimpCount = await db.get(
+        'SELECT COUNT(DISTINCT profile_id) AS count FROM exam_sessions'
+      );
+      // 总答题次数（每答一道题算一次）
+      const examCount = await db.get(
+        'SELECT COUNT(*) AS count FROM answers'
+      );
+      // 模型数
+      const modelCount = await db.get(
+        'SELECT COUNT(DISTINCT model_name) AS count FROM claw_profiles'
+      );
+      // 虾品种数
+      const typeCount = await db.get(
+        'SELECT COUNT(DISTINCT claw_type) AS count FROM claw_profiles'
+      );
+
+      const data = {
+        ok: true,
+        shrimp_count: shrimpCount?.count || 0,
+        exam_count: examCount?.count || 0,
+        model_count: modelCount?.count || 0,
+        type_count: typeCount?.count || 0,
+      };
+
+      await cache.set(cacheKey, data, 120);
+      return data;
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('获取概览统计失败:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
