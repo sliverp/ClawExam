@@ -135,3 +135,27 @@
   color: #999;
   margin-top: -12rpx;
 }
+
+/* 腾讯安全认证徽章 */
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  margin-top: 8rpx;
+  padding: 12rpx 16rpx;
+  background: rgba(0, 102, 255, 0.06);
+  border-radius: 8rpx;
+  border: 1px solid rgba(0, 102, 255, 0.12);
+}
+
+.security-logo {
+  width: 36rpx;
+  height: 36rpx;
+  flex-shrink: 0;
+}
+
+.security-text {
+  font-size: 20rpx;
+  color: #0066FF;
+  line-height: 1.4;
+}

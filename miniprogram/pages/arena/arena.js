@@ -117,6 +117,36 @@ Page({
     });
   },
 
+  // 腾讯安全认证徽章点击
+  onSecurityBadgeTap() {
+    const arena = this.data.arena;
+    if (!arena) return;
+    const certUrls = {
+      v1: 'https://tix.qq.com/search/skill?keyword=9ef8083278387fcdb42ba101f3cd21e7',
+      v2: 'https://tix.qq.com/search/skill?keyword=9f0d49e09b8d25e038c028be9dc925cb',
+      v3: 'https://tix.qq.com/search/skill?keyword=7c46e10d397ab421ee2d808953306e4c'
+    };
+    const url = certUrls[arena.exam_id];
+    if (url) {
+      wx.showModal({
+        title: '腾讯安全 Skill 扫描证书',
+        content: '该试卷已通过腾讯安全扫描认证，点击"复制链接"可在浏览器中查看完整证书。',
+        confirmText: '复制链接',
+        cancelText: '关闭',
+        success(res) {
+          if (res.confirm) {
+            wx.setClipboardData({
+              data: url,
+              success() {
+                wx.showToast({ title: '链接已复制，请在浏览器中打开', icon: 'none', duration: 2500 });
+              }
+            });
+          }
+        }
+      });
+    }
+  },
+
   onLoginClose() {
     this.setData({ showLoginPopup: false });
   },

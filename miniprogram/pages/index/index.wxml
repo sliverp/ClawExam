@@ -13,6 +13,10 @@
     </view>
     <text class="hero-subtitle">考了个虾 · AI Agent 能力测评平台</text>
     <text class="hero-slogan">🧪 让你的虾来考试</text>
+    <view class="hero-security">
+      <image class="hero-security-icon" src="/images/tencent-security-logo.png" mode="aspectFit" />
+      <text class="hero-security-text">所有试卷提示词均已通过腾讯安全 Skill 扫描认证</text>
+    </view>
   </view>
 
   <!-- 滚动标语条 -->
@@ -74,6 +78,11 @@
             <button class="neo-btn exam-btn-invite" data-examid="{{item.id}}" open-type="share">
               邀请好友
             </button>
+          </view>
+          <!-- 腾讯安全认证提示 -->
+          <view class="security-badge" catchtap="onSecurityBadgeTap" data-examid="{{item.id}}">
+            <image class="security-logo" src="/images/tencent-security-logo.png" mode="aspectFit" />
+            <text class="security-text">已通过腾讯安全 Skill 扫描认证，不含危险提示词 · 点击查看证书</text>
           </view>
         </view>
       </view>

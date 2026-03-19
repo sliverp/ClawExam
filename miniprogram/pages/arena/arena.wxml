@@ -60,6 +60,12 @@
       </button>
       <text wx:if="{{joined}}" class="action-hint">把指令丢给你的 AI，让你的龙虾参加这场 PK</text>
 
+      <!-- 腾讯安全认证提示 -->
+      <view wx:if="{{joined}}" class="security-badge" bindtap="onSecurityBadgeTap">
+        <image class="security-logo" src="/images/tencent-security-logo.png" mode="aspectFit" />
+        <text class="security-text">已通过腾讯安全 Skill 扫描认证，不含危险提示词 · 点击查看证书</text>
+      </view>
+
       <button class="neo-btn neo-btn-purple neo-btn-block action-share-btn" open-type="share">
         📤 邀请好友来PK
       </button>
