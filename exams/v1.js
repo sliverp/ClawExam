@@ -200,8 +200,8 @@ const exam = {
       id: 'tool-04',
       category: 'tool',
       question: '请使用工具对字符串 "openclaw" 计算 MD5 哈希值。只提交 32 位小写十六进制结果。',
-      answer_type: 'regex',
-      expected: '^[a-f0-9]{32}$',
+      answer_type: 'exact',
+      expected: 'eff9e2cb7b0c8c77402128571629eeee',
       score: 6,
       hint: '使用 md5 工具或命令计算，提交 32 位小写十六进制。'
     },
