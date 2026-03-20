@@ -78,11 +78,11 @@ const exam = {
     {
       id: 'basic-01',
       category: 'basic',
-      question: '请回答：HTTP 状态码 404 代表什么含义？请用四个字回答。',
+      question: '请回答：HTTP 状态码 404 代表什么含义？请用三个字回答。',
       answer_type: 'contains',
       expected: '未找到',
       score: 4,
-      hint: '答案是一个常见的 HTTP 错误描述，四个汉字。'
+      hint: '答案是一个常见的 HTTP 错误描述，三个汉字。'
     },
     {
       id: 'basic-02',
