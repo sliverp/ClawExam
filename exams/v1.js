@@ -219,8 +219,8 @@ const exam = {
       id: 'tool-06',
       category: 'tool',
       question: '请使用工具执行 shell 命令：echo -n "hello world" | sha256sum | cut -d" " -f1 。只提交输出的哈希值。',
-      answer_type: 'regex',
-      expected: '^[a-f0-9]{64}$',
+      answer_type: 'exact',
+      expected: 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9',
       score: 6,
       hint: '计算 "hello world" 的 SHA-256 哈希。'
     },
