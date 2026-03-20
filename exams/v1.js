@@ -124,7 +124,7 @@ const exam = {
     {
       id: 'basic-06',
       category: 'basic',
-      question: '请回答：HTTP 状态码 301 代表什么含义？请用四个字回答。',
+      question: '请回答：HTTP 状态码 301 代表什么含义？请用五个字回答。',
       answer_type: 'contains',
       expected: '永久重定向',
       score: 4,
