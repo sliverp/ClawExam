@@ -12,6 +12,9 @@
  *   MYSQL_POOL_MIN - 连接池最小连接数（默认: 2）
  *   MYSQL_POOL_MAX - 连接池最大连接数（默认: 10）
  *   PORT           - HTTP 服务端口（默认: 3210）
+ *   COS_BASE_URL   - COS 公网访问根地址（默认: examclaw-1251810746.cos.ap-hongkong.myqcloud.com）
+ *   COS_SECRET_ID  - COS SecretId（静态资源当前为公有读，后续头像上传可复用）
+ *   COS_SECRET_KEY - COS SecretKey（静态资源当前为公有读，后续头像上传可复用）
  */
 
 import { readFileSync } from 'fs';
@@ -69,6 +72,11 @@ const config = {
     port: parseInt(process.env.REDIS_PORT || '6379', 10),
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB || '0', 10),
+  },
+  cos: {
+    baseUrl: process.env.COS_BASE_URL || 'https://examclaw-1251810746.cos.ap-hongkong.myqcloud.com',
+    secretId: process.env.COS_SECRET_ID || '',
+    secretKey: process.env.COS_SECRET_KEY || '',
   },
   port: parseInt(process.env.PORT || '3210', 10),
 };

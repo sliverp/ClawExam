@@ -9,7 +9,8 @@ Page({
     exams: [],
     activeExamId: '',
     loading: false,
-    myUid: ''
+    myUid: '',
+    friendCount: 0
   },
 
   async onShow() {
@@ -69,9 +70,12 @@ Page({
         const leaderboard = (res.leaderboard || []).map((item, idx) => ({
           ...item,
           rank: idx + 1,
+          is_me: item.uid_hash === this.data.myUid,
           durationText: util.formatDuration(item.best_duration),
           percentText: Number(item.best_percent || 0).toFixed(1),
-          dateText: item.started_at ? (util.formatTime ? util.formatTime(new Date(item.started_at)) : item.started_at) : ''
+          scoreValue: Number(item.total_score || 0),
+          maxValue: Number(item.total_max || 0),
+          dateText: item.started_at ? this.formatLeaderboardTime(item.started_at) : ''
         }));
         this.setData({ leaderboard, loading: false });
       } else {
@@ -88,6 +92,18 @@ Page({
     if (examId === this.data.activeExamId) return;
     this.setData({ activeExamId: examId });
     this.loadLeaderboard(examId);
+  },
+
+  formatLeaderboardTime(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return '';
+    const now = new Date();
+    const diff = now - date;
+    const days = Math.floor(diff / 86400000);
+    if (days <= 0) return '今天';
+    if (days < 30) return `${days}天前`;
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
   },
 
   onGoLogin() {

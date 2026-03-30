@@ -7,6 +7,7 @@ Page({
     arena: null,
     participants: [],
     loading: true,
+    error: '',
     isLoggedIn: false,
     showLoginPopup: false,
     myUid: '',
@@ -58,16 +59,22 @@ Page({
           rank: idx + 1,
           durationText: util.formatDuration(p.duration_seconds),
           percentText: Number(p.score_percent || 0).toFixed(1),
+          scoreText: `得分 ${Number(p.score || 0)} · ${Number(p.score_percent || 0).toFixed(1)}%`,
           is_me: p.uid_hash === this.data.myUid
         }));
 
         const joined = participants.some(p => p.uid_hash === this.data.myUid);
 
         this.setData({
-          arena: res.arena,
+          arena: {
+            ...res.arena,
+            exam_name: res.arena.exam_name || this.getExamName(res.arena.exam_id),
+            statusText: res.arena.status === 'finished' ? '已结束' : '进行中'
+          },
           participants,
           joined,
-          loading: false
+          loading: false,
+          error: ''
         });
 
         wx.setNavigationBarTitle({
@@ -75,11 +82,11 @@ Page({
         });
       } else {
         wx.showToast({ title: '竞技场不存在', icon: 'none' });
-        this.setData({ loading: false });
+        this.setData({ loading: false, error: '竞技场不存在' });
       }
     } catch (e) {
       console.error('加载竞技场失败:', e);
-      this.setData({ loading: false });
+      this.setData({ loading: false, error: '加载失败，请稍后重试' });
     }
   },
 
@@ -149,6 +156,20 @@ Page({
 
   onLoginClose() {
     this.setData({ showLoginPopup: false });
+  },
+
+  getExamName(examId) {
+    const exams = getApp().globalData.exams || [];
+    const exam = exams.find((item) => item.id === examId);
+    return exam?.name || examId;
+  },
+
+  onGoBack() {
+    wx.navigateBack({
+      fail: () => {
+        wx.switchTab({ url: '/pages/index/index' });
+      }
+    });
   },
 
   onLoginSuccess() {

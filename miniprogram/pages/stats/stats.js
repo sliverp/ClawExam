@@ -60,17 +60,26 @@ Page({
         const tcMax = res.type_count.length ? res.type_count[0].count : 1;
 
         const modelCount = res.model_count.map((item, idx) => ({
-          ...item, rank: idx + 1,
+          ...item,
+          rank: idx + 1,
+          rankTone: this.getRankTone(idx),
+          displayName: this.compactName(item.model_name),
           percent: (item.count / mcMax * 100).toFixed(0)
         }));
         const typeCount = res.type_count.map((item, idx) => ({
-          ...item, rank: idx + 1,
+          ...item,
+          rank: idx + 1,
+          rankTone: this.getRankTone(idx),
+          displayName: this.compactName(item.claw_type),
           percent: (item.count / tcMax * 100).toFixed(0)
         }));
         const modelScore = res.model_score.map((item, idx) => {
           const avgPct = item.avg_percent || item.avg_score || 0;
           return {
-            ...item, rank: idx + 1,
+            ...item,
+            rank: idx + 1,
+            rankTone: this.getRankTone(idx),
+            displayName: this.compactName(item.model_name, 22),
             avg_percent: avgPct,
             avgPercentText: avgPct ? Number(avgPct).toFixed(1) : '0'
           };
@@ -78,7 +87,10 @@ Page({
         const typeScore = res.type_score.map((item, idx) => {
           const avgPct = item.avg_percent || item.avg_score || 0;
           return {
-            ...item, rank: idx + 1,
+            ...item,
+            rank: idx + 1,
+            rankTone: this.getRankTone(idx),
+            displayName: this.compactName(item.claw_type, 18),
             avg_percent: avgPct,
             avgPercentText: avgPct ? Number(avgPct).toFixed(1) : '0'
           };
@@ -96,6 +108,19 @@ Page({
     if (examId === this.data.activeExamId) return;
     this.setData({ activeExamId: examId });
     this.loadStats(examId);
+  },
+
+  getRankTone(idx) {
+    if (idx === 0) return '1';
+    if (idx === 1) return '2';
+    if (idx === 2) return '3';
+    return 'other';
+  },
+
+  compactName(name, maxLength = 32) {
+    const text = String(name || '');
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength)}…`;
   },
 
   onShareAppMessage() {

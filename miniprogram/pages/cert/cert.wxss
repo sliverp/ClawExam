@@ -1,351 +1,531 @@
-/* ============================================
-   证书页 · Neobrutalism 爆款版
-   ============================================ */
-.page {
-  padding-bottom: 40rpx;
+page {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.cert-content {
-  padding: 32rpx;
+.cert-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #ffe384 0%, #fff5d9 28%, #fffaf0 100%);
 }
 
-/* ============================================
-   分享卡片 - 为截图传播优化
-   ============================================ */
-.cert-share-card {
-  background: linear-gradient(135deg, var(--fg) 0%, #2a2a2a 100%);
-  border: var(--border-thick);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 48rpx 36rpx;
+.cert-layout {
+  padding: 18rpx 10rpx 16rpx;
+}
+
+.cert-empty {
+  min-height: calc(100vh - 220rpx);
+  padding: 80rpx 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-bottom: 32rpx;
 }
 
-.cert-share-title {
-  font-size: 22rpx;
-  font-weight: 800;
-  color: #888;
-  letter-spacing: 8rpx;
-  margin-bottom: 16rpx;
+.cert-empty-icon {
+  font-size: 88rpx;
+  margin-bottom: 18rpx;
 }
 
-.cert-share-score {
-  font-size: 120rpx;
+.cert-empty-title {
+  font-size: 40rpx;
   font-weight: 900;
-  color: var(--yellow);
-  line-height: 1.1;
-  margin-bottom: 12rpx;
+  color: #201d1b;
 }
 
-.cert-share-name {
-  font-size: 26rpx;
-  font-weight: 700;
-  color: #ccc;
-  margin-bottom: 8rpx;
-}
-
-.cert-share-meta {
-  font-size: 22rpx;
-  color: #888;
-  margin-bottom: 20rpx;
-}
-
-.cert-share-challenge {
+.cert-empty-btn {
+  margin-top: 28rpx;
+  width: 240rpx;
+  height: 84rpx;
+  border-radius: 24rpx;
+  border: none;
+  background: #111;
+  color: #fff;
   font-size: 28rpx;
   font-weight: 800;
-  color: var(--lime);
-  padding: 12rpx 28rpx;
-  background: rgba(198,241,53,0.1);
-  border: 2px solid var(--lime);
-  border-radius: var(--radius-pill);
 }
 
-/* ============================================
-   证书主体卡片
-   ============================================ */
-.cert-card {
-  margin-bottom: 32rpx;
+.cert-empty-btn::after {
+  border: none;
 }
 
-/* ---- Header ---- */
-.cert-header {
-  padding: 32rpx 32rpx;
-  border-bottom: var(--border);
+.cert-hero {
+  position: relative;
+  padding-top: 0;
 }
 
-.cert-header-label {
-  font-size: 20rpx;
-  font-weight: 800;
-  letter-spacing: 6rpx;
-  color: var(--fg);
+.cert-hero-main {
+  position: relative;
+  overflow: visible;
+  margin: 0 -4rpx;
+}
+
+.grade-stage-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
   display: block;
-  margin-bottom: 8rpx;
-  opacity: 0.5;
 }
 
-.cert-header-exam {
-  font-size: 36rpx;
-  font-weight: 900;
-  display: block;
-  line-height: 1.3;
-}
-
-/* ---- Claw 信息 ---- */
-.cert-claw {
-  padding: 28rpx 32rpx;
-  border-bottom: 2px dashed #e0e0e0;
-}
-
-.claw-name {
-  font-size: 44rpx;
-  font-weight: 900;
-  display: block;
-  margin-bottom: 16rpx;
-  line-height: 1.2;
-}
-
-.claw-tags {
+.cert-hero-overlay {
+  position: absolute;
+  left: 52%;
+  right: 34rpx;
+  bottom: 148rpx;
+  z-index: 3;
   display: flex;
-  flex-wrap: wrap;
-  gap: 10rpx;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-/* ---- 评级 ---- */
-.grade-section {
+.cert-hero-overlay-lower {
+  bottom: 126rpx;
+}
+
+.cert-hero-claw-name {
+  display: block;
+  width: 100%;
+  font-size: 42rpx;
+  line-height: 1.08;
+  font-weight: 900;
+  color: #171410;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cert-hero-claw-name-medium {
+  font-size: 38rpx;
+}
+
+.cert-hero-claw-name-compact {
+  font-size: 34rpx;
+}
+
+.cert-hero-tags-row {
   display: flex;
   align-items: center;
-  padding: 32rpx;
-  gap: 28rpx;
-  border-bottom: 2px dashed #e0e0e0;
+  justify-content: flex-end;
+  gap: 12rpx;
+  width: 100%;
+  margin-top: 14rpx;
+  flex-wrap: nowrap;
 }
 
-.grade-badge {
-  width: 110rpx;
-  height: 110rpx;
+.cert-hero-tag {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 10rpx 18rpx;
+  border-radius: 18rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #d7671d;
+  font-size: 18rpx;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cert-hero-tag-model {
+  max-width: 180rpx;
+  flex: 0 1 auto;
+}
+
+.cert-hero-tag-version {
+  max-width: 96rpx;
+  flex: 0 0 auto;
+}
+
+.cert-hero-foot {
+  position: absolute;
+  left: 56rpx;
+  right: 44rpx;
+  bottom: 52rpx;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cert-profile-row {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  transform: rotate(-0.5deg);
+}
+
+.cert-hero-foot-lower {
+  bottom: 10rpx;
+}
+
+.cert-avatar {
+  width: 62rpx;
+  height: 62rpx;
+  border-radius: 50%;
+  margin-right: 16rpx;
+  background: #fff;
+  border: 4rpx solid #fff;
+  box-shadow: 0 10rpx 18rpx rgba(184, 142, 36, 0.16);
+}
+
+.cert-avatar-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: var(--border);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fff1d7 0%, #ffd87a 100%);
+}
+
+.cert-avatar-fallback-text {
+  font-size: 28rpx;
+}
+
+.cert-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cert-profile-name {
+  display: block;
+  font-size: 27rpx;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #161413;
+  
+  transform-origin: left center;
+}
+
+.cert-percent-chip {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
+  padding-left: 24rpx;
+  transform: rotate(-2.8deg);
+  transform-origin: left center;
+}
+
+.cert-percent-star {
+  font-size: 40rpx;
+  color: #ffd652;
+}
+
+.cert-percent-text {
+  font-size: 25rpx;
+  line-height: 1;
+  font-weight: 900;
+  color: #161413;
+}
+
+.cert-stats-grid {
+  margin-top: -12rpx;
+  display: flex;
+  gap: 1rpx;
+}
+
+.cert-stat-card {
+  flex: 1;
+  min-width: 0;
+  padding: 22rpx 12rpx 18rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.98);
+  text-align: center;
+  box-shadow: 0 12rpx 20rpx rgba(184, 142, 36, 0.08);
+}
+
+.cert-stat-icon {
+  display: block;
+  font-size: 34rpx;
+}
+
+.cert-stat-value {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 36rpx;
+  line-height: 1.08;
+  font-weight: 900;
+  color: #ff8c00;
+  word-break: break-word;
+}
+
+.cert-stat-label {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #24211f;
+}
+
+.cert-panel {
+  margin-top: 40rpx;
+  padding: 34rpx 26rpx 28rpx;
+  border-radius: 34rpx;
+  background: rgba(255, 255, 255, 0.98);
+  border: 2rpx solid #f3c339;
+  box-shadow: 0 14rpx 24rpx rgba(184, 142, 36, 0.08);
+}
+
+.cert-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+  margin: -58rpx 0 28rpx;
+}
+
+.cert-panel-title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 18rpx 26rpx;
+  border-radius: 26rpx;
+  background: #fffef9;
+  box-shadow: 0 12rpx 20rpx rgba(184, 142, 36, 0.12);
+  transform: rotate(-4deg);
   flex-shrink: 0;
 }
 
-.grade-letter {
-  font-size: 56rpx;
+.cert-panel-title-dot {
+  font-size: 26rpx;
+  color: #ffd552;
+}
+
+.cert-panel-title {
+  font-size: 42rpx;
   font-weight: 900;
+  color: #171513;
+  line-height: 1;
 }
 
-.grade-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6rpx;
+.cert-panel-desc {
+  flex: 1;
+  padding-top: 28rpx;
+  font-size: 19rpx;
+  line-height: 1.7;
+  color: rgba(166, 145, 98, 0.82);
+  text-align: right;
 }
 
-.grade-desc {
-  font-size: 28rpx;
-  font-weight: 800;
-  display: block;
-}
-
-.grade-percent {
-  font-size: 24rpx;
-  color: var(--gray);
-  display: block;
-}
-
-/* ---- 毕业标记 ---- */
-.graduated-badge {
-  padding: 20rpx 32rpx;
-  background: var(--bg-alt);
-  text-align: center;
-  font-size: 32rpx;
-  font-weight: 800;
-  border-bottom: 2px dashed #e0e0e0;
-}
-
-/* ---- 统计网格 ---- */
-.stats-grid {
+.cert-category-list {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border-bottom: 2px dashed #e0e0e0;
+  column-gap: 18rpx;
+  row-gap: 26rpx;
 }
 
-.stats-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24rpx 8rpx;
-  border-right: 2px dashed #e0e0e0;
+.cert-category-list-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.stats-item:last-child {
-  border-right: none;
+.cert-category-list-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.stats-value {
-  font-size: 32rpx;
-  font-weight: 900;
-  margin-bottom: 4rpx;
+.cert-category-item {
+  min-width: 0;
 }
 
-.stats-label {
-  font-size: 20rpx;
-  color: var(--gray);
-  font-weight: 600;
-}
-
-/* ---- 快速作答警告 ---- */
-.speedrun-warn {
-  padding: 20rpx 32rpx;
-  background: #FFF3CD;
-  border-bottom: 2px dashed #e0e0e0;
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #856404;
-}
-
-/* ---- 各维度得分 ---- */
-.sub-title {
-  font-size: 28rpx;
-  font-weight: 800;
-  display: block;
-  margin-bottom: 20rpx;
-}
-
-.category-section {
-  padding: 28rpx 32rpx;
-  border-bottom: 2px dashed #e0e0e0;
-}
-
-.category-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.cat-header {
+.cert-category-top {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8rpx;
+  gap: 18rpx;
 }
 
-.cat-name {
-  font-weight: 700;
-  font-size: 24rpx;
+.cert-category-name {
+  font-size: 26rpx;
+  line-height: 1.25;
+  font-weight: 900;
+  color: #475569;
 }
 
-.cat-score {
-  font-weight: 800;
-  font-size: 24rpx;
-  color: var(--fg);
+.cert-category-bar {
+  margin-top: 18rpx;
+  height: 24rpx;
+  border-radius: 999rpx;
+  background: #ededed;
+  overflow: hidden;
 }
 
-/* ---- 技能标签 ---- */
-.skills-section {
-  padding: 28rpx 32rpx;
-  border-bottom: 2px dashed #e0e0e0;
+.cert-category-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffe089 0%, #ffd25c 100%);
 }
 
-.skills-wrap {
+.cert-skills-wrap {
+  margin-top: 34rpx;
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
+  gap: 16rpx;
 }
 
-.skill-tag {
-  font-size: 24rpx;
-  padding: 6rpx 16rpx;
+.cert-skill-tag {
+  padding: 12rpx 24rpx;
+  border-radius: 22rpx;
+  background: #fff5dd;
+  color: #efb93f;
+  font-size: 21rpx;
+  font-weight: 700;
 }
 
-/* ---- 勋章 ---- */
-.badges-section {
-  padding: 28rpx 32rpx;
-  border-bottom: 2px dashed #e0e0e0;
+.cert-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 18rpx;
+  row-gap: 22rpx;
 }
 
-.badges-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
+.cert-badge-card {
+  text-align: center;
+  padding: 0;
 }
 
-.badge-item {
+.cert-badge-image-wrap {
+  position: relative;
+  width: 132rpx;
+  height: 132rpx;
+  margin: 0 auto;
+  border-radius: 0;
+  background: transparent;
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 16rpx 20rpx;
-  margin-bottom: 0;
-  box-shadow: var(--shadow-sm);
+  justify-content: center;
 }
 
-.badge-icon {
-  font-size: 40rpx;
+.cert-badge-tone-gold {
+  background: linear-gradient(180deg, #fff5cf 0%, #ffe7a8 100%);
+}
+
+.cert-badge-tone-blue {
+  background: linear-gradient(180deg, #eef5ff 0%, #dbeafe 100%);
+}
+
+.cert-badge-tone-amber {
+  background: linear-gradient(180deg, #fff7e8 0%, #fde68a 100%);
+}
+
+.cert-badge-tone-orange {
+  background: linear-gradient(180deg, #fff1e7 0%, #fdba74 100%);
+}
+
+.cert-badge-tone-violet {
+  background: linear-gradient(180deg, #f3e8ff 0%, #ddd6fe 100%);
+}
+
+.cert-badge-fallback {
+  font-size: 72rpx;
+}
+
+.cert-badge-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.cert-badge-name {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #334155;
+}
+
+.cert-footer-panel {
+  margin-top: 28rpx;
+  padding: 24rpx;
+  border-radius: 0;
+  background: #060606;
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+}
+
+.cert-footer-qrcode {
+  width: 168rpx;
+  height: 168rpx;
+  background: #fff;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.badge-info {
-  flex: 1;
-}
-
-.badge-name {
-  font-size: 26rpx;
-  font-weight: 800;
-  display: block;
-  margin-bottom: 2rpx;
-}
-
-.badge-desc {
-  font-size: 22rpx;
-  color: var(--gray);
-  display: block;
-}
-
-/* ---- 证书图片 ---- */
-.cert-image-section {
-  padding: 28rpx 32rpx;
-  border-bottom: 2px dashed #e0e0e0;
-}
-
-.cert-image {
+.cert-footer-qrcode-image {
   width: 100%;
-  border: var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  height: 100%;
+  display: block;
 }
 
-/* ---- 准考证号 ---- */
-.token-section {
-  padding: 24rpx 32rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: var(--gray-light);
-  border-radius: 0 0 var(--radius) var(--radius);
+.cert-footer-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.token-label {
+.cert-footer-title {
+  display: block;
+  font-size: 34rpx;
+  line-height: 1.25;
+  font-weight: 900;
+  color: #ffce4b;
+}
+
+.cert-footer-desc {
+  display: block;
+  margin-top: 16rpx;
   font-size: 22rpx;
-  color: var(--gray);
-  font-weight: 700;
-  margin-bottom: 8rpx;
+  color: rgba(255, 255, 255, 0.9);
 }
 
-.token-value {
-  font-size: 22rpx;
-  color: var(--fg);
-  word-break: break-all;
-  text-align: center;
-  line-height: 1.5;
+.cert-footer-meta {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 15rpx;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ---- 操作按钮 ---- */
 .cert-actions {
+  margin-top: 20rpx;
   display: flex;
   flex-direction: column;
-  gap: 20rpx;
+  gap: 12rpx;
+}
+
+.cert-action-btn {
+  height: 88rpx;
+  border-radius: 24rpx;
+  border: none;
+  font-size: 28rpx;
+  font-weight: 900;
+}
+
+.cert-action-btn::after {
+  border: none;
+}
+
+.cert-action-share {
+  background: #111;
+  color: #fff;
+}
+
+.cert-action-save {
+  background: #ffcf4b;
+  color: #3a2500;
+}
+
+.cert-action-home {
+  background: #fff;
+  color: #111;
 }

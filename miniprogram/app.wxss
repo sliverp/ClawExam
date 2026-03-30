@@ -41,7 +41,7 @@ page {
 
   background-color: var(--bg);
   color: var(--fg);
-  padding-bottom: 180rpx;
+  padding-bottom: calc(116rpx + env(safe-area-inset-bottom));
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   font-size: 28rpx;
   line-height: 1.6;

@@ -1,26 +1,20 @@
-/* Neobrutalism TabBar · 轻量毛玻璃版 */
 .tab-bar-wrap {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 999;
-  padding: 0 20rpx;
+  background: #fffdf6;
+  border-top: 2rpx solid rgba(34, 34, 34, 0.06);
   padding-bottom: env(safe-area-inset-bottom);
-  background: transparent;
 }
 
 .tab-bar {
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 110rpx;
-  background: rgba(255, 251, 235, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 3px solid #1a1a1a;
-  border-bottom: none;
-  border-radius: 28rpx 28rpx 0 0;
+  height: 116rpx;
+  background: #fffdf6;
   overflow: hidden;
 }
 
@@ -32,7 +26,6 @@
   justify-content: center;
   height: 100%;
   position: relative;
-  transition: all 0.15s ease;
 }
 
 .tab-item + .tab-item::before {
@@ -42,33 +35,35 @@
   top: 50%;
   transform: translateY(-50%);
   width: 2rpx;
-  height: 48rpx;
-  background: rgba(26, 26, 26, 0.15);
+  height: 56rpx;
+  background: rgba(34, 34, 34, 0.1);
   border-radius: 2rpx;
 }
 
 .tab-icon {
-  font-size: 44rpx;
-  margin-bottom: 4rpx;
+  font-size: 40rpx;
+  margin-bottom: 6rpx;
   line-height: 1.2;
+  opacity: 0.9;
 }
 
 .tab-text {
-  font-size: 20rpx;
+  font-size: 18rpx;
   font-weight: 800;
   color: #999;
   letter-spacing: 1rpx;
 }
 
+.tab-item.active .tab-icon,
 .tab-item.active .tab-text {
-  color: #1a1a1a;
+  color: #f08d2e;
 }
 
 .tab-dot {
   position: absolute;
-  bottom: 14rpx;
-  width: 8rpx;
-  height: 8rpx;
+  bottom: 8rpx;
+  width: 10rpx;
+  height: 10rpx;
   border-radius: 50%;
-  background: #E63B2E;
+  background: #f08d2e;
 }

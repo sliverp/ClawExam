@@ -1,6 +1,30 @@
 const api = require('../../utils/api');
 const util = require('../../utils/util');
 
+const CATEGORY_LABELS = {
+  basic: '基本常识',
+  tool: '工具调用',
+  complex: '复杂推理',
+  computer: '实战操作',
+  browser: 'Browser Use',
+  search: '信息检索',
+  reasoning: '复杂推理',
+  research: '深度检索',
+  practical: '实战操作'
+};
+
+const CATEGORY_ORDER = {
+  practical: 10,
+  computer: 10,
+  complex: 20,
+  reasoning: 20,
+  research: 30,
+  browser: 30,
+  search: 40,
+  basic: 50,
+  tool: 60
+};
+
 Page({
   data: {
     token: '',
@@ -12,13 +36,22 @@ Page({
     gradeDesc: '',
     examColor: '',
     categoryList: [],
+    categoryGridClass: 'cert-category-list-3',
     savingImage: false,
     scorePercent0: '0',
-    scorePercent1: '0.0'
+    scorePercent1: '0.0',
+    qrcodeImageUrl: util.assetUrl('cert/qrcode.jpg'),
+    gradeAssetPath: '',
+    badgeCards: [],
+    heroNameClass: '',
+    heroFootClass: '',
+    heroOverlayClass: '',
+    displayAvatarUrl: '',
+    durationText: '-',
+    startedAtText: ''
   },
 
   onLoad(options) {
-    // 处理邀请者
     if (options.inviter) {
       const app = getApp();
       if (app.globalData.isLoggedIn) {
@@ -33,6 +66,7 @@ Page({
       this.setData({ loading: false, error: '缺少准考证号' });
       return;
     }
+
     this.setData({ token });
     this.loadCert(token);
   },
@@ -45,32 +79,24 @@ Page({
         return;
       }
 
-      // 构建维度得分列表
-      const categoryList = [];
-      if (res.category_scores) {
-        for (const [key, val] of Object.entries(res.category_scores)) {
-          categoryList.push({
-            name: key,
-            score: val.score,
-            max: val.max,
-            percent: val.max > 0 ? (val.score / val.max * 100).toFixed(1) : 0
-          });
-        }
-      }
-
-      // 后端返回 score: { total, max, percent }，映射为前端需要的字段
       const totalScore = res.score ? res.score.total : (res.total_score || 0);
       const totalMaxScore = res.score ? res.score.max : (res.total_max_score || 1);
-      const scorePercent0 = (totalScore / (totalMaxScore || 1) * 100).toFixed(0);
-      const scorePercent1 = (totalScore / (totalMaxScore || 1) * 100).toFixed(1);
+      const scorePercent = res.score && typeof res.score.percent === 'number'
+        ? res.score.percent
+        : (totalScore / (totalMaxScore || 1) * 100);
 
-      // 统一 cert 对象字段，便于 wxml 中直接引用
       const cert = {
         ...res,
         total_score: totalScore,
         total_max_score: totalMaxScore,
-        total_questions: res.total_questions || categoryList.length || 0
+        total_questions: res.total_questions || 0
       };
+      const app = getApp();
+      const cachedUserInfo = wx.getStorageSync('user_info') || {};
+      const displayAvatarUrl = cert.profile?.avatar_url
+        || app?.globalData?.userInfo?.avatar_url
+        || cachedUserInfo.avatar_url
+        || '';
 
       this.setData({
         cert,
@@ -79,13 +105,171 @@ Page({
         gradeColor: util.gradeColor(res.grade),
         gradeDesc: util.gradeDesc(res.grade),
         examColor: util.examColor(res.exam_id),
-        durationText: util.formatDuration(res.duration_seconds),
-        categoryList,
-        scorePercent0,
-        scorePercent1
+        durationText: this.formatDurationCompact(res.duration_seconds),
+        categoryList: this.buildCategoryList(res.exam_id, res.category_scores),
+        categoryGridClass: this.getCategoryGridClass(res.category_scores),
+        scorePercent0: scorePercent.toFixed(0),
+        scorePercent1: scorePercent.toFixed(1),
+        gradeAssetPath: this.resolveGradeAssetPath(res.exam_id, res.grade),
+        badgeCards: this.buildBadgeCards(cert),
+        heroNameClass: this.getHeroNameClass(cert.profile?.claw_name),
+        heroFootClass: this.getHeroFootClass(res.exam_id),
+        heroOverlayClass: this.getHeroOverlayClass(res.exam_id),
+        displayAvatarUrl,
+        startedAtText: this.formatDateTime(res.started_at)
       });
     } catch (e) {
       this.setData({ loading: false, error: '加载失败，请检查网络' });
+    }
+  },
+
+  buildCategoryList(examId, categoryScores = {}) {
+    const examOrder = this.getExamCategoryOrder(examId);
+    return Object.entries(categoryScores)
+      .map(([key, val]) => ({
+        key,
+        name: CATEGORY_LABELS[key] || key,
+        score: val.score,
+        max: val.max,
+        percent: val.max > 0 ? (val.score / val.max * 100).toFixed(1) : '0.0',
+        order: examOrder[key] || CATEGORY_ORDER[key] || 999
+      }))
+      .sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return a.name.localeCompare(b.name, 'zh-Hans-CN');
+      });
+  },
+
+  getExamCategoryOrder(examId) {
+    const examKey = String(examId || '').toLowerCase();
+    const map = {
+      v1: { basic: 10, complex: 20, tool: 30 },
+      v2: { computer: 10, browser: 20, search: 30, complex: 40 },
+      v3: { practical: 10, reasoning: 20, research: 30 }
+    };
+    return map[examKey] || {};
+  },
+
+  getCategoryGridClass(categoryScores = {}) {
+    const count = Object.keys(categoryScores || {}).length;
+    if (count === 4) return 'cert-category-list-2';
+    return 'cert-category-list-3';
+  },
+
+  getHeroNameClass(name) {
+    const len = String(name || '').trim().length;
+    if (len >= 12) return 'cert-hero-claw-name-compact';
+    if (len >= 8) return 'cert-hero-claw-name-medium';
+    return '';
+  },
+
+  getHeroFootClass(examId) {
+    const examKey = String(examId || '').toLowerCase();
+    if (examKey === 'v2') return 'cert-hero-foot-lower';
+    return '';
+  },
+
+  getHeroOverlayClass(examId) {
+    const examKey = String(examId || '').toLowerCase();
+    if (examKey === 'v2') return 'cert-hero-overlay-lower';
+    return '';
+  },
+
+  normalizeGradeAsset(grade) {
+    const raw = String(grade || '').toUpperCase();
+    if (raw === 'A+') return 'A';
+    if (['S', 'A', 'B', 'C', 'D', 'E', 'F'].includes(raw)) return raw;
+    return 'F';
+  },
+
+  resolveGradeAssetPath(examId, grade) {
+    const examKey = ['v1', 'v2', 'v3'].includes(String(examId || '').toLowerCase())
+      ? String(examId).toLowerCase()
+      : 'v1';
+    const gradeKey = this.normalizeGradeAsset(grade);
+    return util.assetUrl(`cert/grades/${examKey}/等级${gradeKey}.png`);
+  },
+
+  resolveLegacyGradeAsset(grade) {
+    const map = {
+      S: 'a',
+      A: 'b',
+      B: 'c',
+      C: 'd',
+      D: 'e',
+      E: 'e',
+      F: 'f'
+    };
+    return map[this.normalizeGradeAsset(grade)] || 'f';
+  },
+
+  buildBadgeCards(cert) {
+    const badges = Array.isArray(cert.badges) ? cert.badges : [];
+    return badges.map((badge) => {
+      const presentation = this.getBadgePresentation(badge.id);
+      return {
+        id: badge.id,
+        name: badge.name,
+        description: badge.description,
+        asset: this.getBadgeAssetPath(badge.id, badge.icon),
+        emoji: presentation.emoji,
+        tone: presentation.tone
+      };
+    });
+  },
+
+  getBadgeAssetPath(badgeId, remoteIcon) {
+    const localMap = {
+      graduate: util.assetUrl('cert/badges/badge-graduate.png'),
+      honor: util.assetUrl('cert/badges/badge-honor.png'),
+      perfect: util.assetUrl('cert/badges/badge-perfect.png'),
+      logic_master: util.assetUrl('cert/badges/badge-logic-master.png'),
+      research_king: util.assetUrl('cert/badges/badge-research-king.png'),
+      practical_ace: util.assetUrl('cert/badges/badge-practical-ace.png'),
+      speed_demon: util.assetUrl('cert/badges/badge-speed-demon.png')
+    };
+    return localMap[badgeId] || remoteIcon || '';
+  },
+
+  getBadgePresentation(badgeId) {
+    const map = {
+      graduate: { emoji: '📜', tone: 'gold' },
+      honor: { emoji: '🏆', tone: 'gold' },
+      perfect: { emoji: '⭐', tone: 'gold' },
+      logic_master: { emoji: '🧠', tone: 'blue' },
+      research_king: { emoji: '🔎', tone: 'amber' },
+      practical_ace: { emoji: '🛠️', tone: 'orange' },
+      speed_demon: { emoji: '⚡', tone: 'violet' }
+    };
+    return map[badgeId] || { emoji: '🏅', tone: 'gold' };
+  },
+
+  formatDurationCompact(seconds) {
+    if (!seconds && seconds !== 0) return '-';
+    const total = Math.max(0, Number(seconds) || 0);
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    if (h > 0) return `${h}h${m}m${s}s`;
+    return `${m}m${s}s`;
+  },
+
+  formatDateTime(dateStr) {
+    if (!dateStr) return '-';
+    const normalized = typeof dateStr === 'string' ? dateStr.replace(' ', 'T') : dateStr;
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) return String(dateStr);
+
+    const pad = (num) => String(num).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  },
+
+  onStageImageError() {
+    const cert = this.data.cert;
+    if (!cert) return;
+    const fallbackPath = util.assetUrl(`cert/grades/grade-${this.resolveLegacyGradeAsset(cert.grade)}.png`);
+    if (this.data.gradeAssetPath !== fallbackPath) {
+      this.setData({ gradeAssetPath: fallbackPath });
     }
   },
 
@@ -120,10 +304,14 @@ Page({
               }
             }
           });
+        } else {
+          console.error('证书图片下载返回异常:', res.statusCode, certImageUrl);
+          wx.showToast({ title: '保存失败，请稍后重试', icon: 'none' });
         }
       },
-      fail: () => {
-        wx.showToast({ title: '下载失败', icon: 'none' });
+      fail: (err) => {
+        console.error('证书图片下载失败:', err);
+        wx.showToast({ title: '保存失败，请稍后重试', icon: 'none' });
       },
       complete: () => {
         this.setData({ savingImage: false });

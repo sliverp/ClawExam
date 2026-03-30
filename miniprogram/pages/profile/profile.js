@@ -5,12 +5,14 @@ Page({
   data: {
     isLoggedIn: false,
     showLoginPopup: false,
+    showShareGuide: false,
     userInfo: null,
     bestScores: [],
     historyList: [],
     friendCount: 0,
     loading: false,
-    topScore: null
+    topScore: null,
+    completedExamCount: 0
   },
 
   async onShow() {
@@ -80,7 +82,11 @@ Page({
           }
           return item;
         });
-        this.setData({ bestScores, topScore });
+        this.setData({
+          bestScores,
+          topScore,
+          completedExamCount: bestScores.filter(item => item.has_score).length
+        });
       }
 
       // 全部考试历史记录
@@ -148,6 +154,18 @@ Page({
     wx.switchTab({ url: '/pages/stats/stats' });
   },
 
+  onOpenShareGuide() {
+    this.setData({ showShareGuide: true });
+  },
+
+  onCloseShareGuide() {
+    this.setData({ showShareGuide: false });
+  },
+
+  onShareFriendSuccess() {
+    this.setData({ showShareGuide: false });
+  },
+
   onLogout() {
     wx.showModal({
       title: '确认退出',
@@ -161,7 +179,8 @@ Page({
             bestScores: [],
             historyList: [],
             friendCount: 0,
-            topScore: null
+            topScore: null,
+            completedExamCount: 0
           });
         }
       }
@@ -170,9 +189,23 @@ Page({
 
   onShareAppMessage() {
     const uid = this.data.userInfo?.uid_hash || '';
+    const topScore = this.data.topScore;
     return {
-      title: '🦞 我的虾考了高分！你的虾行不行？',
+      title: topScore
+        ? `🦞 我的虾在「${topScore.exam_title}」考了 ${topScore.percentText}%！`
+        : '🦞 我的虾考了高分！你的虾行不行？',
       path: uid ? `/pages/index/index?inviter=${uid}` : '/pages/index/index'
+    };
+  },
+
+  onShareTimeline() {
+    const uid = this.data.userInfo?.uid_hash || '';
+    const topScore = this.data.topScore;
+    return {
+      title: topScore
+        ? `我的虾在「${topScore.exam_title}」考了 ${topScore.percentText}%`
+        : '考了个虾 · 你的虾到底行不行？',
+      query: uid ? `inviter=${uid}` : ''
     };
   }
 });

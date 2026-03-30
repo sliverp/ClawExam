@@ -1,133 +1,139 @@
-<!-- 个人中心 · Neobrutalism 爆款版 -->
-<view class="page">
-
-  <!-- 未登录状态 -->
-  <view wx:if="{{!isLoggedIn}}" class="empty-state">
-    <text class="empty-icon">🦞</text>
-    <text class="empty-title">登录虾场</text>
-    <text class="empty-desc">登录后查看你的虾的成绩</text>
-    <button class="neo-btn neo-btn-red neo-btn-lg" bindtap="onGoLogin">🦞 登录虾场</button>
+<view class="page profile-page">
+  <view wx:if="{{!isLoggedIn}}" class="profile-empty">
+    <text class="profile-empty-icon">🦞</text>
+    <text class="profile-empty-title">登录后查看你的成绩单</text>
+    <text class="profile-empty-desc">登录后可以查看最佳成绩、全部考试记录和分享战绩</text>
+    <button class="profile-login-btn" bindtap="onGoLogin">登录查看</button>
   </view>
 
-  <!-- 已登录状态 -->
-  <view wx:if="{{isLoggedIn}}">
+  <view wx:if="{{isLoggedIn}}" class="profile-content">
+    <view class="profile-user-card">
+      <image class="profile-avatar" src="{{userInfo.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
+      <view class="profile-user-main">
+        <text class="profile-name">{{userInfo.nickname}}</text>
+        <view class="profile-user-meta">
+          <text class="profile-user-meta-text">好友 {{friendCount}}</text>
+          <text class="profile-user-meta-dot">·</text>
+          <text class="profile-user-meta-text">试卷 {{completedExamCount}}</text>
+        </view>
+      </view>
+      <text class="profile-user-badge">💎</text>
+    </view>
 
-    <!-- 用户信息卡片 -->
-    <view class="profile-hero">
-      <view class="profile-card neo-card">
-        <view class="profile-card-inner">
-          <image class="profile-avatar" src="{{userInfo.avatar_url || '/images/default-avatar.png'}}" mode="aspectFill" />
-          <view class="profile-info">
-            <text class="profile-name">{{userInfo.nickname}}</text>
-            <text class="profile-uid">UID: {{userInfo.uid_hash}}</text>
-            <view class="profile-stats-row">
-              <view class="profile-stat">
-                <text class="profile-stat-num">{{friendCount}}</text>
-                <text class="profile-stat-label">好友</text>
-              </view>
-              <view class="profile-stat">
-                <text class="profile-stat-num">{{bestScores.length}}</text>
-                <text class="profile-stat-label">考试</text>
-              </view>
+    <view class="profile-section profile-score-section" wx:if="{{topScore}}">
+      <view class="profile-section-inner score-card-main">
+        <text class="score-card-label">考了个虾 ・ 成绩单</text>
+        <text class="score-card-percent">{{topScore.percentText}}%</text>
+        <text class="score-card-grade">{{topScore.grade}} 级</text>
+        <view class="score-card-beat">
+          <text class="score-card-beat-text">超过了</text>
+          <text class="score-card-beat-highlight">{{topScore.beatPercent || 80}}%</text>
+          <text class="score-card-beat-text">的选手</text>
+          <text class="score-card-fire">🔥</text>
+        </view>
+        <button class="score-card-share-btn" bindtap="onOpenShareGuide">分享成绩 ・ 炫一下</button>
+      </view>
+    </view>
+
+    <view class="profile-section" wx:else>
+      <view class="profile-section-inner score-card-main score-card-empty-main">
+        <text class="score-card-label">考了个虾 ・ 成绩单</text>
+        <text class="score-card-empty-title">还没有最佳成绩</text>
+        <text class="score-card-tip">先去首页选一张试卷，让你的 AI Agent 开始考试</text>
+        <button class="score-card-share-btn" open-type="share">邀请好友来考试</button>
+      </view>
+    </view>
+
+    <view class="profile-section">
+      <view class="profile-section-head">
+        <view class="profile-section-title-wrap">
+          <text class="profile-section-title">选择试卷</text>
+        </view>
+        <text class="profile-section-desc">每到期间，发送你的 AI Agent，开始考试</text>
+      </view>
+
+      <view class="exam-summary-list">
+        <view class="exam-summary-card" wx:for="{{bestScores}}" wx:key="exam_id" bindtap="onViewCert" data-token="{{item.session_id}}">
+          <view class="exam-summary-card-head" style="background:{{item.exam_color}}22">
+            <text class="exam-summary-name">{{item.exam_title}}</text>
+            <text class="exam-summary-version">{{item.exam_id}}</text>
+          </view>
+          <view class="exam-summary-card-body" wx:if="{{item.has_score}}">
+            <text class="exam-summary-score" style="color:{{item.exam_color}}">{{item.percentText}}%</text>
+            <view class="exam-summary-meta">
+              <text class="exam-summary-meta-text">{{item.model_name || '未记录模型'}}</text>
+              <text class="exam-summary-meta-dot">·</text>
+              <text class="exam-summary-meta-text">{{item.claw_name || 'OpenClaw 内测版'}}</text>
             </view>
+            <text class="exam-summary-duration">⏱ {{item.durationText}}</text>
+          </view>
+          <view class="exam-summary-card-body exam-summary-empty" wx:else>
+            <text class="exam-summary-empty-text">尚未参加</text>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 分享成绩卡片 - 社交货币 -->
-    <view class="section share-section" wx:if="{{topScore}}">
-      <view class="share-card-preview">
-        <text class="share-card-label">考了个虾 · 成绩单</text>
-        <text class="share-card-score">{{topScore.percentText}}%</text>
-        <text class="share-card-grade neo-tag" style="background:var(--fg);color:var(--yellow);font-size:28rpx;padding:6rpx 24rpx">{{topScore.grade}} 级</text>
-        <text class="share-card-beat">超过了 {{topScore.beatPercent || 80}}% 的选手 🔥</text>
-        <text class="share-card-cta">长按保存 · 发朋友圈炫一下</text>
-      </view>
-      <button class="neo-btn neo-btn-pink neo-btn-block neo-btn-lg share-gen-btn" open-type="share">
-        📤 分享成绩 · 炫一下
-      </button>
-    </view>
-
-    <!-- 邀请好友 -->
-    <view class="section" wx:if="{{!topScore}}">
-      <button class="neo-btn neo-btn-purple neo-btn-block neo-btn-lg" open-type="share">
-        📤 邀请好友来考试
-      </button>
-    </view>
-
-    <!-- 历史最佳成绩 -->
-    <view class="section">
-      <text class="section-title">最佳成绩</text>
-      <text class="section-hint">⏱ 作答时间不足1分钟的成绩不计入排行</text>
-
-      <view class="loading-wrap" wx:if="{{loading}}">
-        <text class="loading-text">加载中...</text>
-      </view>
-
-      <view wx:if="{{!loading}}" class="score-list">
-        <view class="score-card neo-card" wx:for="{{bestScores}}" wx:key="exam_id" bindtap="onViewCert" data-token="{{item.session_id}}">
-          <view class="score-header" style="background:{{item.exam_color}}">
-            <text class="score-exam-name">{{item.exam_title}}</text>
-          </view>
-          <view class="score-body" wx:if="{{item.has_score}}">
-            <view class="score-main">
-              <text class="score-percent">{{item.percentText}}%</text>
-              <text class="score-grade neo-tag" style="background:{{item.grade === 'S' ? '#FFD93D' : item.grade === 'A+' || item.grade === 'A' ? '#6EE7B7' : '#eee'}}">{{item.grade}}</text>
-            </view>
-            <text class="score-detail">{{item.model_name}} · {{item.claw_name}}</text>
-            <text class="score-duration">⏱ {{item.durationText}}</text>
-          </view>
-          <view class="score-body score-empty" wx:else>
-            <text class="score-no-data">尚未参加</text>
-          </view>
+    <view class="profile-section">
+      <view class="profile-section-head">
+        <view class="profile-section-title-wrap">
+          <text class="profile-section-title">全部考试记录</text>
         </view>
+        <text class="profile-section-desc">{{historyList.length ? '共' + historyList.length + '次考试' : '还没有考试记录'}}</text>
       </view>
-    </view>
 
-    <!-- 全部考试记录 -->
-    <view class="section" wx:if="{{historyList.length}}">
-      <text class="section-title">全部考试记录</text>
-      <text class="section-hint">共 {{historyList.length}} 次考试</text>
-
-      <view class="history-list">
-        <view class="history-item neo-card" wx:for="{{historyList}}" wx:key="id" bindtap="onViewCert" data-token="{{item.id}}">
-          <view class="history-left">
-            <view class="history-color-dot" style="background:{{item.exam_color}}"></view>
-            <view class="history-info">
-              <view class="history-top-row">
-                <text class="history-exam-name">{{item.exam_title}}</text>
-                <text class="history-grade neo-tag" style="background:{{item.grade === 'S' ? '#FFD93D' : item.grade === 'A+' || item.grade === 'A' ? '#6EE7B7' : '#eee'}}">{{item.grade}}</text>
+      <view class="history-card-list">
+        <view class="history-card" wx:for="{{historyList}}" wx:key="id" bindtap="onViewCert" data-token="{{item.id}}" wx:if="{{historyList.length}}">
+          <view class="history-card-main">
+            <view class="history-card-left">
+              <view class="history-card-title-row">
+                <text class="history-card-title">{{item.exam_title}}</text>
+                <text class="history-card-tag">{{item.exam_id}}</text>
+                <text class="history-card-tag grade-tag">{{item.grade}}</text>
               </view>
-              <text class="history-claw">{{item.model_name}} · {{item.claw_name}}</text>
-              <text class="history-date">{{item.dateText}}</text>
+              <text class="history-card-subtitle">{{item.model_name}} ・ {{item.claw_name}}</text>
+              <text class="history-card-time">⏱ {{item.dateText}}</text>
             </view>
-          </view>
-          <view class="history-right">
-            <text class="history-percent">{{item.percentText}}%</text>
-            <text class="history-score-detail">{{item.total_score}}/{{item.total_max}}</text>
+            <text class="history-card-score">{{item.percentText}}%</text>
           </view>
         </view>
-      </view>
-    </view>
 
-    <!-- 更多功能 -->
-    <view class="section">
-      <view class="more-item neo-card" bindtap="onGoStats">
-        <view class="more-item-left">
-          <text class="more-item-icon">📊</text>
-          <text class="more-item-text">查看全站统计</text>
+        <view class="history-empty-card" wx:if="{{!historyList.length}}">
+          <text class="history-empty-text">还没有考试记录，先去首页选一张试卷吧</text>
         </view>
-        <text class="more-arrow">→</text>
-      </view>
-      <view class="more-item neo-card logout-item" bindtap="onLogout">
-        <view class="more-item-left">
-          <text class="more-item-icon">👋</text>
-          <text class="more-item-text logout-text">退出登录</text>
+
+        <view class="profile-action-card" bindtap="onGoStats">
+          <view class="profile-action-left">
+            <view class="profile-action-icon">📊</view>
+            <text class="profile-action-text">查看全部统计</text>
+          </view>
+          <text class="profile-action-arrow">›</text>
         </view>
-        <text class="more-arrow">→</text>
+
+        <view class="profile-action-card" bindtap="onLogout">
+          <view class="profile-action-left">
+            <view class="profile-action-icon">↺</view>
+            <text class="profile-action-text">退出登录</text>
+          </view>
+          <text class="profile-action-arrow">›</text>
+        </view>
       </view>
     </view>
+  </view>
+
+  <view class="share-guide-mask" wx:if="{{showShareGuide}}" bindtap="onCloseShareGuide"></view>
+  <view class="share-guide-modal" wx:if="{{showShareGuide}}">
+    <text class="share-guide-title">分享成绩</text>
+    <text class="share-guide-desc">可以先发给朋友；如果要发朋友圈，请点右上角“...”后选择“分享到朋友圈”。</text>
+
+    <button class="share-guide-primary" open-type="share" bindtap="onShareFriendSuccess">发送给朋友</button>
+    <view class="share-guide-tip-box">
+      <text class="share-guide-tip-title">发朋友圈这样做</text>
+      <text class="share-guide-tip-text">1. 点击右上角“...”</text>
+      <text class="share-guide-tip-text">2. 选择“分享到朋友圈”</text>
+      <text class="share-guide-tip-text">3. 系统会使用当前成绩页的分享文案</text>
+    </view>
+    <view class="share-guide-close" bindtap="onCloseShareGuide">我知道了</view>
   </view>
 
   <login-popup show="{{showLoginPopup}}" bind:close="onLoginClose" bind:success="onLoginSuccess" />

@@ -4,6 +4,7 @@ const util = require('../../utils/util');
 Page({
   data: {
     exams: [],
+    heroImageUrl: util.assetUrl('home/hero/504dc413-30ff-42f0-af08-2d399e703344.png'),
     leaderboard: [],
     lbMySection: [],
     lbMyRank: -1,
@@ -275,6 +276,9 @@ Page({
 
   onViewCert(e) {
     const token = e.currentTarget.dataset.token;
+    if (!token) {
+      return;
+    }
     wx.navigateTo({ url: `/pages/cert/cert?token=${token}` });
   },
 

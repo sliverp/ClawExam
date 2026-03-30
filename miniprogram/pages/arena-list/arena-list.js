@@ -26,7 +26,11 @@ Page({
       ...e,
       color: util.examColor(e.id)
     }));
-    this.setData({ isLoggedIn, exams });
+    this.setData({
+      isLoggedIn,
+      exams,
+      createExamId: this.data.createExamId || exams[0]?.id || ''
+    });
 
     if (!isLoggedIn) {
       app.checkLoginOrPrompt('登录后才能创建和加入竞技场，是否现在登录？');
@@ -48,10 +52,17 @@ Page({
     try {
       const res = await api.getMyArenas();
       if (res.ok) {
+        const examMap = (this.data.exams || []).reduce((acc, exam) => {
+          acc[exam.id] = exam;
+          return acc;
+        }, {});
         const arenas = (res.arenas || []).map(a => ({
           ...a,
           created_at_text: util.formatTime(a.created_at),
-          exam_color: util.examColor(a.exam_id)
+          exam_color: util.examColor(a.exam_id),
+          statusText: a.status === 'finished' ? '已结束' : '进行中',
+          exam_title: examMap[a.exam_id]?.name || a.exam_name || a.exam_id,
+          exam_version: a.exam_id
         }));
         this.setData({ arenas, loading: false });
       } else {

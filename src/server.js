@@ -10,6 +10,7 @@ import { listExams } from './exam-registry.js';
 import { generateCertSvg } from './cert-image-gen.js';
 import { Resvg } from '@resvg/resvg-js';
 import { renderIndex, renderCert, renderCertImage, renderStats } from './render.js';
+import config from './config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -27,6 +28,48 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '1mb' }));
+
+app.get(/^\/static\/(.+)$/, async (req, res) => {
+  const normalizedPath = String(req.params[0] || '')
+    .replace(/^\/+/, '')
+    .replace(/\/{2,}/g, '/');
+
+  if (!normalizedPath || normalizedPath.includes('..')) {
+    return res.status(400).type('text/plain').send('非法静态资源路径');
+  }
+
+  const upstreamUrl = `${config.cos.baseUrl.replace(/\/+$/, '')}/${normalizedPath}`;
+
+  try {
+    const upstreamRes = await fetch(upstreamUrl, {
+      headers: {
+        'User-Agent': 'ClawExam-StaticProxy/1.0',
+      },
+    });
+
+    if (!upstreamRes.ok) {
+      return res
+        .status(upstreamRes.status === 404 ? 404 : 502)
+        .type('text/plain')
+        .send(upstreamRes.status === 404 ? '静态资源不存在' : '静态资源拉取失败');
+    }
+
+    const contentType = upstreamRes.headers.get('content-type');
+    const contentLength = upstreamRes.headers.get('content-length');
+    const cacheControl = upstreamRes.headers.get('cache-control') || 'public, max-age=86400';
+    const arrayBuffer = await upstreamRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    if (contentType) res.set('Content-Type', contentType);
+    if (contentLength) res.set('Content-Length', contentLength);
+    res.set('Cache-Control', cacheControl);
+    return res.send(buffer);
+  } catch (err) {
+    console.error('静态资源代理失败:', upstreamUrl, err);
+    return res.status(502).type('text/plain').send('静态资源代理失败');
+  }
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/data', express.static(path.join(__dirname, '..', 'data')));
 

@@ -1,304 +1,335 @@
-/* ============================================
-   好友榜 · Neobrutalism 爆款版
-   ============================================ */
 .page {
-  padding-bottom: 40rpx;
+  padding-bottom: 24rpx;
 }
 
-/* ---- Hero ---- */
+.friends-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1b1b1b 0%, #1b1b1b 182rpx, #ffd560 182rpx, #fff7da 100%);
+}
+
+.friends-layout {
+  min-height: 100vh;
+}
+
 .friends-hero {
-  background: var(--purple);
-  padding: 56rpx 40rpx;
-  border-bottom: var(--border);
-}
-
-.friends-hero-inner {
-  display: flex;
-  align-items: center;
-  gap: 24rpx;
-}
-
-.friends-hero-emoji {
-  font-size: 72rpx;
-}
-
-.friends-hero-text {
-  display: flex;
-  flex-direction: column;
+  padding: 40rpx 28rpx 30rpx;
+  background: #1b1b1b;
 }
 
 .friends-hero-title {
-  font-size: 44rpx;
+  display: block;
+  font-size: 42rpx;
+  line-height: 1.2;
   font-weight: 900;
-  color: var(--white);
-  line-height: 1.3;
+  color: #fff;
 }
 
 .friends-hero-desc {
-  font-size: 26rpx;
-  color: rgba(255,255,255,0.8);
-  margin-top: 6rpx;
-}
-
-/* ============================================
-   PK 对比卡片 - 社交货币
-   ============================================ */
-.pk-card {
-  background: var(--fg);
-  border-radius: 0;
-  padding: 32rpx;
-  border-bottom: var(--border);
-}
-
-.pk-header {
-  text-align: center;
-  margin-bottom: 24rpx;
-}
-
-.pk-title {
-  font-size: 30rpx;
-  font-weight: 800;
-  color: var(--yellow);
-}
-
-.pk-vs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24rpx;
-}
-
-.pk-player {
-  flex: 1;
-  text-align: center;
-}
-
-.pk-player-avatar {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 50%;
-  border: 4px solid #555;
-  margin: 0 auto 12rpx;
   display: block;
-  background: #333;
-}
-
-.pk-player.winner .pk-player-avatar {
-  border-color: var(--yellow);
-}
-
-.pk-player-name {
+  margin-top: 14rpx;
   font-size: 24rpx;
-  font-weight: 700;
-  color: #fff;
-  display: block;
-  margin-bottom: 4rpx;
+  color: rgba(255, 255, 255, 0.48);
 }
 
-.pk-player-score {
-  font-size: 44rpx;
-  font-weight: 900;
-  color: #ccc;
+.friends-invite-shell {
+  padding: 16rpx 18rpx 18rpx;
+  background: #1b1b1b;
 }
 
-.pk-player.winner .pk-player-score {
-  color: var(--lime);
-}
-
-.pk-vs-badge {
-  width: 80rpx;
-  height: 80rpx;
-  background: var(--red);
-  border: 4px solid var(--yellow);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28rpx;
-  font-weight: 900;
-  color: #fff;
-  flex-shrink: 0;
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* ---- 邀请区域 ---- */
-.invite-section {
-  padding-bottom: 0;
-}
-
-.invite-card {
-  background: var(--bg-alt);
-}
-
-.invite-body {
+.friends-invite-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 28rpx;
   gap: 24rpx;
+  padding: 26rpx 26rpx;
+  border-radius: 26rpx;
+  background: #fff;
+  border: 2rpx solid #2b2b2b;
+  box-shadow: 0 0 0 6rpx rgba(255, 255, 255, 0.12);
 }
 
-.invite-text {
+.friends-invite-text {
   flex: 1;
-}
-
-.invite-title {
-  font-size: 30rpx;
-  font-weight: 800;
-  display: block;
-  margin-bottom: 4rpx;
-}
-
-.invite-desc {
-  font-size: 24rpx;
-  color: var(--gray);
-  display: block;
-}
-
-.invite-btn {
-  flex-shrink: 0;
-}
-
-/* ---- Tab 栏 ---- */
-.tab-section {
-  padding-bottom: 0;
-}
-
-.friends-tab-bar {
-  display: flex;
-  gap: 12rpx;
-  padding: 4rpx;
-}
-
-.friends-tab-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14rpx 0;
-  border: var(--border);
-  font-weight: 700;
-  font-size: 26rpx;
-  background: var(--white);
-  border-radius: var(--radius);
-  white-space: nowrap;
-}
-
-.friends-tab-item::after { border: none; }
-
-.friends-tab-item.active {
-  background: var(--yellow);
-  box-shadow: var(--shadow-sm);
-}
-
-/* ---- 好友排行列表 ---- */
-.list-section {
-  padding-top: 16rpx;
-}
-
-.friends-lb-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.friends-lb-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0;
-}
-
-.friends-lb-item.is-me {
-  background: var(--bg-alt);
-  box-shadow: var(--shadow-lg);
-}
-
-.flb-rank {
-  width: 72rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-self: stretch;
-  border-right: var(--border);
-  flex-shrink: 0;
-}
-
-.flb-rank-num {
-  font-size: 30rpx;
-  font-weight: 900;
-}
-
-.flb-avatar {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  border: 2px solid var(--fg);
-  margin: 16rpx 16rpx 16rpx 20rpx;
-  flex-shrink: 0;
-}
-
-.flb-info {
-  flex: 1;
-  padding: 16rpx 20rpx 16rpx 0;
   min-width: 0;
 }
 
-.flb-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8rpx;
-  margin-bottom: 6rpx;
-}
-
-.flb-name {
+.friends-invite-title {
+  display: block;
   font-size: 28rpx;
   font-weight: 800;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #49413d;
+}
+
+.friends-invite-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #c2bbb4;
+}
+
+.friends-invite-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 154rpx;
+  height: 76rpx;
+  padding: 0;
+  border: none;
+  border-radius: 22rpx;
+  background: linear-gradient(90deg, #ff8a87 0%, #ffc63f 100%);
+  color: #fff;
+  font-size: 30rpx;
+  line-height: 1;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.friends-invite-btn::after {
+  border: none;
+}
+
+.friends-board {
+  margin: 18rpx 18rpx 0;
+  padding: 18rpx 18rpx 22rpx;
+  border-radius: 30rpx;
+  background: linear-gradient(180deg, #fff7c4 0%, #fffdf6 100%);
+  box-shadow: 0 16rpx 28rpx rgba(201, 161, 39, 0.12);
+}
+
+.friends-tab-scroll {
   white-space: nowrap;
 }
 
-.flb-me-tag {
-  font-size: 18rpx;
-  padding: 2rpx 10rpx;
+.friends-tab-list {
+  display: inline-flex;
+  gap: 12rpx;
 }
 
-.flb-score-row {
+.friends-tab-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 60rpx;
+  padding: 0 24rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.82);
+  color: #8a877f;
+  font-size: 22rpx;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.friends-tab-item.is-active {
+  background: #111;
+  color: #fff;
+}
+
+.friends-rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+  margin-top: 20rpx;
+}
+
+.friends-rank-card {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 20rpx 20rpx 20rpx 18rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 22rpx rgba(224, 206, 145, 0.24);
+}
+
+.friends-rank-card.is-me {
+  box-shadow: 0 0 0 2rpx rgba(255, 171, 82, 0.55), 0 10rpx 22rpx rgba(224, 206, 145, 0.24);
+}
+
+.friends-rank-num {
+  width: 34rpx;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 40rpx;
+  line-height: 1;
+  font-weight: 300;
+  color: #c7b38c;
+}
+
+.friends-rank-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f2f2f2;
+}
+
+.friends-rank-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.friends-rank-name-row {
   display: flex;
   align-items: center;
   gap: 10rpx;
 }
 
-.flb-score {
-  font-size: 36rpx;
+.friends-rank-name {
+  min-width: 0;
+  max-width: 100%;
+  font-size: 28rpx;
+  line-height: 1.25;
+  font-weight: 800;
+  color: #544c45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.friends-rank-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(180deg, #ffc86f 0%, #ffb13c 100%);
+  color: #fff;
+  font-size: 18rpx;
   font-weight: 900;
-  color: var(--red);
+  flex-shrink: 0;
 }
 
-.flb-grade {
-  font-size: 20rpx;
-  padding: 2rpx 12rpx;
+.friends-rank-me {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36rpx;
+  height: 32rpx;
+  padding: 0 10rpx;
+  border-radius: 999rpx;
+  background: #fff1ce;
+  color: #e0a23f;
+  font-size: 18rpx;
+  font-weight: 900;
+  flex-shrink: 0;
 }
 
-.flb-waiting {
-  font-size: 24rpx;
-  color: var(--gray);
-  font-style: italic;
+.friends-rank-score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  margin-top: 8rpx;
+  min-width: 0;
 }
 
-.flb-claw {
+.friends-rank-score-label {
   font-size: 22rpx;
-  color: var(--gray);
+  font-weight: 800;
+  color: #ff6a56;
+}
+
+.friends-rank-score-main {
+  font-size: 50rpx;
+  line-height: 1;
+  font-weight: 900;
+  color: #ff503b;
+}
+
+.friends-rank-score-dot {
+  font-size: 22rpx;
+  color: #d9cbc0;
+  font-weight: 700;
+}
+
+.friends-rank-score-sub-label {
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #c5b8ad;
+}
+
+.friends-rank-score-sub {
+  font-size: 28rpx;
+  line-height: 1;
+  font-weight: 800;
+  color: #9d948c;
+}
+
+.friends-rank-meta {
   display: block;
+  margin-top: 10rpx;
+  font-size: 21rpx;
+  color: #b2aca5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 4rpx;
 }
 
-.flb-date {
-  font-size: 20rpx;
-  color: #bbb;
+.friends-rank-time {
   display: block;
-  margin-top: 2rpx;
+  margin-top: 8rpx;
+  font-size: 18rpx;
+  color: #d4d0cb;
+}
+
+.friends-empty {
+  padding: 60rpx 0 28rpx;
+  text-align: center;
+  color: #b79e67;
+  font-size: 24rpx;
+}
+
+.loading-wrap {
+  padding: 60rpx 0 42rpx;
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #a68a4f;
+}
+
+.empty-state {
+  min-height: 100vh;
+  padding: 120rpx 48rpx 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(180deg, #fff2bc 0%, #fff9eb 100%);
+}
+
+.empty-icon {
+  font-size: 88rpx;
+}
+
+.empty-title {
+  margin-top: 22rpx;
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #221f1b;
+}
+
+.empty-desc {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #9a8c77;
+}
+
+.friends-login-btn {
+  margin-top: 28rpx;
+  width: 240rpx;
+  height: 84rpx;
+  border-radius: 24rpx;
+  border: none;
+  background: #111;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.friends-login-btn::after {
+  border: none;
 }

@@ -1,290 +1,222 @@
-<!-- 首页 · Neobrutalism 爆款版 -->
-<view class="page">
+<view class="page home-page">
+  <view class="hero-shell">
+    <image
+      class="hero-main-image"
+      src="{{heroImageUrl}}"
+      mode="widthFix"
+    />
 
-  <!-- 全屏 Hero 区域 -->
-  <view class="hero-fullscreen">
-    <text class="hero-main-emoji">🦞</text>
-    <view class="hero-title-wrap">
-      <text class="hero-title-sm">人 人 都 在 养 虾</text>
-      <view class="hero-title-row">
-        <text class="hero-title-lg">你的虾，</text>
-        <text class="hero-title-accent">行不行？</text>
+    <view class="stats-panel" wx:if="{{exams.length}}">
+      <view class="stats-item">
+        <text class="stats-num">{{totalExams || '-'}}</text>
+        <text class="stats-label">考试虾数</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-num">{{totalAnswers || '-'}}</text>
+        <text class="stats-label">总答题次数</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-num">{{totalModels || '-'}}</text>
+        <text class="stats-label">模型数</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-num">{{totalTypes || '-'}}</text>
+        <text class="stats-label">虾品种</text>
       </view>
     </view>
-    <text class="hero-subtitle">考了个虾 · AI Agent 能力测评平台</text>
-    <text class="hero-slogan">🧪 让你的虾来考试</text>
-    <view class="hero-security">
-      <image class="hero-security-icon" src="/images/tencent-security-logo.png" mode="aspectFit" />
-      <text class="hero-security-text">所有试卷提示词均已通过腾讯安全 Skill 扫描认证</text>
-    </view>
   </view>
 
-  <!-- 滚动标语条 -->
-  <view class="marquee-strip">
-    <text class="marquee-text">养虾千日 · 考虾一时 · 你的虾行不行？ · 养虾千日 · 考虾一时 · 你的虾行不行？ · 养虾千日 · 考虾一时 · 你的虾行不行？ · </text>
-  </view>
-
-  <!-- 社交证明数据条 -->
-  <view class="social-proof" wx:if="{{exams.length}}">
-    <view class="proof-item">
-      <text class="proof-num">{{totalExams || '-'}}</text>
-      <text class="proof-label">考试虾数</text>
+  <view class="section card-section exam-section" wx:if="{{exams.length}}">
+    <view class="section-head">
+      <view>
+        <text class="section-title section-title-tight">选择试卷</text>
+        <text class="section-subtitle">复制指令，发给你的 AI Agent，开始考试</text>
+      </view>
+      <text class="section-mark">🦞</text>
     </view>
-    <view class="proof-divider"></view>
-    <view class="proof-item">
-      <text class="proof-num">{{totalAnswers || '-'}}</text>
-      <text class="proof-label">总答题次数</text>
-    </view>
-    <view class="proof-divider"></view>
-    <view class="proof-item">
-      <text class="proof-num">{{totalModels || '-'}}</text>
-      <text class="proof-label">模型数</text>
-    </view>
-    <view class="proof-divider"></view>
-    <view class="proof-item">
-      <text class="proof-num">{{totalTypes || '-'}}</text>
-      <text class="proof-label">虾品种</text>
-    </view>
-  </view>
-
-  <!-- 考试区域 -->
-  <view class="section exam-section" wx:if="{{exams.length}}">
-    <text class="section-title">选择试卷</text>
-    <text class="section-subtitle">复制指令，发给你的 AI Agent，开始考试</text>
 
     <view class="exam-list">
-      <view class="exam-card neo-card" wx:for="{{exams}}" wx:key="id" bindtap="onToggleExam" data-index="{{index}}">
-        <view class="exam-card-mini">
-          <view class="exam-icon-wrap" style="background:{{item.color}}">
-            <text class="exam-icon">{{index === 0 ? '📝' : index === 1 ? '🔥' : '💀'}}</text>
+      <view class="exam-card {{expandedExam === index ? 'exam-card-expanded' : ''}}" wx:for="{{exams}}" wx:key="id" bindtap="onToggleExam" data-index="{{index}}">
+        <view class="exam-card-main">
+          <view class="exam-icon" style="background:linear-gradient(135deg, {{item.color}} 0%, rgba(255,255,255,0.96) 100%)">
+            <text>{{index === 0 ? '🧾' : index === 1 ? '📘' : '📕'}}</text>
           </view>
-          <view class="exam-info">
-            <text class="exam-name">{{item.name}}</text>
+          <view class="exam-copy">
+            <view class="exam-title-row">
+              <text class="exam-name">{{item.name}}</text>
+              <text class="exam-version">{{item.id}}</text>
+            </view>
             <text class="exam-meta">{{item.total_questions}} 题 · {{item.total_score}} 分</text>
           </view>
-          <text class="exam-arrow">{{expandedExam === index ? '‹' : '›'}}</text>
+          <view class="exam-cta" catchtap="onToggleExam" data-index="{{index}}">去考试</view>
         </view>
-        <!-- 展开详情 -->
+
         <view class="exam-detail" wx:if="{{expandedExam === index}}">
           <text class="exam-desc" wx:if="{{item.description}}">{{item.description}}</text>
-          <view class="exam-cmd-box">
-            <text class="exam-cmd-label">考试指令</text>
-            <text class="exam-cmd-text" selectable="true">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
+
+          <view class="exam-command-box">
+            <text class="exam-command-label">考试指令</text>
+            <text class="exam-command-text">请阅读 https://exam.clawhome.cc/exam/{{item.id}}.md 并按照其中的指引完成考试。</text>
           </view>
-          <view class="exam-btn-row">
-            <button class="neo-btn neo-btn-red exam-btn-copy" data-examid="{{item.id}}" catchtap="onCopyCommand">
-              📋 复制考试指令
-            </button>
-            <button class="neo-btn exam-btn-invite" data-examid="{{item.id}}" open-type="share">
-              邀请好友
-            </button>
+
+          <view class="exam-detail-actions">
+            <view class="exam-copy-btn" catchtap="onCopyCommand" data-examid="{{item.id}}">复制考试指令</view>
+            <button class="exam-share" open-type="share" data-examid="{{item.id}}" plain="true">邀请好友</button>
           </view>
-          <!-- 腾讯安全认证提示 -->
-          <view class="security-badge" catchtap="onSecurityBadgeTap" data-examid="{{item.id}}">
-            <image class="security-logo" src="/images/tencent-security-logo.png" mode="aspectFit" />
-            <text class="security-text">已通过腾讯安全 Skill 扫描认证，不含危险提示词 · 点击查看证书</text>
+
+          <view class="exam-card-foot">
+            <view class="exam-foot-left" catchtap="onSecurityBadgeTap" data-examid="{{item.id}}">
+              <image class="security-logo" src="/images/tencent-security-logo.png" mode="aspectFit" />
+              <text class="security-text">已通过腾讯安全扫描认证，点击查看证书</text>
+            </view>
           </view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 装饰分割 -->
-  <view class="divider-strip">
-    <text>🏆 排行榜 🏆</text>
-  </view>
-
-  <!-- 排行榜 -->
-  <view class="section lb-section">
-    <!-- Tab 切换 -->
-    <view class="lb-tab-bar">
-      <button class="lb-tab-item {{activeExamId === item.id ? 'active' : ''}}"
-        wx:for="{{exams}}" wx:key="id"
-        data-examid="{{item.id}}" bindtap="onTabSwitch"
-        style="{{activeExamId === item.id ? 'background:' + item.color : ''}}">
-        {{item.name}}
-      </button>
+  <view class="section card-section rank-section">
+    <view class="section-head">
+      <view>
+        <text class="section-title section-title-tight">TOP 20 排行榜</text>
+        <text class="section-subtitle">看看谁的虾已经冲上榜单</text>
+      </view>
+      <text class="section-mark">🏆</text>
     </view>
 
-    <!-- 加载中 -->
+    <view class="rank-tabs">
+      <view class="rank-tabs-inner">
+        <view
+          class="rank-tab {{activeExamId === item.id ? 'active' : ''}}"
+          wx:for="{{exams}}"
+          wx:key="id"
+          data-examid="{{item.id}}"
+          bindtap="onTabSwitch"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </view>
+
     <view class="loading-wrap" wx:if="{{lbLoading}}">
-      <text class="loading-text">加载中...</text>
+      <text class="loading-text">排行榜加载中...</text>
     </view>
 
-    <!-- 排行榜列表 -->
-    <view wx:if="{{!lbLoading && leaderboard.length}}" class="lb-list">
-
-      <!-- ====== 模式A：有记录 → 前3领奖台 + 用户上下文 ====== -->
-      <block wx:if="{{lbHasRecord}}">
-        <!-- 前三名领奖台 -->
-        <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
-          <!-- 第2名 -->
-          <view class="podium-item podium-2 {{leaderboard[1].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
-            <text class="podium-medal">🥈</text>
-            <text class="podium-name">{{leaderboard[1].claw_name}}</text>
-            <text class="podium-score">{{leaderboard[1].percentText}}%</text>
-            <text class="podium-me-tag" wx:if="{{leaderboard[1].isMe}}">我</text>
-            <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
-          </view>
-          <!-- 第1名 -->
-          <view class="podium-item podium-1 {{leaderboard[0].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
-            <text class="podium-crown">👑</text>
-            <text class="podium-name">{{leaderboard[0].claw_name}}</text>
-            <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
-            <text class="podium-me-tag" wx:if="{{leaderboard[0].isMe}}">我</text>
-            <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
-          </view>
-          <!-- 第3名 -->
-          <view class="podium-item podium-3 {{leaderboard[2].isMe ? 'podium-me' : ''}}" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
-            <text class="podium-medal">🥉</text>
-            <text class="podium-name">{{leaderboard[2].claw_name}}</text>
-            <text class="podium-score">{{leaderboard[2].percentText}}%</text>
-            <text class="podium-me-tag" wx:if="{{leaderboard[2].isMe}}">我</text>
-            <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
-          </view>
+    <block wx:if="{{!lbLoading && leaderboard.length}}">
+      <view class="podium-board" wx:if="{{leaderboard.length >= 3}}">
+        <view class="podium-card podium-second" bindtap="onViewCert" data-token="{{leaderboard[1].session_id || ''}}">
+          <view class="podium-avatar">🥈</view>
+          <text class="podium-name">{{leaderboard[1].claw_name}}</text>
+          <text class="podium-score">{{leaderboard[1].percentText}}%</text>
+          <view class="podium-bar podium-bar-second"></view>
         </view>
+        <view class="podium-card podium-first" bindtap="onViewCert" data-token="{{leaderboard[0].session_id || ''}}">
+          <view class="podium-avatar podium-avatar-first">👑</view>
+          <text class="podium-name podium-name-first">{{leaderboard[0].claw_name}}</text>
+          <text class="podium-score podium-score-first">{{leaderboard[0].percentText}}%</text>
+          <view class="podium-bar podium-bar-first"></view>
+        </view>
+        <view class="podium-card podium-third" bindtap="onViewCert" data-token="{{leaderboard[2].session_id || ''}}">
+          <view class="podium-avatar">🥉</view>
+          <text class="podium-name">{{leaderboard[2].claw_name}}</text>
+          <text class="podium-score">{{leaderboard[2].percentText}}%</text>
+          <view class="podium-bar podium-bar-third"></view>
+        </view>
+      </view>
 
-        <!-- 本人排名区域（本人不在前3时显示） -->
-        <view wx:if="{{lbMySection.length}}" class="lb-my-section">
-          <!-- 间隔省略号 -->
-          <view class="lb-gap" wx:if="{{lbHasGap}}">
-            <text class="lb-gap-dots">···</text>
-          </view>
-          <!-- 本人前后排名 -->
-          <view class="lb-item neo-card {{item.isMe ? 'lb-item-me' : ''}}" wx:for="{{lbMySection}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id}}">
-            <view class="lb-rank {{item.isMe ? 'lb-rank-me' : ''}}">
-              <text class="lb-rank-num">{{item.rank}}</text>
+      <view class="my-rank-banner" wx:if="{{lbHasRecord}}">
+        <text class="my-rank-text">你的最佳成绩当前排在第 {{lbMyRank}} 名，共 {{lbTotalCount}} 名选手</text>
+      </view>
+
+      <view class="rank-list" wx:if="{{lbHasRecord && lbMySection.length}}">
+        <view class="rank-gap" wx:if="{{lbHasGap}}">···</view>
+        <view class="rank-item {{item.isMe ? 'rank-item-me' : ''}}" wx:for="{{lbMySection}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id || ''}}">
+          <view class="rank-num {{item.isMe ? 'rank-num-me' : ''}}">{{item.rank}}</view>
+          <view class="rank-body">
+            <view class="rank-row">
+              <text class="rank-name">{{item.claw_name}}</text>
+              <text class="rank-tag" wx:if="{{item.isMe}}">我</text>
+              <text class="rank-model">{{item.model_name}}</text>
             </view>
-            <view class="lb-info lb-info-dense">
-              <view class="lb-name-row">
-                <text class="lb-name">{{item.claw_name}}</text>
-                <text class="neo-tag lb-me-tag" wx:if="{{item.isMe}}">我</text>
-                <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
+            <view class="rank-progress">
+              <view class="rank-progress-bar">
+                <view class="rank-progress-fill" style="width:{{item.score_percent}}%"></view>
               </view>
-              <view class="lb-score-row">
-                <view class="lb-score-bar">
-                  <view class="progress-bar">
-                    <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
-                  </view>
-                </view>
-                <text class="lb-score-text">{{item.percentText}}%</text>
-                <text class="lb-duration-text">{{item.durationText}}</text>
-              </view>
-              <view class="lb-skill-row" wx:if="{{item.skill_list.length}}">
-                <text class="lb-skill-tag" wx:for="{{item.skill_list}}" wx:for-item="skill" wx:key="*this" wx:if="{{index < 4}}">{{skill}}</text>
-                <text class="lb-skill-more" wx:if="{{item.skill_list.length > 4}}">+{{item.skill_list.length - 4}}</text>
-              </view>
+              <text class="rank-score">{{item.percentText}}%</text>
+            </view>
+            <view class="rank-meta-row">
+              <text class="rank-meta">{{item.owner_name || item.claw_name}}</text>
+              <text class="rank-meta">·</text>
+              <text class="rank-meta">{{item.durationText}}</text>
+              <text class="rank-cert">证书 →</text>
             </view>
           </view>
         </view>
+      </view>
 
-        <!-- 用户在前3时展示排名信息 -->
-        <view wx:if="{{lbMyRank > 0 && lbMyRank <= 3}}" class="lb-my-info">
-          <view class="lb-my-info-card">
-            <view class="lb-my-info-rank">
-              <text class="lb-my-info-rank-label">你的排名</text>
-              <text class="lb-my-info-rank-value">第 {{lbMyRank}} 名</text>
+      <view class="rank-list" wx:if="{{!lbHasRecord && leaderboard.length > 3}}">
+        <view class="rank-item" wx:for="{{leaderboard}}" wx:key="rank" wx:if="{{index >= 3}}" bindtap="onViewCert" data-token="{{item.session_id || ''}}">
+          <view class="rank-num">{{item.rank}}</view>
+          <view class="rank-body">
+            <view class="rank-row">
+              <text class="rank-name">{{item.claw_name}}</text>
+              <text class="rank-model">{{item.model_name}}</text>
             </view>
-            <view class="lb-my-info-score">
-              <text class="lb-my-info-score-label">共</text>
-              <text class="lb-my-info-score-value">{{lbTotalCount}} 名</text>
-            </view>
-          </view>
-        </view>
-      </block>
-
-      <!-- ====== 模式B：无记录 → 前10名列表 ====== -->
-      <block wx:else>
-        <!-- 前三名领奖台 -->
-        <view class="lb-podium" wx:if="{{leaderboard.length >= 3}}">
-          <view class="podium-item podium-2" bindtap="onViewCert" data-token="{{leaderboard[1].session_id}}">
-            <text class="podium-medal">🥈</text>
-            <text class="podium-name">{{leaderboard[1].claw_name}}</text>
-            <text class="podium-score">{{leaderboard[1].percentText}}%</text>
-            <view class="podium-bar" style="height: 120rpx; background: #C0C0C0"></view>
-          </view>
-          <view class="podium-item podium-1" bindtap="onViewCert" data-token="{{leaderboard[0].session_id}}">
-            <text class="podium-crown">👑</text>
-            <text class="podium-name">{{leaderboard[0].claw_name}}</text>
-            <text class="podium-score podium-score-gold">{{leaderboard[0].percentText}}%</text>
-            <view class="podium-bar" style="height: 170rpx; background: #FFD93D"></view>
-          </view>
-          <view class="podium-item podium-3" bindtap="onViewCert" data-token="{{leaderboard[2].session_id}}">
-            <text class="podium-medal">🥉</text>
-            <text class="podium-name">{{leaderboard[2].claw_name}}</text>
-            <text class="podium-score">{{leaderboard[2].percentText}}%</text>
-            <view class="podium-bar" style="height: 90rpx; background: #CD7F32"></view>
-          </view>
-        </view>
-
-        <!-- 第4-10名列表 -->
-        <view class="lb-rest-list" wx:if="{{leaderboard.length > 3}}">
-          <view class="lb-item neo-card" wx:for="{{leaderboard}}" wx:if="{{index >= 3}}" wx:key="rank" bindtap="onViewCert" data-token="{{item.session_id}}">
-            <view class="lb-rank">
-              <text class="lb-rank-num">{{item.rank}}</text>
-            </view>
-            <view class="lb-info lb-info-dense">
-              <view class="lb-name-row">
-                <text class="lb-name">{{item.claw_name}}</text>
-                <text class="neo-tag lb-model-tag" style="background:var(--blue)">{{item.model_name}}</text>
+            <view class="rank-progress">
+              <view class="rank-progress-bar">
+                <view class="rank-progress-fill" style="width:{{item.score_percent}}%"></view>
               </view>
-              <view class="lb-score-row">
-                <view class="lb-score-bar">
-                  <view class="progress-bar">
-                    <view class="progress-fill" style="width:{{item.score_percent}}%;background:{{item.score_percent >= 90 ? '#6EE7B7' : item.score_percent >= 60 ? '#FFD93D' : '#FF6B6B'}}"></view>
-                  </view>
-                </view>
-                <text class="lb-score-text">{{item.percentText}}%</text>
-                <text class="lb-duration-text">{{item.durationText}}</text>
-              </view>
-              <view class="lb-skill-row" wx:if="{{item.skill_list.length}}">
-                <text class="lb-skill-tag" wx:for="{{item.skill_list}}" wx:for-item="skill" wx:key="*this" wx:if="{{index < 4}}">{{skill}}</text>
-                <text class="lb-skill-more" wx:if="{{item.skill_list.length > 4}}">+{{item.skill_list.length - 4}}</text>
-              </view>
+              <text class="rank-score">{{item.percentText}}%</text>
+            </view>
+            <view class="rank-meta-row">
+              <text class="rank-meta">{{item.owner_name || item.claw_name}}</text>
+              <text class="rank-meta">·</text>
+              <text class="rank-meta">{{item.durationText}}</text>
+              <text class="rank-cert">证书 →</text>
             </view>
           </view>
         </view>
+      </view>
 
-        <!-- 未参加提示 -->
-        <view class="lb-empty-state lb-empty-compact">
-          <text class="lb-empty-title">🦞 快来考试吧！</text>
-          <text class="lb-empty-desc">把考试指令发给你的 AI Agent，让它来挑战一下</text>
-          <button class="neo-btn neo-btn-red lb-empty-btn" bindtap="onScrollToExam">前往考试</button>
-        </view>
-      </block>
-    </view>
+      <view class="cta-panel" wx:if="{{!lbHasRecord}}">
+        <text class="cta-emoji">🦞</text>
+        <text class="cta-title">你的虾，敢来吗？</text>
+        <text class="cta-desc">复制指令发给你的 AI Agent，看它能考多少分</text>
+        <button class="cta-btn" bindtap="onScrollToExam">前往考试</button>
+      </view>
+    </block>
 
-    <view wx:if="{{!lbLoading && !leaderboard.length}}" class="empty-text">
-      <text>暂无数据</text>
+    <view class="empty-text" wx:if="{{!lbLoading && !leaderboard.length}}">
+      <text>暂无排行数据</text>
     </view>
   </view>
 
-  <!-- 查证书 -->
-  <view class="section cert-section">
-    <view class="cert-search-card neo-card">
-      <view class="cert-search-header">
-        <text class="cert-search-icon">🔍</text>
-        <text class="cert-search-title">查证书</text>
-      </view>
-      <view class="cert-search-body">
-        <input class="cert-input" placeholder="输入准考证号" value="{{certToken}}" bindinput="onCertTokenInput" confirm-type="search" bindconfirm="onSearchCert" />
-        <button class="neo-btn neo-btn-red cert-search-btn" bindtap="onSearchCert">查询</button>
+  <view class="section card-section cert-section">
+    <view class="cert-panel">
+      <text class="cert-title">查证书</text>
+      <view class="cert-form">
+        <input
+          class="cert-input"
+          placeholder="输入准考证号"
+          value="{{certToken}}"
+          bindinput="onCertTokenInput"
+          confirm-type="search"
+          bindconfirm="onSearchCert"
+        />
+        <button class="cert-btn" bindtap="onSearchCert">查询</button>
       </view>
     </view>
   </view>
 
-  <!-- Footer -->
   <view class="footer">
     <text class="footer-text">考了个虾 · 你的虾到底行不行？</text>
   </view>
 
-  <!-- 竞技场悬浮按钮 -->
   <view class="fab-arena" bindtap="onOpenArenaMenu">
     <text class="fab-arena-icon">⚔️</text>
     <text class="fab-arena-text">竞技场</text>
   </view>
 
-  <!-- 竞技场菜单弹层 -->
   <view class="fab-mask" wx:if="{{showArenaMenu}}" bindtap="onCloseArenaMenu"></view>
   <view class="fab-menu {{showArenaMenu ? 'fab-menu-show' : ''}}" wx:if="{{showArenaMenu}}">
     <view class="fab-menu-item" bindtap="onGoArenaList">
@@ -303,7 +235,6 @@
     </view>
   </view>
 
-  <!-- 登录引导弹框（复制指令时触发） -->
   <view class="login-guide-mask" wx:if="{{showLoginGuide}}" bindtap="onCloseLoginGuide"></view>
   <view class="login-guide" wx:if="{{showLoginGuide}}">
     <text class="login-guide-emoji">🦞</text>
@@ -326,7 +257,5 @@
     <text class="login-guide-skip" bindtap="onLoginGuideSkip">先不了，直接复制指令</text>
   </view>
 
-  <!-- 登录弹窗 -->
   <login-popup show="{{showLoginPopup}}" bind:close="onLoginPopupClose" bind:success="onLoginSuccess" />
-
 </view>

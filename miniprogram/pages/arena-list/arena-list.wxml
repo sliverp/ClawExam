@@ -1,75 +1,70 @@
-<!-- 竞技场列表 · Neobrutalism 爆款版 -->
-<view class="page">
-
-  <!-- 未登录 -->
-  <view wx:if="{{!isLoggedIn}}" class="empty-state">
-    <text class="empty-icon">⚔️</text>
-    <text class="empty-title">登录后进入竞技场</text>
-    <text class="empty-desc">创建房间，和好友 PK 看谁的虾更强</text>
-    <button class="neo-btn neo-btn-red neo-btn-lg" bindtap="onGoLogin">🦞 登录虾场</button>
+<view class="page arena-page">
+  <view wx:if="{{!isLoggedIn}}" class="arena-empty">
+    <text class="arena-empty-icon">⚔️</text>
+    <text class="arena-empty-title">登录后进入竞技场</text>
+    <text class="arena-empty-desc">创建房间，和好友 PK</text>
+    <button class="arena-login-btn" bindtap="onGoLogin">立即登录</button>
   </view>
 
-  <!-- 已登录 -->
-  <view wx:if="{{isLoggedIn}}">
-    <!-- Hero -->
+  <view wx:if="{{isLoggedIn}}" class="arena-layout">
     <view class="arena-hero">
-      <view class="arena-hero-inner">
-        <text class="arena-hero-emoji">⚔️</text>
-        <view class="arena-hero-text">
-          <text class="arena-hero-title">竞技场</text>
-          <text class="arena-hero-desc">创建房间，和好友 PK</text>
-        </view>
-      </view>
+      <text class="arena-hero-title">竞技场</text>
+      <text class="arena-hero-desc">创建房间，和好友PK</text>
     </view>
 
-    <!-- 创建竞技场 -->
-    <view class="section">
-      <view class="create-card neo-card">
-        <view class="create-body">
-          <text class="create-title">创建新竞技场</text>
-          <text class="create-desc">选择试卷，邀请好友来挑战</text>
-          <view class="create-exam-list">
-            <button class="create-exam-btn neo-btn {{item.id === createExamId ? 'neo-btn-red' : ''}}"
-              wx:for="{{exams}}" wx:key="id"
-              data-examid="{{item.id}}" bindtap="onSelectExam">
-              {{item.name}}
-            </button>
-          </view>
-          <button class="neo-btn neo-btn-red neo-btn-block neo-btn-lg create-go-btn" bindtap="onCreate" disabled="{{!createExamId || creating}}">
-            ⚔️ 创建竞技场
-          </button>
+    <view class="arena-panel arena-create-panel">
+      <view class="arena-panel-head">
+        <text class="arena-panel-title">创建新竞技场</text>
+        <text class="arena-panel-desc">选择试卷，邀请好友来挑战</text>
+      </view>
+
+      <view class="arena-create-options">
+        <view
+          wx:for="{{exams}}"
+          wx:key="id"
+          class="arena-create-option {{createExamId === item.id ? 'is-active' : ''}}"
+          data-examid="{{item.id}}"
+          bindtap="onSelectExam"
+        >
+          {{item.name}}
         </view>
       </view>
+
+      <button class="arena-create-btn" bindtap="onCreate" disabled="{{!createExamId || creating}}">
+        {{creating ? '创建中...' : '创建竞技场'}}
+      </button>
     </view>
 
-    <!-- 装饰分割 -->
-    <view class="divider-strip"><text>我的竞技场</text></view>
+    <view class="arena-panel">
+      <view class="arena-panel-head arena-panel-head-list">
+        <text class="arena-panel-title">我的竞技场</text>
+      </view>
 
-    <!-- 我的竞技场列表 -->
-    <view class="section">
       <view class="loading-wrap" wx:if="{{loading}}">
         <text class="loading-text">加载中...</text>
       </view>
 
-      <view wx:if="{{!loading && arenas.length}}" class="arena-list">
-        <view class="arena-item neo-card" wx:for="{{arenas}}" wx:key="id" bindtap="onGoArena" data-id="{{item.id}}">
-          <view class="arena-item-header" style="background:{{item.exam_color || '#3EC1D3'}}">
-            <text class="arena-item-exam">{{item.exam_name || item.exam_id}}</text>
-            <text class="neo-tag arena-status-tag" style="background:{{item.status === 'finished' ? '#6EE7B7' : '#FFD93D'}}">{{item.status === 'finished' ? '已结束' : '进行中'}}</text>
-          </view>
-          <view class="arena-item-body">
-            <view class="arena-item-info">
-              <text class="arena-item-players">👥 {{item.participant_count || 0}} 人参加</text>
-              <text class="arena-item-time">{{item.created_at_text || ''}}</text>
+      <view wx:if="{{!loading && arenas.length}}" class="arena-room-list">
+        <view class="arena-room-card arena-room-{{item.exam_id}}" wx:for="{{arenas}}" wx:key="id" bindtap="onGoArena" data-id="{{item.id}}">
+          <view class="arena-room-top">
+            <view class="arena-room-title-row">
+              <text class="arena-room-title">{{item.exam_title}}</text>
+              <text class="arena-room-version">{{item.exam_version}}</text>
             </view>
-            <text class="arena-item-arrow">→</text>
+            <text class="arena-room-status">{{item.statusText}}</text>
+          </view>
+
+          <view class="arena-room-body">
+            <view class="arena-room-meta">
+              <text class="arena-room-players">{{item.participant_count || 0}}人参加</text>
+              <text class="arena-room-time">{{item.created_at_text}}</text>
+            </view>
+            <text class="arena-room-arrow">→</text>
           </view>
         </view>
       </view>
 
-      <view wx:if="{{!loading && !arenas.length}}" class="empty-text">
-        <text>还没有竞技场，创建一个吧</text>
-      </view>
+      <view wx:if="{{!loading && !arenas.length}}" class="arena-empty-list">还没有竞技场，创建一个吧</view>
     </view>
   </view>
 

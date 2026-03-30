@@ -1,3 +1,10 @@
+const STATIC_BASE_URL = 'https://exam.clawhome.cc/static/assets';
+
+function assetUrl(assetPath) {
+  const normalized = String(assetPath || '').replace(/^\/+/, '');
+  return `${STATIC_BASE_URL}/${normalized}`;
+}
+
 // 格式化用时（秒 → 分:秒）
 function formatDuration(seconds) {
   if (!seconds && seconds !== 0) return '-';
@@ -62,6 +69,8 @@ function formatTime(dateStr) {
 }
 
 module.exports = {
+  STATIC_BASE_URL,
+  assetUrl,
   formatDuration,
   formatTime,
   gradeColor,

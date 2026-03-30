@@ -1,216 +1,372 @@
-/* ============================================
-   统计页 · Neobrutalism 爆款版 · 横向滑动卡片
-   ============================================ */
 .page {
-  padding-bottom: 40rpx;
+  padding-bottom: 24rpx;
 }
 
-/* ---- Hero ---- */
-.stats-hero {
-  background: var(--fg);
-  padding: 56rpx 40rpx;
+.stats-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #ffd968 0%, #ffe899 18%, #fff6da 42%, #fffaf0 100%);
 }
 
-.stats-hero-inner {
+.stats-shell {
+  padding: 18rpx 12rpx 12rpx;
+}
+
+.stats-panel {
+  padding: 18rpx 16rpx 20rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(180deg, rgba(255, 252, 240, 0.96) 0%, rgba(255, 255, 255, 0.96) 100%);
+  box-shadow: 0 14rpx 26rpx rgba(204, 166, 54, 0.12);
+}
+
+.stats-panel-main {
+  background: linear-gradient(180deg, #fff7ca 0%, #fffdf6 100%);
+}
+
+.stats-panel + .stats-panel {
+  margin-top: 0;
+}
+
+.stats-panel-header {
   display: flex;
   align-items: center;
-  gap: 24rpx;
-}
-
-.stats-hero-emoji {
-  font-size: 72rpx;
-}
-
-.stats-hero-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.stats-hero-title {
-  font-size: 44rpx;
-  font-weight: 900;
-  color: var(--yellow);
-  line-height: 1.3;
-}
-
-.stats-hero-desc {
-  font-size: 26rpx;
-  color: #ccc;
-  margin-top: 6rpx;
-}
-
-/* ---- Tab 栏 ---- */
-.stats-tab-bar {
-  display: flex;
-  gap: 12rpx;
-  padding: 24rpx 32rpx;
-  background: var(--bg);
-  border-bottom: var(--border);
-}
-
-.stats-tab-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 72rpx;
-  padding: 0;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: var(--gray);
-  background: var(--white);
-  border: var(--border);
-  border-radius: var(--radius);
-  white-space: nowrap;
-}
-
-.stats-tab-item.active {
-  background: var(--yellow);
-  color: var(--fg);
-  box-shadow: var(--shadow-sm);
-}
-
-.stats-tab-item::after {
-  border: none;
-}
-
-/* ---- 区块标题行 ---- */
-.section-header-row {
-  display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 24rpx;
+  margin-bottom: 18rpx;
 }
 
-.section-header-row .section-title {
-  margin-bottom: 0;
+.stats-panel-title {
+  font-size: 42rpx;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #3f2b00;
 }
 
-.section-hint {
-  font-size: 22rpx;
-  color: var(--gray);
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-/* ============================================
-   横向滑动卡片系统
-   ============================================ */
-.swipe-scroll {
+.stats-exam-tabs {
+  margin: 0 -2rpx 18rpx;
   white-space: nowrap;
-  margin: 0 -32rpx;
-  padding: 0;
 }
 
-.swipe-list {
+.stats-exam-tabs-inner {
   display: inline-flex;
-  gap: 24rpx;
-  padding: 8rpx 32rpx 24rpx;
+  gap: 12rpx;
+  padding: 0 2rpx;
 }
 
-/* ---- 基础滑动卡片 ---- */
-.swipe-card {
+.stats-exam-tab {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 62rpx;
+  padding: 0 26rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.82);
+  color: #8e8a82;
+  font-size: 24rpx;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stats-exam-tab.is-active {
+  background: #111;
+  color: #fff;
+}
+
+.stats-block + .stats-block {
+  margin-top: 28rpx;
+}
+
+.stats-block-title {
+  display: block;
+  margin-bottom: 14rpx;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #8a7234;
+}
+
+.stats-scroll {
+  white-space: nowrap;
+  margin: 0 -4rpx;
+}
+
+.stats-mini-list {
+  display: inline-flex;
+  gap: 18rpx;
+  padding: 0 4rpx;
+}
+
+.stats-mini-card {
+  width: 250rpx;
+  min-height: 214rpx;
+  padding: 20rpx 18rpx 18rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 22rpx rgba(227, 211, 158, 0.28);
+  display: flex;
   flex-direction: column;
   align-items: center;
-  width: 280rpx;
-  padding: 0 0 28rpx;
-  margin-bottom: 0;
-  white-space: normal;
-  flex-shrink: 0;
-  box-shadow: var(--shadow);
-  transition: transform 0.15s ease;
+  justify-content: flex-start;
+  box-sizing: border-box;
 }
 
-.swipe-card:active {
-  transform: translate(2px, 2px);
-  box-shadow: var(--shadow-active);
-}
-
-/* 大号卡片（平均分排行用） */
-.swipe-card-lg {
-  width: 320rpx;
-}
-
-/* ---- 排名徽章 ---- */
-.swipe-card-rank {
-  width: 64rpx;
-  height: 64rpx;
+.stats-rank-badge {
+  width: 42rpx;
+  height: 42rpx;
   border-radius: 50%;
-  border: var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 28rpx;
-  margin-bottom: 16rpx;
-  box-shadow: var(--shadow-sm);
-}
-
-.swipe-card-rank-num {
-  font-size: 32rpx;
-  font-weight: 900;
-}
-
-/* ---- 名称 ---- */
-.swipe-card-name {
-  font-size: 26rpx;
+  color: #fff;
+  font-size: 22rpx;
   font-weight: 800;
+}
+
+.rank-1 {
+  background: linear-gradient(180deg, #ffb84a 0%, #ff9f26 100%);
+}
+
+.rank-2 {
+  background: linear-gradient(180deg, #8fe2d9 0%, #4ec8bb 100%);
+}
+
+.rank-3 {
+  background: linear-gradient(180deg, #c6b7ff 0%, #ad9cff 100%);
+}
+
+.rank-other {
+  background: linear-gradient(180deg, #d4d4d4 0%, #b9b9b9 100%);
+}
+
+.stats-mini-name {
+  display: block;
+  width: 100%;
+  margin-top: 18rpx;
+  font-size: 18rpx;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #77716c;
   text-align: center;
-  padding: 0 20rpx;
-  margin-bottom: 16rpx;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 100%;
-  line-height: 1.4;
 }
 
-/* ---- 进度条 ---- */
-.swipe-card-bar {
-  width: calc(100% - 40rpx);
-  margin-bottom: 12rpx;
+.stats-mini-bar {
+  width: 100%;
+  height: 10rpx;
+  margin-top: 24rpx;
+  border-radius: 999rpx;
+  background: #efefef;
+  overflow: hidden;
 }
 
-/* ---- 数值 ---- */
-.swipe-card-value {
-  font-size: 26rpx;
-  font-weight: 800;
-  color: var(--gray-dark);
+.stats-mini-fill {
+  height: 100%;
+  border-radius: inherit;
 }
 
-.swipe-card-value-big {
+.stats-fill-model {
+  background: linear-gradient(90deg, #ffd659 0%, #ffbc37 100%);
+}
+
+.stats-fill-claw {
+  background: linear-gradient(90deg, #66ded1 0%, #46c9bd 100%);
+}
+
+.stats-mini-value {
+  margin-top: 20rpx;
   font-size: 40rpx;
+  line-height: 1;
   font-weight: 900;
-  color: var(--fg);
-  margin-bottom: 8rpx;
+  color: #4a4036;
 }
 
-/* ---- 详细指标（平均分卡片底部） ---- */
-.swipe-card-meta {
+.stats-divider {
+  width: 24rpx;
+  height: 44rpx;
+  margin: 4rpx 0 4rpx 8rpx;
+  border-left: 8rpx solid #f0b400;
+  border-bottom: 8rpx solid #f0b400;
+  border-radius: 0 0 0 18rpx;
+}
+
+.stats-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-section-title {
+  display: inline-block;
+  position: relative;
+  font-size: 42rpx;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #3f2b00;
+}
+
+.stats-section-title::after {
+  content: '';
+  position: absolute;
+  left: -2rpx;
+  right: -4rpx;
+  bottom: 0;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, rgba(118, 233, 221, 0.75) 0%, rgba(255, 223, 121, 0.8) 52%, rgba(255, 171, 124, 0.72) 100%);
+  z-index: -1;
+}
+
+.stats-section-subtitle {
+  display: block;
+  margin-top: 10rpx;
+  margin-bottom: 18rpx;
+  font-size: 24rpx;
+  color: #a29063;
+  font-weight: 700;
+}
+
+.stats-score-scroll {
+  margin: 0 -4rpx;
+}
+
+.stats-score-list {
+  display: inline-flex;
+  gap: 20rpx;
+  padding: 0 4rpx;
+}
+
+.stats-score-card {
+  width: 290rpx;
+  min-height: 320rpx;
+  padding: 20rpx 18rpx 18rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 22rpx rgba(227, 211, 158, 0.28);
+  box-sizing: border-box;
+}
+
+.stats-score-rank {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 20rpx;
-  margin-top: 8rpx;
-  padding: 0 16rpx;
-  flex-wrap: wrap;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 800;
+  margin: 0 auto 16rpx;
 }
 
-.swipe-meta-item {
+.stats-score-name {
+  display: block;
+  min-height: 66rpx;
+  font-size: 20rpx;
+  line-height: 1.35;
+  font-weight: 700;
+  color: #7a7686;
+  text-align: center;
+  white-space: normal;
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-score-bar {
+  width: 100%;
+  height: 10rpx;
+  margin-top: 16rpx;
+  border-radius: 999rpx;
+  background: #efeff7;
+  overflow: hidden;
+}
+
+.stats-score-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.stats-score-fill-model {
+  background: linear-gradient(90deg, #b0b2ff 0%, #7068ff 100%);
+}
+
+.stats-score-fill-claw {
+  background: linear-gradient(90deg, #ffb6bb 0%, #ff6b72 100%);
+}
+
+.stats-score-value {
+  display: block;
+  margin-top: 18rpx;
+  font-size: 46rpx;
+  line-height: 1;
+  font-weight: 900;
+  color: #4b4744;
+  text-align: center;
+}
+
+.stats-score-meta-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 26rpx;
+  margin-top: 16rpx;
+}
+
+.stats-score-meta {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rpx;
+  gap: 4rpx;
 }
 
-.swipe-meta-label {
+.stats-score-meta-label {
   font-size: 18rpx;
-  color: var(--gray);
-  font-weight: 600;
+  line-height: 1.2;
+  color: #a9a2ad;
 }
 
-.swipe-meta-val {
+.stats-score-meta-val {
+  font-size: 22rpx;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #64606c;
+}
+
+.stats-score-bottom {
+  display: block;
+  margin-top: 8rpx;
   font-size: 24rpx;
-  font-weight: 800;
-  color: var(--fg);
+  line-height: 1.2;
+  font-weight: 900;
+  color: #7a66ff;
+  text-align: center;
+}
+
+.stats-score-bottom-claw {
+  color: #ff7068;
+}
+
+.stats-score-meta-label-last {
+  display: block;
+  margin-top: 12rpx;
+  text-align: center;
+}
+
+.stats-empty {
+  padding: 28rpx 0 12rpx;
+  text-align: center;
+  color: #b1a481;
+  font-size: 20rpx;
+}
+
+.loading-wrap {
+  padding: 60rpx 0 46rpx;
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #a18b4d;
 }

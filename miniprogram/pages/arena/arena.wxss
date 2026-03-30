@@ -1,161 +1,246 @@
-/* ============================================
-   竞技场详情 · Neobrutalism 爆款版
-   ============================================ */
 .page {
-  padding-bottom: 40rpx;
+  padding-bottom: 18rpx;
 }
 
-/* ---- Hero ---- */
+.arena-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1b1b1b 0%, #1b1b1b 228rpx, #fff8e8 228rpx, #fff8e8 100%);
+}
+
+.arena-detail-layout {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1b1b1b 0%, #1b1b1b 228rpx, #fff8e8 228rpx, #fff8e8 100%);
+}
+
 .arena-detail-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 56rpx 40rpx;
-  border-bottom: var(--border);
-  text-align: center;
-}
-
-.arena-detail-emoji {
-  font-size: 80rpx;
-  margin-bottom: 16rpx;
+  padding: 34rpx 32rpx 22rpx;
+  background: #1b1b1b;
 }
 
 .arena-detail-title {
-  font-size: 40rpx;
+  display: block;
+  font-size: 42rpx;
+  line-height: 1.2;
   font-weight: 900;
-  color: var(--fg);
-  margin-bottom: 16rpx;
+  color: #fff;
 }
 
 .arena-detail-status {
-  font-size: 24rpx;
-}
-
-/* ---- 参赛者列表 ---- */
-.participant-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-
-.participant-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0;
-}
-
-.participant-item.is-me {
-  background: var(--bg-alt);
-  box-shadow: var(--shadow-lg);
-}
-
-.pt-rank {
-  width: 72rpx;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  align-self: stretch;
-  border-right: var(--border);
-  flex-shrink: 0;
-}
-
-.pt-rank-num {
-  font-size: 30rpx;
+  min-width: 94rpx;
+  height: 54rpx;
+  padding: 0 20rpx;
+  margin-top: 18rpx;
+  border-radius: 18rpx;
+  background: #ffc831;
+  color: #1a140d;
+  font-size: 20rpx;
   font-weight: 900;
 }
 
-.pt-avatar {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  border: 2px solid var(--fg);
-  margin: 16rpx;
-  flex-shrink: 0;
+.arena-detail-panel {
+  margin: 12rpx 18rpx 0;
+  padding: 30rpx 18rpx 20rpx;
+  border-radius: 34rpx;
+  background: linear-gradient(180deg, #fff7c7 0%, #fffdf6 100%);
+  box-shadow: 0 14rpx 28rpx rgba(183, 146, 32, 0.12);
 }
 
-.pt-info {
+.arena-detail-panel-head {
+  margin-bottom: 24rpx;
+}
+
+.arena-detail-panel-title {
+  position: relative;
+  display: inline-block;
+  font-size: 40rpx;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #18130d;
+}
+
+.arena-detail-panel-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: -8rpx;
+  bottom: 0;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, rgba(111, 224, 217, 0.76) 0%, rgba(255, 231, 125, 0.82) 48%, rgba(255, 175, 126, 0.76) 100%);
+  z-index: -1;
+}
+
+.arena-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.arena-detail-player {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 22rpx 22rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 22rpx rgba(222, 207, 160, 0.24);
+}
+
+.arena-detail-rank {
+  width: 34rpx;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 40rpx;
+  line-height: 1;
+  font-weight: 300;
+  color: #c7b38c;
+}
+
+.arena-detail-avatar {
+  width: 86rpx;
+  height: 86rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f2f2f2;
+}
+
+.arena-detail-main {
   flex: 1;
-  padding: 16rpx 20rpx 16rpx 0;
   min-width: 0;
 }
 
-.pt-name-row {
+.arena-detail-name-row {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  margin-bottom: 6rpx;
+  gap: 10rpx;
 }
 
-.pt-name {
+.arena-detail-name {
+  min-width: 0;
   font-size: 28rpx;
+  line-height: 1.25;
   font-weight: 800;
+  color: #544c45;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.pt-score-row {
-  display: flex;
+.arena-detail-me {
+  display: inline-flex;
   align-items: center;
-  gap: 12rpx;
-}
-
-.pt-score {
-  font-size: 36rpx;
+  justify-content: center;
+  min-width: 36rpx;
+  height: 34rpx;
+  padding: 0 10rpx;
+  border-radius: 12rpx;
+  background: #ffe9b5;
+  color: #ff8d12;
+  font-size: 18rpx;
   font-weight: 900;
-  color: var(--red);
-}
-
-.pt-detail {
-  font-size: 22rpx;
-  color: var(--gray);
-}
-
-.pt-waiting {
-  font-size: 24rpx;
-  color: var(--gray);
-  font-style: italic;
-}
-
-/* ---- 操作区域 ---- */
-.action-area {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.action-share-btn {
-  margin-top: 0;
-}
-
-.action-hint {
-  display: block;
-  text-align: center;
-  font-size: 24rpx;
-  color: #999;
-  margin-top: -12rpx;
-}
-
-/* 腾讯安全认证徽章 */
-.security-badge {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  margin-top: 8rpx;
-  padding: 12rpx 16rpx;
-  background: rgba(0, 102, 255, 0.06);
-  border-radius: 8rpx;
-  border: 1px solid rgba(0, 102, 255, 0.12);
-}
-
-.security-logo {
-  width: 36rpx;
-  height: 36rpx;
   flex-shrink: 0;
 }
 
-.security-text {
-  font-size: 20rpx;
-  color: #0066FF;
-  line-height: 1.4;
+.arena-detail-waiting {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  color: #b7b1aa;
+}
+
+.arena-detail-finished {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  color: #ff5b4b;
+  font-weight: 900;
+}
+
+.arena-detail-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16rpx;
+  margin-top: 26rpx;
+}
+
+.arena-detail-btn {
+  height: 80rpx;
+  min-width: 0;
+  padding: 0 16rpx;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arena-detail-btn::after {
+  border: none;
+}
+
+.arena-detail-btn-primary {
+  border: none;
+  background: #000;
+  color: #fff;
+}
+
+.arena-detail-btn-secondary {
+  border: 2rpx solid #1c1610;
+  background: #fffdf6;
+  color: #1c1610;
+}
+
+.loading-wrap {
+  padding: 120rpx 0 80rpx;
+  text-align: center;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.arena-detail-empty {
+  min-height: 100vh;
+  padding: 120rpx 48rpx 80rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #000;
+}
+
+.arena-detail-empty-icon {
+  font-size: 88rpx;
+}
+
+.arena-detail-empty-title {
+  margin-top: 22rpx;
+  font-size: 38rpx;
+  font-weight: 900;
+  color: #fff;
+}
+
+.arena-detail-back-btn {
+  margin-top: 28rpx;
+  width: 280rpx;
+  height: 84rpx;
+  border-radius: 24rpx;
+  border: none;
+  background: #fff;
+  color: #111;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.arena-detail-back-btn::after {
+  border: none;
 }
