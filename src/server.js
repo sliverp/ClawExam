@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 import rateLimit from 'express-rate-limit';
 import apiRouter from './api.js';
 import authRouter from './auth.js';
@@ -16,6 +17,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.set('trust proxy', 1); // 信任第一层反向代理（Nginx），正确获取真实客户端 IP
 const PORT = process.env.PORT || 3210;
+const STATIC_CACHE_DIR = path.join(__dirname, '..', 'public', 'static-cache');
+
+if (!fs.existsSync(STATIC_CACHE_DIR)) {
+  fs.mkdirSync(STATIC_CACHE_DIR, { recursive: true });
+}
+
+function getCachedStaticPath(normalizedPath) {
+  return path.join(STATIC_CACHE_DIR, normalizedPath);
+}
+
+function ensureParentDir(filePath) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+}
 
 // CORS + 安全响应头
 app.use((req, res, next) => {
@@ -36,6 +50,11 @@ app.get(/^\/static\/(.+)$/, async (req, res) => {
 
   if (!normalizedPath || normalizedPath.includes('..')) {
     return res.status(400).type('text/plain').send('非法静态资源路径');
+  }
+
+  const cachedFilePath = getCachedStaticPath(normalizedPath);
+  if (fs.existsSync(cachedFilePath)) {
+    return res.set('Cache-Control', 'public, max-age=86400').sendFile(cachedFilePath);
   }
 
   const upstreamUrl = `${config.cos.baseUrl.replace(/\/+$/, '')}/${normalizedPath}`;
@@ -59,6 +78,9 @@ app.get(/^\/static\/(.+)$/, async (req, res) => {
     const cacheControl = upstreamRes.headers.get('cache-control') || 'public, max-age=86400';
     const arrayBuffer = await upstreamRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    ensureParentDir(cachedFilePath);
+    fs.writeFileSync(cachedFilePath, buffer);
 
     if (contentType) res.set('Content-Type', contentType);
     if (contentLength) res.set('Content-Length', contentLength);
