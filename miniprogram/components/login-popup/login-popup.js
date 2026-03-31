@@ -65,9 +65,12 @@ Component({
           };
           app.login(res.app_token, userInfo);
 
-          if (this.data.avatarUrl && this.data.avatarUrl.startsWith('wxfile://')) {
+          const isLocalFile = this.data.avatarUrl && (this.data.avatarUrl.startsWith('wxfile://') || this.data.avatarUrl.startsWith('http://tmp/'));
+          if (isLocalFile) {
+            console.log('[头像上传] 开始上传, avatarUrl:', this.data.avatarUrl);
             try {
               const uploadRes = await api.uploadAvatar(this.data.avatarUrl);
+              console.log('[头像上传] 上传结果:', JSON.stringify(uploadRes));
               if (uploadRes.ok) {
                 const freshUserInfo = {
                   ...userInfo,
@@ -75,10 +78,14 @@ Component({
                 };
                 app.globalData.userInfo = freshUserInfo;
                 wx.setStorageSync('user_info', freshUserInfo);
+              } else {
+                console.warn('[头像上传] 服务端返回失败:', JSON.stringify(uploadRes));
               }
             } catch (e) {
-              console.warn('头像上传失败，继续使用默认头像:', e);
+              console.error('[头像上传] 上传异常:', e.message || e, e);
             }
+          } else {
+            console.log('[头像上传] 跳过上传, avatarUrl:', this.data.avatarUrl || '(空)');
           }
 
           wx.showToast({ title: '登录成功', icon: 'success' });

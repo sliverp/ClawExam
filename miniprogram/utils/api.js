@@ -157,22 +157,18 @@ function getMyExamHistory() {
   return authRequest('/api/user/history');
 }
 
-// 上传头像
+// 上传头像（base64 方式，避免 uploadFile 域名限制）
 function uploadAvatar(filePath) {
   return new Promise((resolve, reject) => {
-    wx.uploadFile({
-      url: `${BASE_URL}/api/upload/avatar`,
+    const fs = wx.getFileSystemManager();
+    fs.readFile({
       filePath,
-      name: 'file',
-      header: {
-        'X-App-Token': wx.getStorageSync('app_token') || ''
-      },
-      success(res) {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(JSON.parse(res.data));
-        } else {
-          reject({ statusCode: res.statusCode });
-        }
+      encoding: 'base64',
+      success(readRes) {
+        authRequest('/api/upload/avatar', {
+          method: 'POST',
+          data: { base64: readRes.data }
+        }).then(resolve).catch(reject);
       },
       fail: reject
     });

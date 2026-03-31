@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import db from './db.js';
@@ -6,7 +6,6 @@ import { requireAuth } from './auth-middleware.js';
 import {
   buildAvatarUrl,
   detectImageMeta,
-  extractMultipartFile,
   uploadAvatarToCos,
 } from './avatar.js';
 
@@ -130,47 +129,42 @@ router.put('/user/me', requireAuth, async (req, res) => {
 
 /**
  * POST /api/upload/avatar
- * 上传头像图片（接收 multipart/form-data）
+ * 上传头像图片（接收 JSON { base64: "..." }）
  */
-router.post('/upload/avatar', requireAuth, async (req, res) => {
+router.post('/upload/avatar', requireAuth, express.json({ limit: '3mb' }), async (req, res) => {
   try {
-    const chunks = [];
-    req.on('data', chunk => chunks.push(chunk));
-    req.on('end', async () => {
-      try {
-        const body = Buffer.concat(chunks);
-        const file = extractMultipartFile(body, req.headers['content-type'] || '');
-        if (!file || !file.buffer || file.buffer.length === 0) {
-          return res.status(400).json({ ok: false, error: '没有文件数据' });
-        }
-        if (file.buffer.length > 2 * 1024 * 1024) {
-          return res.status(400).json({ ok: false, error: '文件过大（最大 2MB）' });
-        }
+    const { base64 } = req.body || {};
+    if (!base64 || typeof base64 !== 'string') {
+      return res.status(400).json({ ok: false, error: '缺少 base64 数据' });
+    }
 
-        const imageMeta = detectImageMeta(file.buffer);
-        if (!imageMeta) {
-          return res.status(400).json({ ok: false, error: '不支持的图片格式，仅支持 JPEG/PNG/GIF/WebP' });
-        }
+    const buffer = Buffer.from(base64, 'base64');
+    if (buffer.length === 0) {
+      return res.status(400).json({ ok: false, error: '没有文件数据' });
+    }
+    if (buffer.length > 2 * 1024 * 1024) {
+      return res.status(400).json({ ok: false, error: '文件过大（最大 2MB）' });
+    }
 
-        const uploaded = await uploadAvatarToCos(req.user.uid_hash, file.buffer, imageMeta.contentType);
-        await db.run(
-          'UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE uid_hash = ?',
-          [uploaded.objectKey, req.user.uid_hash]
-        );
+    const imageMeta = detectImageMeta(buffer);
+    if (!imageMeta) {
+      return res.status(400).json({ ok: false, error: '不支持的图片格式，仅支持 JPEG/PNG/GIF/WebP' });
+    }
 
-        return res.json({
-          ok: true,
-          uid_hash: req.user.uid_hash,
-          url: buildAvatarUrl(req, req.user.uid_hash)
-        });
-      } catch (err) {
-        console.error('头像上传失败:', err);
-        return res.status(500).json({ ok: false, error: '上传失败' });
-      }
+    const uploaded = await uploadAvatarToCos(req.user.uid_hash, buffer, imageMeta.contentType);
+    await db.run(
+      'UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE uid_hash = ?',
+      [uploaded.objectKey, req.user.uid_hash]
+    );
+
+    return res.json({
+      ok: true,
+      uid_hash: req.user.uid_hash,
+      url: buildAvatarUrl(req, req.user.uid_hash)
     });
   } catch (err) {
     console.error('头像上传失败:', err);
-    res.status(500).json({ ok: false, error: '上传失败' });
+    return res.status(500).json({ ok: false, error: '上传失败' });
   }
 });
 
