@@ -12,6 +12,7 @@ import { generateCertSvg } from './cert-image-gen.js';
 import { Resvg } from '@resvg/resvg-js';
 import { renderIndex, renderCert, renderCertImage, renderStats } from './render.js';
 import config from './config.js';
+import db from './db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -31,6 +32,11 @@ function ensureParentDir(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
+function sendDefaultAvatar(res) {
+  const fallbackPath = path.join(__dirname, '..', 'public', 'images', 'default-avatar.png');
+  return res.set('Cache-Control', 'public, max-age=86400').sendFile(fallbackPath);
+}
+
 // CORS + 安全响应头
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -42,6 +48,47 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '1mb' }));
+
+app.get('/static/avatar/:uid', async (req, res) => {
+  try {
+    const uidHash = String(req.params.uid || '').trim();
+    if (!/^[0-9a-f]{16}$/i.test(uidHash)) {
+      return sendDefaultAvatar(res);
+    }
+
+    const user = await db.get(
+      'SELECT avatar_url FROM users WHERE uid_hash = ?',
+      [uidHash]
+    );
+
+    if (!user?.avatar_url) {
+      return sendDefaultAvatar(res);
+    }
+
+    const upstreamUrl = `${config.cos.baseUrl.replace(/\/+$/, '')}/${String(user.avatar_url).replace(/^\/+/, '')}`;
+    const upstreamRes = await fetch(upstreamUrl, {
+      headers: {
+        'User-Agent': 'ClawExam-AvatarProxy/1.0',
+      },
+    });
+
+    if (!upstreamRes.ok) {
+      return sendDefaultAvatar(res);
+    }
+
+    const contentType = upstreamRes.headers.get('content-type') || 'image/jpeg';
+    const cacheControl = upstreamRes.headers.get('cache-control') || 'public, max-age=86400';
+    const arrayBuffer = await upstreamRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', cacheControl);
+    return res.send(buffer);
+  } catch (err) {
+    console.error('头像代理失败:', err);
+    return sendDefaultAvatar(res);
+  }
+});
 
 app.get(/^\/static\/(.+)$/, async (req, res) => {
   const normalizedPath = String(req.params[0] || '')

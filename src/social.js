@@ -2,8 +2,16 @@ import { Router } from 'express';
 import crypto from 'crypto';
 import db from './db.js';
 import { requireAuth } from './auth-middleware.js';
+import { buildAvatarUrl } from './avatar.js';
 
 const router = Router();
+
+function attachAvatarUrls(req, rows = []) {
+  return rows.map((row) => ({
+    ...row,
+    avatar_url: buildAvatarUrl(req, row.uid_hash),
+  }));
+}
 
 // 生成 6 位随机短码（大写字母+数字，排除易混淆字符）
 function generateShortCode(length = 6) {
@@ -63,7 +71,7 @@ router.get('/friends/list', requireAuth, async (req, res) => {
        )`,
       [uid, uid]
     );
-    res.json({ ok: true, friends });
+    res.json({ ok: true, friends: attachAvatarUrls(req, friends) });
   } catch (err) {
     console.error('获取好友列表失败:', err);
     res.status(500).json({ ok: false, error: '获取失败' });
@@ -127,7 +135,7 @@ router.get('/friends/leaderboard', requireAuth, async (req, res) => {
       item.is_me = item.uid_hash === uid;
     });
 
-    res.json({ ok: true, leaderboard });
+    res.json({ ok: true, leaderboard: attachAvatarUrls(req, leaderboard) });
   } catch (err) {
     console.error('获取好友排行榜失败:', err);
     res.status(500).json({ ok: false, error: '获取失败' });
@@ -209,7 +217,7 @@ router.get('/arena/my', requireAuth, async (req, res) => {
 router.get('/arena/:id', async (req, res) => {
   try {
     const arena = await db.get(
-      `SELECT a.*, u.nickname AS creator_name, u.avatar_url AS creator_avatar
+      `SELECT a.*, u.nickname AS creator_name, u.uid_hash AS creator_uid_hash
        FROM arenas a
        LEFT JOIN users u ON u.uid_hash = a.creator_uid
        WHERE a.id = ?`,
@@ -218,7 +226,7 @@ router.get('/arena/:id', async (req, res) => {
     if (!arena) return res.status(404).json({ ok: false, error: '竞技场不存在' });
 
     const participants = await db.all(
-      `SELECT ap.*, u.nickname, u.avatar_url
+      `SELECT ap.*, u.nickname
        FROM arena_participants ap
        JOIN users u ON u.uid_hash = ap.uid_hash
        WHERE ap.arena_id = ?
@@ -231,7 +239,14 @@ router.get('/arena/:id', async (req, res) => {
       p.rank = idx + 1;
     });
 
-    res.json({ ok: true, arena, participants });
+    res.json({
+      ok: true,
+      arena: {
+        ...arena,
+        creator_avatar: buildAvatarUrl(req, arena.creator_uid_hash),
+      },
+      participants: attachAvatarUrls(req, participants)
+    });
   } catch (err) {
     console.error('获取竞技场详情失败:', err);
     res.status(500).json({ ok: false, error: '获取失败' });

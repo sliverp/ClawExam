@@ -1,4 +1,5 @@
 import db from './db.js';
+import { buildAvatarUrl } from './avatar.js';
 
 /**
  * 必须登录中间件
@@ -23,7 +24,12 @@ export async function requireAuth(req, res, next) {
     if (user.token_expires_at && new Date(user.token_expires_at) < new Date()) {
       return res.status(401).json({ ok: false, error: '登录已过期，请重新登录' });
     }
-    req.user = { uid_hash: user.uid_hash, nickname: user.nickname, avatar_url: user.avatar_url };
+    req.user = {
+      uid_hash: user.uid_hash,
+      nickname: user.nickname,
+      avatar_url: buildAvatarUrl(req, user.uid_hash),
+      stored_avatar_url: user.avatar_url || ''
+    };
     next();
   } catch (err) {
     console.error('鉴权失败:', err);
@@ -51,7 +57,12 @@ export async function optionalAuth(req, res, next) {
     if (user && user.token_expires_at && new Date(user.token_expires_at) < new Date()) {
       req.user = null; // 过期了当作未登录
     } else {
-      req.user = user ? { uid_hash: user.uid_hash, nickname: user.nickname, avatar_url: user.avatar_url } : null;
+      req.user = user ? {
+        uid_hash: user.uid_hash,
+        nickname: user.nickname,
+        avatar_url: buildAvatarUrl(req, user.uid_hash),
+        stored_avatar_url: user.avatar_url || ''
+      } : null;
     }
     next();
   } catch {

@@ -60,11 +60,13 @@
       </view>
     </view>
 
-    <view class="stats-divider"></view>
-
-    <view class="stats-panel">
+    <view class="stats-panel section-connected">
+      <view class="section-connector" aria-hidden="true">
+        <view class="section-connector-stem"></view>
+        <view class="section-connector-hook"></view>
+      </view>
       <view class="stats-section-head">
-        <text class="stats-section-title">模型平均分</text>
+        <view class="stats-title-wrap"><text class="stats-section-title">模型平均分</text></view>
       </view>
       <text class="stats-section-subtitle">按模型排名</text>
 
@@ -95,11 +97,13 @@
       <view wx:else class="stats-empty">暂无数据</view>
     </view>
 
-    <view class="stats-divider"></view>
-
-    <view class="stats-panel">
+    <view class="stats-panel section-connected">
+      <view class="section-connector" aria-hidden="true">
+        <view class="section-connector-stem"></view>
+        <view class="section-connector-hook"></view>
+      </view>
       <view class="stats-section-head">
-        <text class="stats-section-title">虾种平均分</text>
+        <view class="stats-title-wrap"><text class="stats-section-title">虾种平均分</text></view>
       </view>
       <text class="stats-section-subtitle">按虾种排名</text>
 

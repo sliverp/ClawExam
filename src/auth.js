@@ -1,24 +1,20 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import db from './db.js';
 import { requireAuth } from './auth-middleware.js';
+import {
+  buildAvatarUrl,
+  detectImageMeta,
+  extractMultipartFile,
+  uploadAvatarToCos,
+} from './avatar.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
 
 const WX_APPID = process.env.WX_APPID || '';
 const WX_SECRET = process.env.WX_SECRET || '';
 const UID_SALT = process.env.UID_SALT || 'clawexam-default-salt';
-
-// 头像存储目录
-const AVATAR_DIR = path.join(__dirname, '..', 'public', 'avatars');
-if (!fs.existsSync(AVATAR_DIR)) {
-  fs.mkdirSync(AVATAR_DIR, { recursive: true });
-}
 
 /**
  * 从 openid 计算 uid_hash（16位hex）
@@ -32,11 +28,11 @@ const TOKEN_TTL_DAYS = 14;
 /**
  * POST /api/wx-login
  * 微信登录注册
- * Body: { code, nickname, avatar_url }
+ * Body: { code, nickname }
  */
 router.post('/wx-login', async (req, res) => {
   try {
-    const { code, nickname, avatar_url } = req.body;
+    const { code, nickname } = req.body;
     if (!code) return res.status(400).json({ ok: false, error: '缺少 code' });
     if (!nickname || !nickname.trim()) return res.status(400).json({ ok: false, error: '缺少昵称' });
 
@@ -63,13 +59,13 @@ router.post('/wx-login', async (req, res) => {
 
     if (existing) {
       await db.run(
-        'UPDATE users SET session_key = ?, app_token = ?, token_expires_at = DATE_ADD(NOW(), INTERVAL ? DAY), nickname = ?, avatar_url = ?, updated_at = NOW() WHERE openid = ?',
-        [session_key, app_token, TOKEN_TTL_DAYS, nickname.trim(), avatar_url || '', openid]
+        'UPDATE users SET session_key = ?, app_token = ?, token_expires_at = DATE_ADD(NOW(), INTERVAL ? DAY), nickname = ?, updated_at = NOW() WHERE openid = ?',
+        [session_key, app_token, TOKEN_TTL_DAYS, nickname.trim(), openid]
       );
     } else {
       await db.run(
         'INSERT INTO users (uid_hash, openid, session_key, app_token, token_expires_at, nickname, avatar_url) VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY), ?, ?)',
-        [uid_hash, openid, session_key, app_token, TOKEN_TTL_DAYS, nickname.trim(), avatar_url || '']
+        [uid_hash, openid, session_key, app_token, TOKEN_TTL_DAYS, nickname.trim(), '']
       );
     }
 
@@ -78,7 +74,7 @@ router.post('/wx-login', async (req, res) => {
       app_token,
       uid_hash,
       nickname: nickname.trim(),
-      avatar_url: avatar_url || ''
+      avatar_url: buildAvatarUrl(req, uid_hash)
     });
   } catch (err) {
     console.error('wx-login 失败:', err);
@@ -103,7 +99,7 @@ router.get('/user/me', requireAuth, (req, res) => {
  */
 router.put('/user/me', requireAuth, async (req, res) => {
   try {
-    const { nickname, avatar_url } = req.body;
+    const { nickname } = req.body;
     const updates = [];
     const params = [];
 
@@ -111,11 +107,6 @@ router.put('/user/me', requireAuth, async (req, res) => {
       updates.push('nickname = ?');
       params.push(nickname.trim());
     }
-    if (avatar_url !== undefined) {
-      updates.push('avatar_url = ?');
-      params.push(avatar_url);
-    }
-
     if (updates.length === 0) {
       return res.status(400).json({ ok: false, error: '没有要更新的字段' });
     }
@@ -123,30 +114,19 @@ router.put('/user/me', requireAuth, async (req, res) => {
     params.push(req.user.uid_hash);
     await db.run(`UPDATE users SET ${updates.join(', ')}, updated_at = NOW() WHERE uid_hash = ?`, params);
 
-    const updated = await db.get('SELECT uid_hash, nickname, avatar_url FROM users WHERE uid_hash = ?', [req.user.uid_hash]);
-    res.json({ ok: true, user: updated });
+    const updated = await db.get('SELECT uid_hash, nickname FROM users WHERE uid_hash = ?', [req.user.uid_hash]);
+    res.json({
+      ok: true,
+      user: {
+        ...updated,
+        avatar_url: buildAvatarUrl(req, req.user.uid_hash)
+      }
+    });
   } catch (err) {
     console.error('更新用户失败:', err);
     res.status(500).json({ ok: false, error: '更新失败' });
   }
 });
-
-/**
- * 校验图片 magic bytes
- */
-function isValidImage(buffer) {
-  if (buffer.length < 4) return false;
-  // JPEG: FF D8 FF
-  if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) return 'image/jpeg';
-  // PNG: 89 50 4E 47
-  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) return 'image/png';
-  // GIF: 47 49 46
-  if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) return 'image/gif';
-  // WebP: 52 49 46 46 ... 57 45 42 50
-  if (buffer.length >= 12 && buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46
-      && buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50) return 'image/webp';
-  return false;
-}
 
 /**
  * POST /api/upload/avatar
@@ -156,26 +136,37 @@ router.post('/upload/avatar', requireAuth, async (req, res) => {
   try {
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));
-    req.on('end', () => {
-      const buffer = Buffer.concat(chunks);
-      if (buffer.length === 0) {
-        return res.status(400).json({ ok: false, error: '没有文件数据' });
-      }
-      if (buffer.length > 2 * 1024 * 1024) {
-        return res.status(400).json({ ok: false, error: '文件过大（最大 2MB）' });
-      }
+    req.on('end', async () => {
+      try {
+        const body = Buffer.concat(chunks);
+        const file = extractMultipartFile(body, req.headers['content-type'] || '');
+        if (!file || !file.buffer || file.buffer.length === 0) {
+          return res.status(400).json({ ok: false, error: '没有文件数据' });
+        }
+        if (file.buffer.length > 2 * 1024 * 1024) {
+          return res.status(400).json({ ok: false, error: '文件过大（最大 2MB）' });
+        }
 
-      const mimeType = isValidImage(buffer);
-      if (!mimeType) {
-        return res.status(400).json({ ok: false, error: '不支持的图片格式，仅支持 JPEG/PNG/GIF/WebP' });
+        const imageMeta = detectImageMeta(file.buffer);
+        if (!imageMeta) {
+          return res.status(400).json({ ok: false, error: '不支持的图片格式，仅支持 JPEG/PNG/GIF/WebP' });
+        }
+
+        const uploaded = await uploadAvatarToCos(req.user.uid_hash, file.buffer, imageMeta.contentType);
+        await db.run(
+          'UPDATE users SET avatar_url = ?, updated_at = NOW() WHERE uid_hash = ?',
+          [uploaded.objectKey, req.user.uid_hash]
+        );
+
+        return res.json({
+          ok: true,
+          uid_hash: req.user.uid_hash,
+          url: buildAvatarUrl(req, req.user.uid_hash)
+        });
+      } catch (err) {
+        console.error('头像上传失败:', err);
+        return res.status(500).json({ ok: false, error: '上传失败' });
       }
-
-      const filename = `${req.user.uid_hash}.jpg`;
-      const filepath = path.join(AVATAR_DIR, filename);
-      fs.writeFileSync(filepath, buffer);
-
-      const url = `/avatars/${filename}`;
-      res.json({ ok: true, url });
     });
   } catch (err) {
     console.error('头像上传失败:', err);

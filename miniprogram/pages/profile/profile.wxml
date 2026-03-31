@@ -104,7 +104,7 @@
 
         <view class="profile-action-card" bindtap="onGoStats">
           <view class="profile-action-left">
-            <view class="profile-action-icon">📊</view>
+            <image class="profile-action-icon" src="/assets/icon/statistic.png" mode="aspectFit" />
             <text class="profile-action-text">查看全部统计</text>
           </view>
           <text class="profile-action-arrow">›</text>
@@ -112,7 +112,7 @@
 
         <view class="profile-action-card" bindtap="onLogout">
           <view class="profile-action-left">
-            <view class="profile-action-icon">↺</view>
+            <image class="profile-action-icon" src="/assets/icon/exit.png" mode="aspectFit" />
             <text class="profile-action-text">退出登录</text>
           </view>
           <text class="profile-action-arrow">›</text>

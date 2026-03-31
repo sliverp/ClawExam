@@ -103,6 +103,10 @@ function getCertImageUrl(token) {
   return `${BASE_URL}/cert/${token}/image`;
 }
 
+function getAvatarUrl(uidHash) {
+  return `${BASE_URL}/static/avatar/${uidHash}`;
+}
+
 // ===== 新增接口 =====
 
 function wxLogin(data) {
@@ -156,13 +160,12 @@ function getMyExamHistory() {
 // 上传头像
 function uploadAvatar(filePath) {
   return new Promise((resolve, reject) => {
-    const token = wx.getStorageSync('app_token');
     wx.uploadFile({
       url: `${BASE_URL}/api/upload/avatar`,
       filePath,
       name: 'file',
       header: {
-        'X-App-Token': token || ''
+        'X-App-Token': wx.getStorageSync('app_token') || ''
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -186,6 +189,7 @@ module.exports = {
   getStats,
   getCertificate,
   getCertImageUrl,
+  getAvatarUrl,
   wxLogin,
   getUserInfo,
   updateUserInfo,

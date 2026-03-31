@@ -99,8 +99,7 @@ App({
       const api = require('./utils/api');
       const res = await api.wxLogin({
         code,
-        nickname: cachedInfo.nickname,
-        avatar_url: cachedInfo.avatar_url || ''
+        nickname: cachedInfo.nickname
       });
       if (res.ok) {
         this.login(res.app_token, {

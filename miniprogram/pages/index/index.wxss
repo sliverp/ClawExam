@@ -1,32 +1,105 @@
 .home-page {
   min-height: 100vh;
   padding-bottom: 0;
+  font-family: "PingFang SC", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
   background:
     radial-gradient(circle at 18% 8%, rgba(255, 155, 103, 0.9) 0, rgba(255, 155, 103, 0.35) 22%, transparent 40%),
     radial-gradient(circle at 82% 9%, rgba(214, 255, 89, 0.92) 0, rgba(214, 255, 89, 0.3) 20%, transparent 38%),
     linear-gradient(180deg, #fff7d4 0%, #ffd965 56%, #f7c64f 100%);
 }
 
+.home-page view,
+.home-page text,
+.home-page button,
+.home-page input {
+  font-family: "PingFang SC", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 .hero-shell {
   position: relative;
   overflow: hidden;
-  padding: 12rpx 16rpx 18rpx;
+
 }
 
 .hero-main-image {
   display: block;
+  width: 105%;
+}
+
+.hero-security-badge {
+  width: calc(100% - 64rpx);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rpx;
+  padding: 5rpx 24rpx 5rpx;
+  border-radius: 28rpx;
+  background: rgba(0, 102, 255, 0.31);
+  box-shadow: 0 10rpx 24rpx rgba(46, 30, 8, 0.14);
+  box-sizing: border-box;
+}
+
+.hero-security-strip {
+  margin: 8rpx auto 12rpx;
+}
+
+.hero-security-logo-large {
+  width: 200rpx;
+  flex-shrink: 0;
+}
+
+.hero-security-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
   width: 100%;
-  border-radius: 36rpx;
+}
+
+.hero-security-copy-stacked {
+  align-items: center;
+}
+
+.hero-security-line {
+  font-size: 22rpx;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hero-security-line-accent {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6rpx;
+  width: 100%;
+}
+
+.hero-security-brand {
+  font-size: 18rpx;
+  line-height: 1.2;
+  color: #71a8ff;
+  font-weight: 700;
+}
+
+.hero-security-text {
+  font-size: 18rpx;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hero-security-text-inline {
+  white-space: nowrap;
 }
 
 .stats-panel {
   position: relative;
   z-index: 1;
-  margin: -56rpx 16rpx 0;
+  margin: -175rpx 16rpx 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 22rpx 0;
+  gap: 2rpx 0;
   padding: 28rpx 26rpx;
   border-radius: 34rpx;
   background: rgba(255, 251, 235, 0.96);
@@ -54,11 +127,48 @@
 }
 
 .card-section {
+  position: relative;
   margin: 0 28rpx 30rpx;
   padding: 28rpx;
   border-radius: 34rpx;
   background: linear-gradient(180deg, rgba(255, 248, 212, 0.92) 0%, rgba(255, 244, 202, 0.76) 100%);
   box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.42), 0 14rpx 28rpx rgba(176, 122, 23, 0.1);
+}
+
+.section-connected {
+  margin-top: 2rpx;
+}
+
+.section-connector {
+  position: absolute;
+  left: 8rpx;
+  top: -66rpx;
+  width: 66rpx;
+  height: 96rpx;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.section-connector-stem {
+  position: absolute;
+  left: -2rpx;
+  top: 30rpx;
+  width: 8rpx;
+  height: 45rpx;
+  border-radius: 999rpx;
+  background: #f6ab14;
+}
+
+.section-connector-hook {
+  position: absolute;
+  left: 20rpx;
+  top: 6rpx;
+  width: 28rpx;
+  height: 82rpx;
+  border: 8rpx solid #f6ab14;
+  border-left: 0;
+  border-radius: 0 999rpx 999rpx 0;
+  box-sizing: border-box;
 }
 
 .section-head {
@@ -68,16 +178,66 @@
   margin-bottom: 22rpx;
 }
 
+.section-head-inline {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.section-head-main {
+  min-width: 0;
+}
+
+.section-head-main-inline {
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+  min-width: 0;
+}
+
 .section-title-tight {
+  display: inline-block;
+  position: relative;
   margin-bottom: 10rpx;
-  font-size: 48rpx;
-  line-height: 1.1;
-  color: #222;
+  font-size: 42rpx;
+  line-height: 52rpx;
+  font-weight: 900;
+  letter-spacing: 0;
+  color: #111111;
+}
+
+.section-title-wrap {
+  display: inline-block;
+  position: relative;
+}
+
+.section-title-wrap::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 6rpx;
+  width: 100%;
+  height: 14rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, rgba(118, 233, 221, 0.75) 0%, rgba(255, 223, 121, 0.8) 52%, rgba(255, 171, 124, 0.72) 100%);
+  z-index: 0;
+}
+
+.section-title-wrap .section-title-tight {
+  position: relative;
+  z-index: 1;
 }
 
 .section-subtitle {
   margin-bottom: 0;
   color: rgba(84, 72, 55, 0.66);
+}
+
+.section-head-main-inline .section-subtitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 24rpx;
+  line-height: 34rpx;
+  white-space: nowrap;
 }
 
 .section-mark {
@@ -130,6 +290,12 @@
   color: #fff;
   box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.6);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.exam-icon-img {
+  width: 100%;
+  height: 100%;
 }
 
 .exam-copy {
@@ -150,10 +316,11 @@
   display: block;
   flex: 0 1 auto;
   min-width: 0;
-  font-size: 34rpx;
-  font-weight: 800;
-  color: #222;
-  line-height: 1.35;
+  font-size: 28rpx;
+  font-weight: 600;
+  font-family: "PingFang SC", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #2b2b2b;
+  line-height: 44rpx;
   word-break: break-word;
 }
 
@@ -316,6 +483,88 @@
   background: rgba(255, 245, 220, 0.96);
   font-size: 28rpx;
   border-radius: 22rpx;
+}
+
+.philosophy-head {
+  margin-bottom: 14rpx;
+}
+
+.philosophy-quote {
+  margin-bottom: 16rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 247, 223, 0.96) 100%);
+  box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.42);
+}
+
+.philosophy-quote-text {
+  display: block;
+  font-size: 22rpx;
+  line-height: 1.6;
+  color: rgba(61, 51, 36, 0.82);
+}
+
+.philosophy-roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.philosophy-step {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 20rpx 18rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10rpx 22rpx rgba(140, 102, 24, 0.08);
+}
+
+.philosophy-step-tag {
+  width: 104rpx;
+  height: 52rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.philosophy-step-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.philosophy-step-title {
+  font-size: 28rpx;
+  line-height: 1.3;
+  font-weight: 800;
+  color: #222;
+}
+
+.philosophy-step-desc {
+  font-size: 20rpx;
+  line-height: 1.55;
+  color: rgba(80, 69, 54, 0.72);
+}
+
+.philosophy-step-v1 .philosophy-step-tag {
+  background: rgba(110, 231, 183, 0.22);
+  color: #179b70;
+}
+
+.philosophy-step-v2 .philosophy-step-tag {
+  background: rgba(95, 111, 255, 0.14);
+  color: #5f6fff;
+}
+
+.philosophy-step-v3 .philosophy-step-tag {
+  background: rgba(255, 107, 53, 0.16);
+  color: #ff6b35;
 }
 
 .rank-tabs {
@@ -663,6 +912,10 @@
 .cert-btn {
   width: 148rpx;
   height: 84rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   border-radius: 22rpx;
   background: linear-gradient(180deg, #ff6969 0%, #ff5656 100%);
   color: #fff;

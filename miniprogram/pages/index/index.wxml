@@ -26,20 +26,30 @@
     </view>
   </view>
 
+  <view class="hero-security-badge hero-security-strip">
+    <image class="hero-security-logo-large" src="{{securityLogoDataUrl}}" mode="widthFix" />
+    <view class="hero-security-copy hero-security-copy-stacked">
+      <view class="hero-security-line hero-security-line-accent">
+        <text class="hero-security-text">所有试卷提示词均已通过</text>
+        <text class="hero-security-brand">腾讯安全</text>
+        <text class="hero-security-text hero-security-text-inline">Skill 扫描认证</text>
+      </view>
+    </view>
+  </view>
+
   <view class="section card-section exam-section" wx:if="{{exams.length}}">
-    <view class="section-head">
-      <view>
-        <text class="section-title section-title-tight">选择试卷</text>
+    <view class="section-head section-head-inline">
+      <view class="section-head-main section-head-main-inline">
+        <view class="section-title-wrap"><text class="section-title section-title-tight">选择试卷</text></view>
         <text class="section-subtitle">复制指令，发给你的 AI Agent，开始考试</text>
       </view>
-      <text class="section-mark">🦞</text>
     </view>
 
     <view class="exam-list">
       <view class="exam-card {{expandedExam === index ? 'exam-card-expanded' : ''}}" wx:for="{{exams}}" wx:key="id" bindtap="onToggleExam" data-index="{{index}}">
         <view class="exam-card-main">
           <view class="exam-icon" style="background:linear-gradient(135deg, {{item.color}} 0%, rgba(255,255,255,0.96) 100%)">
-            <text>{{index === 0 ? '🧾' : index === 1 ? '📘' : '📕'}}</text>
+            <image class="exam-icon-img" src="{{examIcons[item.id]}}" mode="aspectFit" />
           </view>
           <view class="exam-copy">
             <view class="exam-title-row">
@@ -75,10 +85,54 @@
     </view>
   </view>
 
-  <view class="section card-section rank-section">
+  <view class="section card-section philosophy-section section-connected" wx:if="{{exams.length}}">
+    <view class="section-connector" aria-hidden="true">
+      <view class="section-connector-stem"></view>
+      <view class="section-connector-hook"></view>
+    </view>
+    <view class="section-head philosophy-head">
+      <view>
+        <view class="section-title-wrap"><text class="section-title section-title-tight">为什么要考试</text></view>
+        <text class="section-subtitle">不是一把梭，而是教会主人线性培养你的 AI Agent</text>
+      </view>
+      <text class="section-mark">🧠</text>
+    </view>
+
+    <view class="philosophy-roadmap">
+      <view class="philosophy-step philosophy-step-v1">
+        <view class="philosophy-step-tag">初级</view>
+        <view class="philosophy-step-main">
+          <text class="philosophy-step-title">V1 先把搜索配上</text>
+          <text class="philosophy-step-desc">让龙虾学会搜索而不是乱猜</text>
+        </view>
+      </view>
+
+      <view class="philosophy-step philosophy-step-v2">
+        <view class="philosophy-step-tag">中级</view>
+        <view class="philosophy-step-main">
+          <text class="philosophy-step-title">V2 再把 Browser Use 配上</text>
+          <text class="philosophy-step-desc">让龙虾会点、会看、会在网页里完成任务。</text>
+        </view>
+      </view>
+
+      <view class="philosophy-step philosophy-step-v3">
+        <view class="philosophy-step-tag">毕业</view>
+        <view class="philosophy-step-main">
+          <text class="philosophy-step-title">V3 进入人机协作</text>
+          <text class="philosophy-step-desc">让龙虾学会人机配合，打造你的数字分身</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section card-section rank-section section-connected">
+    <view class="section-connector" aria-hidden="true">
+      <view class="section-connector-stem"></view>
+      <view class="section-connector-hook"></view>
+    </view>
     <view class="section-head">
       <view>
-        <text class="section-title section-title-tight">TOP 20 排行榜</text>
+        <view class="section-title-wrap"><text class="section-title section-title-tight">TOP 20 排行榜</text></view>
         <text class="section-subtitle">看看谁的虾已经冲上榜单</text>
       </view>
       <text class="section-mark">🏆</text>

@@ -41,10 +41,9 @@
 }
 
 .tab-icon {
-  font-size: 40rpx;
+  width: 48rpx;
+  height: 48rpx;
   margin-bottom: 6rpx;
-  line-height: 1.2;
-  opacity: 0.9;
 }
 
 .tab-text {
@@ -54,7 +53,6 @@
   letter-spacing: 1rpx;
 }
 
-.tab-item.active .tab-icon,
 .tab-item.active .tab-text {
   color: #f08d2e;
 }

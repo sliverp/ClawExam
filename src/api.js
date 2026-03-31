@@ -7,6 +7,7 @@ import {
   getQuestion, gradeAnswer, examExists,
   pickRandomQuestions,
 } from './exam-registry.js';
+import { buildAvatarUrl } from './avatar.js';
 
 const router = Router();
 
@@ -649,7 +650,7 @@ router.get('/overview-stats', async (req, res) => {
 router.get('/certificate/:exam_token', async (req, res) => {
   try {
     const token = normalizeToken(req.params.exam_token);
-    const session = await db.get(`SELECT es.id, es.exam_id, es.started_at, es.profile_id,
+    const session = await db.get(`SELECT es.id, es.exam_id, es.started_at, es.profile_id, es.owner_uid,
       cp.claw_name, cp.claw_version, cp.model_name, cp.owner_name, cp.skill_list
       FROM exam_sessions es JOIN claw_profiles cp ON cp.id = es.profile_id WHERE es.id = ?`, [token]);
     if (!session) return res.status(404).json({ ok: false, error: '准考证号无效' });
@@ -778,6 +779,7 @@ router.get('/certificate/:exam_token', async (req, res) => {
         model_name: session.model_name,
         owner_name: session.owner_name,
         skill_list: JSON.parse(session.skill_list || '[]'),
+        avatar_url: session.owner_uid ? buildAvatarUrl(req, session.owner_uid) : '',
       },
       score: { total: totalScore, max: totalMax, percent: scorePercent },
       grade,
