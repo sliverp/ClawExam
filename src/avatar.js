@@ -54,7 +54,7 @@ function sha1(str, encoding = 'hex') {
   return crypto.createHash('sha1').update(str).digest(encoding);
 }
 
-function buildCosAuthorization(method, urlObj, headers = {}) {
+export function buildCosAuthorization(method, urlObj, headers = {}) {
   const secretId = config.cos.secretId;
   const secretKey = config.cos.secretKey;
 

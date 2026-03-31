@@ -10,6 +10,7 @@ import { generateExamMd } from './exam-md.js';
 import { listExams } from './exam-registry.js';
 import { generateCertSvg } from './cert-image-gen.js';
 import { Resvg } from '@resvg/resvg-js';
+import { buildCosAuthorization } from './avatar.js';
 import { renderIndex, renderCert, renderCertImage, renderStats } from './render.js';
 import config from './config.js';
 import db from './db.js';
@@ -32,9 +33,18 @@ function ensureParentDir(filePath) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
 
+// 1x1 透明 PNG fallback（避免依赖本地文件）
+const DEFAULT_AVATAR_BUFFER = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAB' +
+  'Nl7BcQAAAABJRU5ErkJggg==', 'base64'
+);
+
 function sendDefaultAvatar(res) {
   const fallbackPath = path.join(__dirname, '..', 'public', 'images', 'default-avatar.png');
-  return res.set('Cache-Control', 'public, max-age=86400').sendFile(fallbackPath);
+  if (fs.existsSync(fallbackPath)) {
+    return res.set('Cache-Control', 'public, max-age=86400').sendFile(fallbackPath);
+  }
+  return res.set('Content-Type', 'image/png').set('Cache-Control', 'public, max-age=3600').send(DEFAULT_AVATAR_BUFFER);
 }
 
 // CORS + 安全响应头
@@ -53,6 +63,7 @@ app.get('/static/avatar/:uid', async (req, res) => {
   try {
     const uidHash = String(req.params.uid || '').trim();
     if (!/^[0-9a-f]{16}$/i.test(uidHash)) {
+      console.log('[头像代理] uid_hash 格式不合法:', uidHash);
       return sendDefaultAvatar(res);
     }
 
@@ -62,17 +73,29 @@ app.get('/static/avatar/:uid', async (req, res) => {
     );
 
     if (!user?.avatar_url) {
+      console.log('[头像代理] 数据库中无 avatar_url, uid_hash:', uidHash);
       return sendDefaultAvatar(res);
     }
 
     const upstreamUrl = `${config.cos.baseUrl.replace(/\/+$/, '')}/${String(user.avatar_url).replace(/^\/+/, '')}`;
-    const upstreamRes = await fetch(upstreamUrl, {
-      headers: {
-        'User-Agent': 'ClawExam-AvatarProxy/1.0',
-      },
-    });
+    const urlObj = new URL(upstreamUrl);
+    const cosHeaders = { host: urlObj.host };
+    let authorization;
+    try {
+      authorization = buildCosAuthorization('GET', urlObj, cosHeaders);
+    } catch (e) {
+      console.warn('[头像代理] COS 签名失败，尝试无签名请求:', e.message);
+    }
+    console.log('[头像代理] COS URL:', upstreamUrl);
+    const fetchHeaders = {
+      'User-Agent': 'ClawExam-AvatarProxy/1.0',
+      Host: urlObj.host,
+    };
+    if (authorization) fetchHeaders.Authorization = authorization;
+    const upstreamRes = await fetch(upstreamUrl, { headers: fetchHeaders });
 
     if (!upstreamRes.ok) {
+      console.error('[头像代理] COS 返回失败:', upstreamRes.status, await upstreamRes.text().catch(() => ''));
       return sendDefaultAvatar(res);
     }
 
