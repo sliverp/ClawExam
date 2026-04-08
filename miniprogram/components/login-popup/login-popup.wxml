@@ -34,15 +34,48 @@
           <view class="checkbox {{privacyAgreed ? 'checked' : ''}}">
             <text wx:if="{{privacyAgreed}}">✓</text>
           </view>
-          <text class="privacy-text">我已阅读并同意</text>
+          <text class="privacy-text">登录前请先阅读并同意</text>
         </view>
         <text class="privacy-link" bindtap="onViewPrivacy">《隐私政策》</text>
       </view>
 
-      <button class="confirm-btn neo-btn neo-btn-red neo-btn-block neo-btn-lg" bindtap="onConfirm" loading="{{loading}}" disabled="{{loading}}">
+      <button
+        class="confirm-btn neo-btn neo-btn-red neo-btn-block neo-btn-lg"
+        open-type="agreePrivacyAuthorization"
+        bindagreeprivacyauthorization="onConfirm"
+        loading="{{loading}}"
+        disabled="{{loading}}"
+      >
         确认登录
       </button>
       <text class="skip-btn" bindtap="onClose">暂不登录</text>
     </view>
+  </view>
+
+  <view class="privacy-notice-mask" wx:if="{{showPrivacyNotice}}" bindtap="onClosePrivacyNotice"></view>
+  <view class="privacy-notice-modal" wx:if="{{showPrivacyNotice}}">
+    <text class="privacy-notice-title">登录前请注意隐私授权</text>
+    <text class="privacy-notice-desc">继续登录前，请先阅读《隐私政策》。登录时我们会获取你的头像、昵称，并保存你的考试记录、排行榜与竞技场数据。</text>
+
+    <view class="privacy-notice-card">
+      <text class="privacy-notice-label">你将授权我们用于：</text>
+      <text class="privacy-notice-item">· 获取并保存你的昵称与头像</text>
+      <text class="privacy-notice-item">· 同步你的考试成绩、排行榜和竞技场数据</text>
+      <text class="privacy-notice-item">· 在“我的”页面查看历史记录与证书</text>
+    </view>
+
+    <view class="privacy-notice-check" bindtap="onTogglePrivacy">
+      <view class="privacy-checkbox {{privacyAgreed ? 'checked' : ''}}">
+        <text wx:if="{{privacyAgreed}}">✓</text>
+      </view>
+      <text class="privacy-check-text">我已阅读并同意《隐私政策》</text>
+    </view>
+
+    <view class="privacy-notice-actions">
+      <view class="privacy-notice-secondary" bindtap="onViewPrivacy">查看隐私政策</view>
+      <view class="privacy-notice-primary" bindtap="onClosePrivacyNotice">我已知晓</view>
+    </view>
+
+    <view class="privacy-notice-close" bindtap="onClose">暂不登录</view>
   </view>
 </view>

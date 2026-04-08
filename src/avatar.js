@@ -9,7 +9,7 @@ export function getBaseUrl(req) {
 
 export function buildAvatarUrl(req, uidHash) {
   if (!uidHash) return '';
-  return `${getBaseUrl(req)}/static/avatar/${uidHash}`;
+  return `${getBaseUrl(req)}/static/avatar/${uidHash}?t=${Date.now()}`;
 }
 
 export function buildAvatarPath(uidHash) {

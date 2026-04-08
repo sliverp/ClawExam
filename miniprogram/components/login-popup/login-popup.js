@@ -4,7 +4,12 @@ Component({
   properties: {
     show: {
       type: Boolean,
-      value: false
+      value: false,
+      observer(newVal) {
+        if (newVal) {
+          this.resetForm();
+        }
+      }
     }
   },
 
@@ -12,10 +17,21 @@ Component({
     avatarUrl: '',
     nickname: '',
     loading: false,
+    showPrivacyNotice: true,
     privacyAgreed: false
   },
 
   methods: {
+    resetForm() {
+      this.setData({
+        avatarUrl: '',
+        nickname: '',
+        loading: false,
+        showPrivacyNotice: true,
+        privacyAgreed: false
+      });
+    },
+
     onChooseAvatar(e) {
       this.setData({ avatarUrl: e.detail.avatarUrl });
     },
@@ -25,21 +41,37 @@ Component({
     },
 
     onClose() {
-      this.setData({ avatarUrl: '', nickname: '', loading: false, privacyAgreed: false });
+      this.resetForm();
       this.triggerEvent('close');
+    },
+
+    onViewPrivacy() {
+      if (wx.openPrivacyContract) {
+        wx.openPrivacyContract({
+          fail: () => {
+            wx.navigateTo({ url: '/pages/privacy/privacy' });
+          }
+        });
+        return;
+      }
+      wx.navigateTo({ url: '/pages/privacy/privacy' });
     },
 
     onTogglePrivacy() {
       this.setData({ privacyAgreed: !this.data.privacyAgreed });
     },
 
-    onViewPrivacy() {
-      wx.navigateTo({ url: '/pages/privacy/privacy' });
+    onClosePrivacyNotice() {
+      if (!this.data.privacyAgreed) {
+        wx.showToast({ title: '请先勾选并同意隐私政策', icon: 'none' });
+        return;
+      }
+      this.setData({ showPrivacyNotice: false });
     },
 
     async onConfirm() {
       if (!this.data.privacyAgreed) {
-        wx.showToast({ title: '请先阅读并同意隐私政策', icon: 'none' });
+        wx.showToast({ title: '请先勾选并同意隐私政策', icon: 'none' });
         return;
       }
       if (!this.data.nickname.trim()) {
@@ -89,7 +121,7 @@ Component({
           }
 
           wx.showToast({ title: '登录成功', icon: 'success' });
-          this.setData({ avatarUrl: '', nickname: '', loading: false });
+          this.resetForm();
           this.triggerEvent('success', {
             uid_hash: res.uid_hash,
             nickname: res.nickname,

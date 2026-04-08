@@ -154,6 +154,18 @@ Page({
     wx.switchTab({ url: '/pages/stats/stats' });
   },
 
+  onViewPrivacy() {
+    if (wx.openPrivacyContract) {
+      wx.openPrivacyContract({
+        fail: () => {
+          wx.navigateTo({ url: '/pages/privacy/privacy' });
+        }
+      });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
+  },
+
   onOpenShareGuide() {
     this.setData({ showShareGuide: true });
   },

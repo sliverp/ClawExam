@@ -100,12 +100,11 @@ app.get('/static/avatar/:uid', async (req, res) => {
     }
 
     const contentType = upstreamRes.headers.get('content-type') || 'image/jpeg';
-    const cacheControl = upstreamRes.headers.get('cache-control') || 'public, max-age=86400';
     const arrayBuffer = await upstreamRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     res.set('Content-Type', contentType);
-    res.set('Cache-Control', cacheControl);
+    res.set('Cache-Control', 'private, no-cache, max-age=0');
     return res.send(buffer);
   } catch (err) {
     console.error('头像代理失败:', err);

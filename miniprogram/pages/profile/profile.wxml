@@ -110,6 +110,14 @@
           <text class="profile-action-arrow">›</text>
         </view>
 
+        <view class="profile-action-card" bindtap="onViewPrivacy">
+          <view class="profile-action-left">
+            <image class="profile-action-icon" src="/assets/icon/privacy.png" mode="aspectFit" />
+            <text class="profile-action-text">隐私政策</text>
+          </view>
+          <text class="profile-action-arrow">›</text>
+        </view>
+
         <view class="profile-action-card" bindtap="onLogout">
           <view class="profile-action-left">
             <image class="profile-action-icon" src="/assets/icon/exit.png" mode="aspectFit" />

@@ -95,7 +95,6 @@
         <view class="section-title-wrap"><text class="section-title section-title-tight">为什么要考试</text></view>
         <text class="section-subtitle">不是一把梭，而是教会主人线性培养你的 AI Agent</text>
       </view>
-      <text class="section-mark">🧠</text>
     </view>
 
     <view class="philosophy-roadmap">
@@ -135,7 +134,6 @@
         <view class="section-title-wrap"><text class="section-title section-title-tight">TOP 20 排行榜</text></view>
         <text class="section-subtitle">看看谁的虾已经冲上榜单</text>
       </view>
-      <text class="section-mark">🏆</text>
     </view>
 
     <view class="rank-tabs">
