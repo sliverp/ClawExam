@@ -46,14 +46,6 @@ Component({
     },
 
     onViewPrivacy() {
-      if (wx.openPrivacyContract) {
-        wx.openPrivacyContract({
-          fail: () => {
-            wx.navigateTo({ url: '/pages/privacy/privacy' });
-          }
-        });
-        return;
-      }
       wx.navigateTo({ url: '/pages/privacy/privacy' });
     },
 
