@@ -329,9 +329,45 @@ app.get('/stats', (req, res) => {
   res.type('text/html; charset=utf-8').send(html);
 });
 
-// 隐私协议入口：临时改为 301 跳转，验证小程序 web-view 是否接受外域最终页
+// 隐私协议入口：由我们自己的域名承载，内容源仍然来自腾讯官方链接
 app.get('/privacy-policy', async (req, res) => {
-  res.redirect(301, PRIVACY_POLICY_URL);
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>隐私政策</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        overflow: hidden;
+      }
+      .privacy-frame {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe
+      class="privacy-frame"
+      src="${PRIVACY_POLICY_URL}"
+      referrerpolicy="no-referrer-when-downgrade"
+      allowfullscreen
+    ></iframe>
+  </body>
+</html>`;
+
+  return res
+    .type('text/html; charset=utf-8')
+    .set('Cache-Control', 'public, max-age=300')
+    .send(html);
 });
 
 // 隐私协议静态资源代理：/document/* -> privacy.qq.com/document/*
