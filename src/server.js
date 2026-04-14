@@ -200,6 +200,8 @@ function getBaseUrl(req) {
   return `${proto}://${host}`;
 }
 
+const PRIVACY_POLICY_URL = 'https://privacy.qq.com/document/preview/995bf37ced7a4b2f9dd64b83da734478';
+
 // 动态试卷 Markdown：GET /exam/:exam_id.md?uid=xxx
 app.get('/exam/:examId.md', (req, res) => {
   const baseUrl = getBaseUrl(req);
@@ -295,6 +297,39 @@ app.get('/cert/:token', async (req, res) => {
 app.get('/stats', (req, res) => {
   const html = renderStats();
   res.type('text/html; charset=utf-8').send(html);
+});
+
+// 隐私协议代理页：由我们自己的域名承载，内容源仍然是腾讯官方链接
+app.get('/privacy-policy', async (req, res) => {
+  try {
+    const upstreamRes = await fetch(PRIVACY_POLICY_URL, {
+      headers: {
+        'User-Agent': 'ClawExam-PrivacyProxy/1.0',
+      },
+    });
+
+    if (!upstreamRes.ok) {
+      return res.status(502).type('text/plain').send('隐私协议加载失败');
+    }
+
+    let html = await upstreamRes.text();
+
+    // 补 base，确保相对资源继续从 privacy.qq.com 加载
+    if (html.includes('<head>')) {
+      html = html.replace(
+        '<head>',
+        `<head><base href="https://privacy.qq.com/">`
+      );
+    }
+
+    res
+      .type('text/html; charset=utf-8')
+      .set('Cache-Control', 'public, max-age=300')
+      .send(html);
+  } catch (err) {
+    console.error('隐私协议代理失败:', err);
+    res.status(502).type('text/plain').send('隐私协议代理失败');
+  }
 });
 
 // 首页：服务端渲染（支持 ?exam_id= 筛选排行榜）
