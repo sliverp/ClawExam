@@ -203,6 +203,35 @@ function getBaseUrl(req) {
 const PRIVACY_POLICY_URL = 'https://privacy.qq.com/document/preview/995bf37ced7a4b2f9dd64b83da734478';
 const PRIVACY_POLICY_ORIGIN = 'https://privacy.qq.com';
 
+function buildPrivacyProxyHeaders(req, upstreamUrl, extraHeaders = {}) {
+  const headers = {
+    'User-Agent': 'ClawExam-PrivacyProxy/1.0',
+    ...extraHeaders,
+  };
+
+  const passthroughHeaderNames = [
+    'accept',
+    'accept-language',
+    'content-type',
+    'token',
+    'nonce',
+    'dtstamp',
+    'appid',
+    'sign',
+  ];
+
+  for (const name of passthroughHeaderNames) {
+    const value = req.headers[name];
+    if (value) headers[name] = value;
+  }
+
+  headers.referer = PRIVACY_POLICY_URL;
+  headers.origin = PRIVACY_POLICY_ORIGIN;
+  headers.host = new URL(upstreamUrl).host;
+
+  return headers;
+}
+
 // 动态试卷 Markdown：GET /exam/:exam_id.md?uid=xxx
 app.get('/exam/:examId.md', (req, res) => {
   const baseUrl = getBaseUrl(req);
@@ -350,6 +379,38 @@ app.get(/^\/document\/(.+)$/, async (req, res) => {
   } catch (err) {
     console.error('隐私协议静态资源代理失败:', err);
     res.status(502).type('text/plain').send('隐私协议静态资源代理失败');
+  }
+});
+
+// 隐私协议接口代理：/document_ext_api/* -> privacy.qq.com/document_ext_api/*
+app.all(/^\/document_ext_api\/(.+)$/, async (req, res) => {
+  try {
+    const upstreamUrl = `${PRIVACY_POLICY_ORIGIN}${req.originalUrl}`;
+    const method = req.method.toUpperCase();
+    const fetchOptions = {
+      method,
+      headers: buildPrivacyProxyHeaders(req, upstreamUrl),
+    };
+
+    if (!['GET', 'HEAD'].includes(method)) {
+      fetchOptions.body = JSON.stringify(req.body || {});
+      if (!fetchOptions.headers['content-type']) {
+        fetchOptions.headers['content-type'] = 'application/json;charset=UTF-8';
+      }
+    }
+
+    const upstreamRes = await fetch(upstreamUrl, fetchOptions);
+    const contentType = upstreamRes.headers.get('content-type') || 'application/json; charset=utf-8';
+    const cacheControl = upstreamRes.headers.get('cache-control') || 'no-store';
+    const bodyText = await upstreamRes.text();
+
+    res.status(upstreamRes.status);
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', cacheControl);
+    return res.send(bodyText);
+  } catch (err) {
+    console.error('隐私协议接口代理失败:', err);
+    return res.status(502).json({ code: 502, message: '隐私协议接口代理失败' });
   }
 });
 
