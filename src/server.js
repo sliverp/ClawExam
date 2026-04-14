@@ -329,29 +329,9 @@ app.get('/stats', (req, res) => {
   res.type('text/html; charset=utf-8').send(html);
 });
 
-// 隐私协议代理页：由我们自己的域名承载，内容源仍然是腾讯官方链接
+// 隐私协议入口：临时改为 301 跳转，验证小程序 web-view 是否接受外域最终页
 app.get('/privacy-policy', async (req, res) => {
-  try {
-    const upstreamRes = await fetch(PRIVACY_POLICY_URL, {
-      headers: {
-        'User-Agent': 'ClawExam-PrivacyProxy/1.0',
-      },
-    });
-
-    if (!upstreamRes.ok) {
-      return res.status(502).type('text/plain').send('隐私协议加载失败');
-    }
-
-    const html = await upstreamRes.text();
-
-    res
-      .type('text/html; charset=utf-8')
-      .set('Cache-Control', 'public, max-age=300')
-      .send(html);
-  } catch (err) {
-    console.error('隐私协议代理失败:', err);
-    res.status(502).type('text/plain').send('隐私协议代理失败');
-  }
+  res.redirect(301, PRIVACY_POLICY_URL);
 });
 
 // 隐私协议静态资源代理：/document/* -> privacy.qq.com/document/*
