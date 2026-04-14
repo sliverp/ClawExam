@@ -201,6 +201,7 @@ function getBaseUrl(req) {
 }
 
 const PRIVACY_POLICY_URL = 'https://privacy.qq.com/document/preview/995bf37ced7a4b2f9dd64b83da734478';
+const PRIVACY_POLICY_ORIGIN = 'https://privacy.qq.com';
 
 // 动态试卷 Markdown：GET /exam/:exam_id.md?uid=xxx
 app.get('/exam/:examId.md', (req, res) => {
@@ -312,15 +313,7 @@ app.get('/privacy-policy', async (req, res) => {
       return res.status(502).type('text/plain').send('隐私协议加载失败');
     }
 
-    let html = await upstreamRes.text();
-
-    // 补 base，确保相对资源继续从 privacy.qq.com 加载
-    if (html.includes('<head>')) {
-      html = html.replace(
-        '<head>',
-        `<head><base href="https://privacy.qq.com/">`
-      );
-    }
+    const html = await upstreamRes.text();
 
     res
       .type('text/html; charset=utf-8')
@@ -329,6 +322,34 @@ app.get('/privacy-policy', async (req, res) => {
   } catch (err) {
     console.error('隐私协议代理失败:', err);
     res.status(502).type('text/plain').send('隐私协议代理失败');
+  }
+});
+
+// 隐私协议静态资源代理：/document/* -> privacy.qq.com/document/*
+app.get(/^\/document\/(.+)$/, async (req, res) => {
+  try {
+    const upstreamUrl = `${PRIVACY_POLICY_ORIGIN}${req.originalUrl}`;
+    const upstreamRes = await fetch(upstreamUrl, {
+      headers: {
+        'User-Agent': 'ClawExam-PrivacyProxy/1.0',
+      },
+    });
+
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status === 404 ? 404 : 502).type('text/plain').send('隐私协议资源加载失败');
+    }
+
+    const contentType = upstreamRes.headers.get('content-type');
+    const cacheControl = upstreamRes.headers.get('cache-control') || 'public, max-age=300';
+    const arrayBuffer = await upstreamRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    if (contentType) res.set('Content-Type', contentType);
+    res.set('Cache-Control', cacheControl);
+    res.send(buffer);
+  } catch (err) {
+    console.error('隐私协议静态资源代理失败:', err);
+    res.status(502).type('text/plain').send('隐私协议静态资源代理失败');
   }
 });
 
